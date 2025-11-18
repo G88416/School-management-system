@@ -996,10 +996,36 @@
                         <button class="btn btn-success" onclick="viewAnnouncements()">View Announcements</button>
                     </div>
                     <div class="col-md-4">
-                        <button class="btn btn-info" onclick="startChat()">Live Chat</button>
+                        <button class="btn btn-info" onclick="startLiveChat()">Live Chat</button>
                     </div>
                 </div>
                 <div id="messagesContainer"></div>
+                
+                <!-- Live Chat Section -->
+                <div id="liveChatContainer" class="d-none mt-4">
+                    <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
+                        <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4><i class="fas fa-comments me-2"></i>Live Chat - All Students & Teachers</h4>
+                                <button class="btn btn-sm btn-danger" onclick="closeLiveChat()">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                            <small class="text-muted">Real-time communication for students and teachers</small>
+                        </div>
+                        <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="liveChatMessages">
+                            <!-- Chat messages will appear here -->
+                        </div>
+                        <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
+                            <div class="input-group">
+                                <input type="text" id="liveChatInput" class="form-control" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendLiveChatMessage()">
+                                <button class="btn btn-primary" onclick="sendLiveChatMessage()">
+                                    <i class="fas fa-paper-plane me-2"></i>Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
             <!-- Content Management -->
             <section id="content" class="section d-none admin-only">
@@ -1207,14 +1233,19 @@
                     <tbody id="studentResultsTable"></tbody>
                 </table>
             </section>
-            <!-- Student Inbox (Read-Only) -->
+            <!-- Student Inbox -->
             <section id="studentInbox" class="section d-none student-only">
                 <h2>My Inbox</h2>
-                <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>View messages from teachers and administrators.
+                <div class="alert alert-success mb-3">
+                    <i class="fas fa-envelope me-2"></i>View messages from teachers and send messages to your teachers.
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" onclick="showSendTeacherMessageModal()">
+                            <i class="fas fa-paper-plane me-2"></i>Send Message to Teacher
+                        </button>
+                    </div>
+                    <div class="col-md-4">
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Search messages..." id="studentInboxSearch">
                             <button class="btn btn-outline-secondary" onclick="searchStudentInbox()">
@@ -1222,22 +1253,65 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <select class="form-control" id="studentInboxFilter" onchange="loadStudentInbox()">
                             <option value="all">All Messages</option>
                             <option value="unread">Unread</option>
                             <option value="important">Important</option>
+                            <option value="sent">Sent by Me</option>
                         </select>
                     </div>
                 </div>
                 <div id="studentInboxContainer"></div>
             </section>
-            <!-- Student Upload Work (Read-Only) -->
+            <!-- Student Upload Work -->
             <section id="studentUploadWork" class="section d-none student-only">
                 <h2>My Work Submissions</h2>
-                <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>View your submitted work and assignments.
+                <div class="alert alert-success mb-3">
+                    <i class="fas fa-upload me-2"></i>Submit your homework, projects, and assignments here.
                 </div>
+                
+                <!-- Submit New Work Form -->
+                <div class="card mb-4" style="background: rgba(255, 255, 255, 0.1);">
+                    <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
+                        <h5><i class="fas fa-plus-circle me-2"></i>Submit New Work</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Assignment Title</label>
+                                <input type="text" id="studentWorkTitle" class="form-control" placeholder="e.g., Math Homework Chapter 5">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Subject</label>
+                                <select id="studentWorkSubject" class="form-control">
+                                    <option value="">Select Subject</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="English">English</option>
+                                    <option value="Science">Science</option>
+                                    <option value="History">History</option>
+                                    <option value="Geography">Geography</option>
+                                    <option value="Art">Art</option>
+                                    <option value="Physical Education">Physical Education</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description / Notes</label>
+                            <textarea id="studentWorkDescription" class="form-control" rows="3" placeholder="Add any notes or comments about your submission..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Upload Files (PDF, Word, Images, etc.)</label>
+                            <input type="file" id="studentWorkFiles" class="form-control" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt">
+                            <small class="text-muted">You can select multiple files</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="submitStudentWork()">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Work
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="card card-metric p-3">
@@ -1265,6 +1339,7 @@
                             <th>Assignment</th>
                             <th>Subject</th>
                             <th>Submitted Date</th>
+                            <th>Files</th>
                             <th>Status</th>
                             <th>Grade</th>
                             <th>Feedback</th>
@@ -1917,6 +1992,178 @@
                         </div>
                         <div class="modal-body">
                             <div id="notificationContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add Wellness Program Modal -->
+            <div class="modal fade" id="addWellnessProgramModal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Wellness Program</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Program Name</label>
+                                <input type="text" id="wellnessProgramName" class="form-control" placeholder="e.g., Yoga & Meditation">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select id="wellnessProgramCategory" class="form-control">
+                                    <option value="Physical Fitness">Physical Fitness</option>
+                                    <option value="Mental Health">Mental Health</option>
+                                    <option value="Nutrition">Nutrition</option>
+                                    <option value="Stress Management">Stress Management</option>
+                                    <option value="Work-Life Balance">Work-Life Balance</option>
+                                    <option value="General Wellness">General Wellness</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea id="wellnessProgramDescription" class="form-control" rows="3" placeholder="Describe the wellness program..."></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" id="wellnessProgramStartDate" class="form-control">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Duration (weeks)</label>
+                                    <input type="number" id="wellnessProgramDuration" class="form-control" min="1" value="4" placeholder="e.g., 4">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Participants</label>
+                                <select id="wellnessProgramTarget" class="form-control">
+                                    <option value="All Staff">All Staff</option>
+                                    <option value="Teachers">Teachers Only</option>
+                                    <option value="Admin Staff">Admin Staff Only</option>
+                                    <option value="Support Staff">Support Staff Only</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Participants</label>
+                                <input type="number" id="wellnessProgramMaxParticipants" class="form-control" min="1" value="20" placeholder="e.g., 20">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Facilitator</label>
+                                <input type="text" id="wellnessProgramFacilitator" class="form-control" placeholder="e.g., Dr. Smith">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select id="wellnessProgramStatus" class="form-control">
+                                    <option value="Active">Active</option>
+                                    <option value="Upcoming">Upcoming</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="saveWellnessProgram()">
+                                <i class="fas fa-save me-2"></i>Save Program
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add Wellness Resource Modal -->
+            <div class="modal fade" id="addWellnessResourceModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Wellness Resource</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Resource Title</label>
+                                <input type="text" id="wellnessResourceTitle" class="form-control" placeholder="e.g., Stress Management Guide">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Type</label>
+                                <select id="wellnessResourceType" class="form-control">
+                                    <option value="Article">Article</option>
+                                    <option value="Video">Video</option>
+                                    <option value="Guide">Guide</option>
+                                    <option value="Workshop">Workshop</option>
+                                    <option value="External Link">External Link</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select id="wellnessResourceCategory" class="form-control">
+                                    <option value="Mental Health">Mental Health</option>
+                                    <option value="Physical Fitness">Physical Fitness</option>
+                                    <option value="Nutrition">Nutrition</option>
+                                    <option value="Stress Management">Stress Management</option>
+                                    <option value="General Wellness">General Wellness</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">URL/Link</label>
+                                <input type="url" id="wellnessResourceUrl" class="form-control" placeholder="https://...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea id="wellnessResourceDescription" class="form-control" rows="3" placeholder="Describe the resource..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="saveWellnessResource()">
+                                <i class="fas fa-save me-2"></i>Save Resource
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Send Message to Teacher Modal (Student) -->
+            <div class="modal fade" id="sendTeacherMessageModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Send Message to Teacher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Select Teacher</label>
+                                <select id="teacherRecipient" class="form-control">
+                                    <option value="">-- Select Teacher --</option>
+                                    <option value="Mr. Smith">Mr. Smith (Mathematics)</option>
+                                    <option value="Mrs. Johnson">Mrs. Johnson (English)</option>
+                                    <option value="Dr. Brown">Dr. Brown (Science)</option>
+                                    <option value="Ms. Davis">Ms. Davis (History)</option>
+                                    <option value="Mr. Wilson">Mr. Wilson (Geography)</option>
+                                    <option value="Coach Taylor">Coach Taylor (Physical Education)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Subject</label>
+                                <input type="text" id="messageSubject" class="form-control" placeholder="e.g., Question about Homework">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message</label>
+                                <textarea id="messageBody" class="form-control" rows="5" placeholder="Type your message here..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="markImportant">
+                                    <label class="form-check-label" for="markImportant">
+                                        Mark as Important
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="sendTeacherMessage()">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -3133,32 +3380,75 @@
         }
 
         function renderWellnessPrograms() {
-            const programs = [
-                { id: 1, name: 'Fitness Challenge 2024', category: 'Fitness', participants: 45, startDate: '2024-01-01', status: 'Active' },
-                { id: 2, name: 'Mental Health Week', category: 'Mental Health', participants: 67, startDate: '2024-02-15', status: 'Active' },
-                { id: 3, name: 'Nutrition Workshop Series', category: 'Nutrition', participants: 32, startDate: '2024-03-01', status: 'Active' },
-                { id: 4, name: 'Yoga Sessions', category: 'Fitness', participants: 28, startDate: '2024-01-15', status: 'Active' }
-            ];
+            wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
+            
+            // If no programs, show sample data
+            if (wellnessPrograms.length === 0) {
+                wellnessPrograms = [
+                    { id: 1, name: 'Fitness Challenge 2024', category: 'Physical Fitness', participants: [], maxParticipants: 50, startDate: '2024-01-01', status: 'Active', duration: 12 },
+                    { id: 2, name: 'Mental Health Week', category: 'Mental Health', participants: [], maxParticipants: 100, startDate: '2024-02-15', status: 'Active', duration: 1 },
+                    { id: 3, name: 'Nutrition Workshop Series', category: 'Nutrition', participants: [], maxParticipants: 30, startDate: '2024-03-01', status: 'Active', duration: 8 },
+                    { id: 4, name: 'Yoga Sessions', category: 'Physical Fitness', participants: [], maxParticipants: 25, startDate: '2024-01-15', status: 'Active', duration: 16 }
+                ];
+                localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
+            }
+            
+            const searchTerm = document.getElementById('wellnessSearch')?.value.toLowerCase() || '';
+            const filteredPrograms = wellnessPrograms.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) || 
+                p.category.toLowerCase().includes(searchTerm)
+            );
 
-            document.getElementById('wellnessProgramsTable').innerHTML = programs.map(p => `
+            const statusBadgeClass = (status) => {
+                switch(status) {
+                    case 'Active': return 'success';
+                    case 'Upcoming': return 'primary';
+                    case 'Completed': return 'secondary';
+                    case 'Cancelled': return 'danger';
+                    default: return 'info';
+                }
+            };
+
+            document.getElementById('wellnessProgramsTable').innerHTML = filteredPrograms.length > 0 ? filteredPrograms.map(p => `
                 <tr>
                     <td>${p.name}</td>
-                    <td>${p.category}</td>
-                    <td>${p.participants}</td>
+                    <td><span class="badge bg-info">${p.category}</span></td>
+                    <td>${p.participants?.length || 0}/${p.maxParticipants}</td>
                     <td>${p.startDate}</td>
-                    <td><span class="badge bg-success">${p.status}</span></td>
+                    <td><span class="badge bg-${statusBadgeClass(p.status)}">${p.status}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewWellnessProgram(${p.id})">View</button>
-                        <button class="btn btn-sm btn-warning" onclick="editWellnessProgram(${p.id})">Edit</button>
+                        <button class="btn btn-sm btn-primary" onclick="viewWellnessProgram(${p.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="editWellnessProgram(${p.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteWellnessProgram(${p.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
-            `).join('');
+            `).join('') : '<tr><td colspan="6" class="text-center text-muted">No wellness programs found. Click "Add Wellness Program" to create one.</td></tr>';
 
             // Update metrics
-            document.getElementById('totalWellnessParticipants').textContent = programs.reduce((sum, p) => sum + p.participants, 0);
-            document.getElementById('totalWellnessPrograms').textContent = programs.length;
-            document.getElementById('avgWellnessEngagement').textContent = '78%';
+            const totalParticipants = wellnessPrograms.reduce((sum, p) => sum + (p.participants?.length || 0), 0);
+            document.getElementById('totalWellnessParticipants').textContent = totalParticipants;
+            document.getElementById('totalWellnessPrograms').textContent = wellnessPrograms.length;
+            
+            const activePrograms = wellnessPrograms.filter(p => p.status === 'Active').length;
+            const engagement = wellnessPrograms.length > 0 ? Math.round((activePrograms / wellnessPrograms.length) * 100) : 0;
+            document.getElementById('avgWellnessEngagement').textContent = engagement + '%';
             document.getElementById('wellnessSatisfaction').textContent = '92%';
+        }
+        
+        function deleteWellnessProgram(id) {
+            if (confirm('Are you sure you want to delete this wellness program?')) {
+                wellnessPrograms = wellnessPrograms.filter(p => p.id !== id);
+                localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
+                renderWellnessPrograms();
+                addNotification('Wellness program deleted', 'warning');
+                logAudit('Wellness Program', 'Deleted wellness program', 'Medium');
+            }
         }
 
         function renderWellnessParticipants() {
@@ -3190,44 +3480,198 @@
         }
 
         function renderWellnessResourcesAdmin() {
-            const resources = [
-                { title: 'Healthy Eating Guide', type: 'PDF', category: 'Nutrition', views: 145 },
-                { title: 'Stress Management Tips', type: 'Video', category: 'Mental Health', views: 289 },
-                { title: 'Fitness Program Guide', type: 'PDF', category: 'Fitness', views: 203 }
-            ];
+            wellnessResources = JSON.parse(localStorage.getItem('wellnessResources') || '[]');
+            
+            // If no resources, show sample data
+            if (wellnessResources.length === 0) {
+                wellnessResources = [
+                    { id: 1, title: 'Healthy Eating Guide', type: 'Guide', category: 'Nutrition', views: 145, url: '#' },
+                    { id: 2, title: 'Stress Management Tips', type: 'Video', category: 'Mental Health', views: 289, url: '#' },
+                    { id: 3, title: 'Fitness Program Guide', type: 'Guide', category: 'Physical Fitness', views: 203, url: '#' }
+                ];
+                localStorage.setItem('wellnessResources', JSON.stringify(wellnessResources));
+            }
 
-            document.getElementById('wellnessResourcesTable').innerHTML = resources.map(r => `
+            document.getElementById('wellnessResourcesTable').innerHTML = wellnessResources.length > 0 ? wellnessResources.map(r => `
                 <tr>
-                    <td>${r.title}</td>
-                    <td>${r.type}</td>
-                    <td>${r.category}</td>
+                    <td><a href="${r.url}" target="_blank" class="text-white">${r.title}</a></td>
+                    <td><span class="badge bg-secondary">${r.type}</span></td>
+                    <td><span class="badge bg-info">${r.category}</span></td>
                     <td>${r.views}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary">Edit</button>
-                        <button class="btn btn-sm btn-danger">Delete</button>
+                        <button class="btn btn-sm btn-primary" onclick="editWellnessResource(${r.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteWellnessResource(${r.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
-            `).join('');
+            `).join('') : '<tr><td colspan="5" class="text-center text-muted">No wellness resources found.</td></tr>';
+        }
+        
+        function editWellnessResource(id) {
+            const resource = wellnessResources.find(r => r.id === id);
+            if (resource) {
+                document.getElementById('wellnessResourceTitle').value = resource.title;
+                document.getElementById('wellnessResourceType').value = resource.type;
+                document.getElementById('wellnessResourceCategory').value = resource.category;
+                document.getElementById('wellnessResourceUrl').value = resource.url;
+                document.getElementById('wellnessResourceDescription').value = resource.description || '';
+                
+                wellnessResources = wellnessResources.filter(r => r.id !== id);
+                showAddWellnessResourceModal();
+            }
+        }
+        
+        function deleteWellnessResource(id) {
+            if (confirm('Are you sure you want to delete this wellness resource?')) {
+                wellnessResources = wellnessResources.filter(r => r.id !== id);
+                localStorage.setItem('wellnessResources', JSON.stringify(wellnessResources));
+                renderWellnessResourcesAdmin();
+                addNotification('Wellness resource deleted', 'warning');
+            }
         }
 
+        // Wellness Program Storage
+        let wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
+        let wellnessResources = JSON.parse(localStorage.getItem('wellnessResources') || '[]');
+        
         function showAddWellnessProgramModal() {
-            addNotification('Add Wellness Program modal', 'info');
+            new bootstrap.Modal(document.getElementById('addWellnessProgramModal')).show();
+        }
+
+        function saveWellnessProgram() {
+            const name = document.getElementById('wellnessProgramName').value.trim();
+            const category = document.getElementById('wellnessProgramCategory').value;
+            const description = document.getElementById('wellnessProgramDescription').value.trim();
+            const startDate = document.getElementById('wellnessProgramStartDate').value;
+            const duration = document.getElementById('wellnessProgramDuration').value;
+            const target = document.getElementById('wellnessProgramTarget').value;
+            const maxParticipants = document.getElementById('wellnessProgramMaxParticipants').value;
+            const facilitator = document.getElementById('wellnessProgramFacilitator').value.trim();
+            const status = document.getElementById('wellnessProgramStatus').value;
+            
+            if (!name || !startDate || !description) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const program = {
+                id: Date.now(),
+                name,
+                category,
+                description,
+                startDate,
+                duration,
+                target,
+                maxParticipants,
+                facilitator,
+                status,
+                participants: [],
+                createdBy: currentUser.name,
+                createdAt: new Date().toISOString()
+            };
+            
+            wellnessPrograms.push(program);
+            localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
+            
+            // Clear form
+            document.getElementById('wellnessProgramName').value = '';
+            document.getElementById('wellnessProgramDescription').value = '';
+            document.getElementById('wellnessProgramStartDate').value = '';
+            document.getElementById('wellnessProgramDuration').value = '4';
+            document.getElementById('wellnessProgramMaxParticipants').value = '20';
+            document.getElementById('wellnessProgramFacilitator').value = '';
+            
+            bootstrap.Modal.getInstance(document.getElementById('addWellnessProgramModal')).hide();
+            renderWellnessPrograms();
+            addNotification('Wellness program added successfully!', 'success');
+            logAudit('Wellness Program', `Added program: ${name}`, 'Low');
         }
 
         function showAddWellnessResourceModal() {
-            addNotification('Add Wellness Resource modal', 'info');
+            new bootstrap.Modal(document.getElementById('addWellnessResourceModal')).show();
+        }
+        
+        function saveWellnessResource() {
+            const title = document.getElementById('wellnessResourceTitle').value.trim();
+            const type = document.getElementById('wellnessResourceType').value;
+            const category = document.getElementById('wellnessResourceCategory').value;
+            const url = document.getElementById('wellnessResourceUrl').value.trim();
+            const description = document.getElementById('wellnessResourceDescription').value.trim();
+            
+            if (!title || !url) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const resource = {
+                id: Date.now(),
+                title,
+                type,
+                category,
+                url,
+                description,
+                views: 0,
+                createdBy: currentUser.name,
+                createdAt: new Date().toISOString()
+            };
+            
+            wellnessResources.push(resource);
+            localStorage.setItem('wellnessResources', JSON.stringify(wellnessResources));
+            
+            // Clear form
+            document.getElementById('wellnessResourceTitle').value = '';
+            document.getElementById('wellnessResourceUrl').value = '';
+            document.getElementById('wellnessResourceDescription').value = '';
+            
+            bootstrap.Modal.getInstance(document.getElementById('addWellnessResourceModal')).hide();
+            renderWellnessResourcesAdmin();
+            addNotification('Wellness resource added successfully!', 'success');
+            logAudit('Wellness Resource', `Added resource: ${title}`, 'Low');
         }
 
         function exportWellnessReport() {
-            addNotification('Wellness report exported', 'success');
+            const report = {
+                programs: wellnessPrograms,
+                resources: wellnessResources,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wellness-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            addNotification('Wellness report exported successfully', 'success');
         }
 
         function viewWellnessProgram(id) {
-            addNotification('Viewing wellness program ' + id, 'info');
+            const program = wellnessPrograms.find(p => p.id === id);
+            if (program) {
+                alert(`Program: ${program.name}\nCategory: ${program.category}\nStart: ${program.startDate}\nDuration: ${program.duration} weeks\nStatus: ${program.status}\nParticipants: ${program.participants.length}/${program.maxParticipants}\n\n${program.description}`);
+            }
         }
 
         function editWellnessProgram(id) {
-            addNotification('Editing wellness program ' + id, 'info');
+            const program = wellnessPrograms.find(p => p.id === id);
+            if (program) {
+                document.getElementById('wellnessProgramName').value = program.name;
+                document.getElementById('wellnessProgramCategory').value = program.category;
+                document.getElementById('wellnessProgramDescription').value = program.description;
+                document.getElementById('wellnessProgramStartDate').value = program.startDate;
+                document.getElementById('wellnessProgramDuration').value = program.duration;
+                document.getElementById('wellnessProgramTarget').value = program.target;
+                document.getElementById('wellnessProgramMaxParticipants').value = program.maxParticipants;
+                document.getElementById('wellnessProgramFacilitator').value = program.facilitator;
+                document.getElementById('wellnessProgramStatus').value = program.status;
+                
+                // Remove old and save as new
+                wellnessPrograms = wellnessPrograms.filter(p => p.id !== id);
+                showAddWellnessProgramModal();
+            }
         }
 
         function viewParticipantDetails(name) {
@@ -5214,13 +5658,91 @@
                 addNotification(a.title + ': ' + a.content, 'info');
             });
         }
+        
+        // Live Chat Functionality
+        let liveChatMessages = JSON.parse(localStorage.getItem('liveChatMessages') || '[]');
+        let liveChatInterval = null;
+        
+        function startLiveChat() {
+            document.getElementById('liveChatContainer').classList.remove('d-none');
+            renderLiveChatMessages();
+            addNotification('Live chat started! You can now communicate with all students and teachers.', 'success');
+            
+            // Auto-refresh chat every 2 seconds
+            if (liveChatInterval) clearInterval(liveChatInterval);
+            liveChatInterval = setInterval(renderLiveChatMessages, 2000);
+        }
+        
+        function closeLiveChat() {
+            document.getElementById('liveChatContainer').classList.add('d-none');
+            if (liveChatInterval) {
+                clearInterval(liveChatInterval);
+                liveChatInterval = null;
+            }
+        }
+        
+        function sendLiveChatMessage() {
+            const input = document.getElementById('liveChatInput');
+            const text = input.value.trim();
+            
+            if (!text) {
+                addNotification('Please enter a message', 'warning');
+                return;
+            }
+            
+            const message = {
+                id: Date.now(),
+                sender: currentUser.name,
+                role: currentUser.role,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+            
+            liveChatMessages.push(message);
+            localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+            
+            input.value = '';
+            renderLiveChatMessages();
+            
+            // Scroll to bottom
+            const container = document.getElementById('liveChatMessages');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function renderLiveChatMessages() {
+            const container = document.getElementById('liveChatMessages');
+            if (!container) return;
+            
+            // Get last 50 messages
+            const recentMessages = liveChatMessages.slice(-50);
+            
+            let html = '';
+            recentMessages.forEach(msg => {
+                const isCurrentUser = msg.sender === currentUser.name;
+                const alignClass = isCurrentUser ? 'text-end' : 'text-start';
+                const bgClass = isCurrentUser ? 'bg-primary' : 'bg-secondary';
+                const roleColor = msg.role === 'teacher' ? 'warning' : msg.role === 'admin' ? 'danger' : 'info';
+                
+                html += `
+                    <div class="${alignClass} mb-3">
+                        <div class="d-inline-block" style="max-width: 70%;">
+                            <div class="mb-1">
+                                <span class="badge bg-${roleColor}">${msg.sender}</span>
+                                <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="p-3 rounded ${bgClass}" style="word-wrap: break-word;">
+                                ${msg.text}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-center text-muted">No messages yet. Start the conversation!</p>';
+        }
+        
         function startChat() {
-            addNotification('Live chat started (mock)', 'info');
-            // Simulate chat
-            setInterval(() => {
-                messages.push({ id: Date.now(), sender: 'Assistant', text: 'Hello! How can I help?', timestamp: new Date().toLocaleString() });
-                renderMessages();
-            }, 10000);
+            startLiveChat();
         }
 
         // Content Management
@@ -5624,72 +6146,146 @@
             document.getElementById('studentResultsTable').innerHTML = resultsHtml || '<tr><td colspan="6" class="text-center">No results yet</td></tr>';
         }
         
+        // Student Messages Storage
+        let studentMessages = JSON.parse(localStorage.getItem('studentMessages') || '[]');
+        
+        function showSendTeacherMessageModal() {
+            new bootstrap.Modal(document.getElementById('sendTeacherMessageModal')).show();
+        }
+        
+        function sendTeacherMessage() {
+            const teacher = document.getElementById('teacherRecipient').value;
+            const subject = document.getElementById('messageSubject').value.trim();
+            const body = document.getElementById('messageBody').value.trim();
+            const important = document.getElementById('markImportant').checked;
+            
+            if (!teacher) {
+                addNotification('Please select a teacher', 'warning');
+                return;
+            }
+            
+            if (!subject || !body) {
+                addNotification('Please fill in the subject and message', 'warning');
+                return;
+            }
+            
+            const message = {
+                id: Date.now(),
+                from: currentUser.name,
+                to: teacher,
+                subject: subject,
+                message: body,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString(),
+                read: false,
+                important: important,
+                type: 'sent'
+            };
+            
+            studentMessages.push(message);
+            localStorage.setItem('studentMessages', JSON.stringify(studentMessages));
+            
+            // Clear form
+            document.getElementById('teacherRecipient').value = '';
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageBody').value = '';
+            document.getElementById('markImportant').checked = false;
+            
+            bootstrap.Modal.getInstance(document.getElementById('sendTeacherMessageModal')).hide();
+            loadStudentInbox();
+            addNotification('Message sent to ' + teacher + ' successfully!', 'success');
+        }
+        
         // Load Student Inbox
         function loadStudentInbox() {
             if (!currentUser || currentUser.role !== 'student') return;
             
-            // Mock messages data
-            const messages = [
+            // Get messages from localStorage
+            studentMessages = JSON.parse(localStorage.getItem('studentMessages') || '[]');
+            
+            // Get received messages (mock teacher responses)
+            const receivedMessages = [
                 { 
-                    id: 1, 
-                    from: 'Mr. Smith (Mathematics Teacher)', 
+                    id: 1001, 
+                    from: 'Mr. Smith (Mathematics Teacher)',
+                    to: currentUser.name,
                     subject: 'Homework Assignment Due',
                     date: '2025-11-15',
                     message: 'Please complete pages 45-47 by Friday.',
                     read: false,
-                    important: true
+                    important: true,
+                    type: 'received'
                 },
                 { 
-                    id: 2, 
-                    from: 'Administration', 
+                    id: 1002, 
+                    from: 'Administration',
+                    to: currentUser.name,
                     subject: 'School Event Reminder',
                     date: '2025-11-14',
                     message: 'Sports day is scheduled for next week. Please bring appropriate attire.',
                     read: true,
-                    important: false
+                    important: false,
+                    type: 'received'
                 },
                 { 
-                    id: 3, 
-                    from: 'Mrs. Johnson (English Teacher)', 
+                    id: 1003, 
+                    from: 'Mrs. Johnson (English Teacher)',
+                    to: currentUser.name,
                     subject: 'Great work on your essay!',
                     date: '2025-11-13',
                     message: 'Your essay showed excellent writing skills. Keep up the good work!',
                     read: true,
-                    important: false
+                    important: false,
+                    type: 'received'
                 },
             ];
             
+            // Combine sent and received messages
+            const allMessages = [...receivedMessages, ...studentMessages.filter(m => m.from === currentUser.name)];
+            
             const filter = document.getElementById('studentInboxFilter')?.value || 'all';
-            let filteredMessages = messages;
+            let filteredMessages = allMessages;
+            
             if (filter === 'unread') {
-                filteredMessages = messages.filter(m => !m.read);
+                filteredMessages = allMessages.filter(m => !m.read && m.type === 'received');
             } else if (filter === 'important') {
-                filteredMessages = messages.filter(m => m.important);
+                filteredMessages = allMessages.filter(m => m.important);
+            } else if (filter === 'sent') {
+                filteredMessages = allMessages.filter(m => m.type === 'sent');
             }
+            
+            // Sort by date (newest first)
+            filteredMessages.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
             
             let html = '';
             filteredMessages.forEach(msg => {
-                const readClass = msg.read ? 'read' : 'unread';
+                const isSent = msg.type === 'sent';
                 const importantBadge = msg.important ? '<span class="badge bg-danger ms-2">Important</span>' : '';
+                const sentBadge = isSent ? '<span class="badge bg-success ms-2">Sent</span>' : '';
+                const unreadIndicator = !isSent && !msg.read ? '<i class="fas fa-circle text-primary me-2" style="font-size: 8px;"></i>' : '';
+                
                 html += `
-                    <div class="card mb-3" style="background: rgba(255, 255, 255, 0.1);">
+                    <div class="card mb-3" style="background: rgba(255, 255, 255, ${isSent ? '0.05' : '0.1'});">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <h5 class="card-title">
-                                    ${msg.read ? '' : '<i class="fas fa-circle text-primary me-2" style="font-size: 8px;"></i>'}
+                                    ${unreadIndicator}
                                     ${msg.subject}
                                     ${importantBadge}
+                                    ${sentBadge}
                                 </h5>
                                 <small class="text-muted">${msg.date}</small>
                             </div>
-                            <h6 class="card-subtitle mb-2 text-muted">From: ${msg.from}</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                ${isSent ? 'To: ' + msg.to : 'From: ' + msg.from}
+                            </h6>
                             <p class="card-text">${msg.message}</p>
                         </div>
                     </div>
                 `;
             });
             
-            document.getElementById('studentInboxContainer').innerHTML = html || '<p class="text-center">No messages found</p>';
+            document.getElementById('studentInboxContainer').innerHTML = html || '<p class="text-center text-muted">No messages found. Click "Send Message to Teacher" to start a conversation!</p>';
         }
         
         function searchStudentInbox() {
@@ -5698,42 +6294,74 @@
             loadStudentInbox();
         }
         
+        // Student Work Submissions Storage
+        let studentSubmissions = JSON.parse(localStorage.getItem('studentSubmissions') || '[]');
+        
+        function submitStudentWork() {
+            const title = document.getElementById('studentWorkTitle').value.trim();
+            const subject = document.getElementById('studentWorkSubject').value;
+            const description = document.getElementById('studentWorkDescription').value.trim();
+            const filesInput = document.getElementById('studentWorkFiles');
+            const files = filesInput.files;
+            
+            if (!title || !subject) {
+                addNotification('Please fill in the assignment title and subject', 'warning');
+                return;
+            }
+            
+            if (files.length === 0) {
+                addNotification('Please select at least one file to upload', 'warning');
+                return;
+            }
+            
+            // Create file list
+            const fileList = [];
+            for (let i = 0; i < files.length; i++) {
+                fileList.push({
+                    name: files[i].name,
+                    size: files[i].size,
+                    type: files[i].type
+                });
+            }
+            
+            const submission = {
+                id: Date.now(),
+                student: currentUser.name,
+                assignment: title,
+                subject: subject,
+                description: description,
+                files: fileList,
+                submittedDate: new Date().toISOString().split('T')[0],
+                status: 'Under Review',
+                grade: '-',
+                feedback: 'Waiting for teacher review'
+            };
+            
+            studentSubmissions.push(submission);
+            localStorage.setItem('studentSubmissions', JSON.stringify(studentSubmissions));
+            
+            // Clear form
+            document.getElementById('studentWorkTitle').value = '';
+            document.getElementById('studentWorkSubject').value = '';
+            document.getElementById('studentWorkDescription').value = '';
+            filesInput.value = '';
+            
+            loadStudentUploadWork();
+            addNotification('Work submitted successfully!', 'success');
+        }
+        
         // Load Student Upload Work
         function loadStudentUploadWork() {
             if (!currentUser || currentUser.role !== 'student') return;
             
-            // Mock work submissions data
-            const submissions = [
-                { 
-                    assignment: 'Math Homework Chapter 5',
-                    subject: 'Mathematics',
-                    submittedDate: '2025-11-10',
-                    status: 'Graded',
-                    grade: 'A',
-                    feedback: 'Excellent work! All answers correct.'
-                },
-                { 
-                    assignment: 'English Essay - My Hero',
-                    subject: 'English',
-                    submittedDate: '2025-11-12',
-                    status: 'Graded',
-                    grade: 'B+',
-                    feedback: 'Good structure, but watch your grammar.'
-                },
-                { 
-                    assignment: 'Science Lab Report',
-                    subject: 'Science',
-                    submittedDate: '2025-11-14',
-                    status: 'Under Review',
-                    grade: '-',
-                    feedback: 'Being reviewed by teacher'
-                },
-            ];
+            // Get submissions for current student
+            studentSubmissions = JSON.parse(localStorage.getItem('studentSubmissions') || '[]');
+            const mySubmissions = studentSubmissions.filter(s => s.student === currentUser.name);
             
             // Update metrics
-            const submitted = submissions.length;
-            const graded = submissions.filter(s => s.status === 'Graded').length;
-            const pending = submissions.filter(s => s.status === 'Under Review').length;
+            const submitted = mySubmissions.length;
+            const graded = mySubmissions.filter(s => s.status === 'Graded').length;
+            const pending = mySubmissions.filter(s => s.status === 'Under Review').length;
             
             document.getElementById('studentSubmittedWork').textContent = submitted;
             document.getElementById('studentPendingWork').textContent = pending;
@@ -5741,19 +6369,21 @@
             
             // Render submissions table
             let html = '';
-            submissions.forEach(sub => {
+            mySubmissions.forEach(sub => {
                 const statusClass = sub.status === 'Graded' ? 'success' : 'warning';
+                const fileNames = sub.files.map(f => f.name).join(', ');
                 html += `<tr>
                     <td>${sub.assignment}</td>
-                    <td>${sub.subject}</td>
+                    <td><span class="badge bg-info">${sub.subject}</span></td>
                     <td>${sub.submittedDate}</td>
+                    <td><small title="${fileNames}">${sub.files.length} file(s)</small></td>
                     <td><span class="badge bg-${statusClass}">${sub.status}</span></td>
                     <td>${sub.grade}</td>
                     <td>${sub.feedback}</td>
                 </tr>`;
             });
             
-            document.getElementById('studentWorkTable').innerHTML = html || '<tr><td colspan="6" class="text-center">No submissions yet</td></tr>';
+            document.getElementById('studentWorkTable').innerHTML = html || '<tr><td colspan="7" class="text-center text-muted">No submissions yet. Submit your first assignment above!</td></tr>';
         }
         
         // Enhanced AI Research
