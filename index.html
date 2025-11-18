@@ -16,14 +16,14 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
             min-height: 100vh;
         }
         .sidebar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
             height: 100vh;
             position: fixed;
             width: 260px;
@@ -31,7 +31,7 @@
             overflow-y: auto;
             transition: width 0.3s ease;
             z-index: 1000;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
         }
         .sidebar.collapsed { width: 70px; }
         .sidebar.collapsed .nav-text { display: none; }
@@ -45,12 +45,14 @@
             backdrop-filter: blur(5px);
         }
         .sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
             transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
         .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.35);
             font-weight: 600;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
         }
         .content {
             margin-left: 260px;
@@ -60,14 +62,18 @@
         }
         .content.expanded { margin-left: 70px; }
         .card-metric {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 15px;
             backdrop-filter: blur(10px);
-            transition: transform 0.3s;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        .card-metric:hover { transform: translateY(-8px); }
+        .card-metric:hover { 
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.25));
+        }
         .table {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
@@ -155,11 +161,103 @@
         .cert-expiry { color: #ffc107; }
         .cert-expired { color: #dc3545; }
         .lesson-plan { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; }
+        
+        /* Enhanced Teachers Module Styles */
+        #teachers .nav-tabs {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #teachers .nav-tabs .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+        #teachers .nav-tabs .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        #teachers .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        #teachers .tab-content {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Enhanced Wellness Section Styles */
+        #employee-wellness .card-metric {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+        #employee-wellness .card-metric:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        #employee-wellness .card-metric i {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        #wellness-activities, #wellness-tips, #wellness-tracking, #wellness-support {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 300px;
+        }
+        .wellness-activity-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid rgba(99, 102, 241, 0.8);
+            transition: all 0.3s;
+        }
+        .wellness-activity-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+        }
+        
+        /* Responsive Wellness Section */
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
             .sidebar .nav-text { display: none; }
             .content { margin-left: 70px; }
             .btn-toggle-sidebar { left: 80px; }
+            
+            #employee-wellness .row {
+                flex-direction: column;
+            }
+            #employee-wellness .card-metric {
+                margin-bottom: 15px;
+            }
+            #teachers .nav-tabs {
+                flex-wrap: wrap;
+            }
+            #teachers .nav-tabs .nav-link {
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+        }
+        @media (max-width: 576px) {
+            #teachers .tab-content {
+                padding: 15px;
+            }
+            .card-metric h5 {
+                font-size: 0.9rem;
+            }
+            .card-metric h3 {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
@@ -989,14 +1087,17 @@
             <section id="communication" class="section d-none non-student">
                 <h2>Communication</h2>
                 <div class="row mb-3">
-                    <div class="col-md-4">
-                        <button class="btn btn-primary" onclick="showSendMessageModal()">Send Message</button>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" onclick="showSendMessageModal()"><i class="fas fa-envelope me-2"></i>Send Message</button>
                     </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-success" onclick="viewAnnouncements()">View Announcements</button>
+                    <div class="col-md-3">
+                        <button class="btn btn-success" onclick="showAnnouncementsModal()"><i class="fas fa-bullhorn me-2"></i>View Announcements</button>
                     </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-info" onclick="startLiveChat()">Live Chat</button>
+                    <div class="col-md-3">
+                        <button class="btn btn-info" onclick="startLiveChat()"><i class="fas fa-comments me-2"></i>Live Chat</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-danger" onclick="clearAllCommunications()"><i class="fas fa-trash me-2"></i>Clear All</button>
                     </div>
                 </div>
                 <div id="messagesContainer"></div>
@@ -1667,6 +1768,131 @@
                     </div>
                 </div>
             </div>
+            <!-- Enhanced Announcements Modal -->
+            <div class="modal fade" id="announcementsModal">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Announcements Center</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="nav nav-tabs mb-3" id="announcementsTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#view-announcements">View Announcements</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#create-announcement">Create Announcement</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#create-poster">Create Poster</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#upload-video">Upload Video</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="view-announcements">
+                                    <h6>Recent Announcements</h6>
+                                    <div id="announcementsList"></div>
+                                </div>
+                                <div class="tab-pane fade" id="create-announcement">
+                                    <h6>Create New Announcement</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Title</label>
+                                        <input type="text" id="announcementTitle" class="form-control" placeholder="Enter announcement title">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Content</label>
+                                        <textarea id="announcementContent" class="form-control" rows="5" placeholder="Enter announcement content"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Priority</label>
+                                        <select id="announcementPriority" class="form-control">
+                                            <option value="Low">Low</option>
+                                            <option value="Medium" selected>Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Target Audience</label>
+                                        <select id="announcementAudience" class="form-control">
+                                            <option value="All">All</option>
+                                            <option value="Students">Students</option>
+                                            <option value="Parents">Parents</option>
+                                            <option value="Staff">Staff</option>
+                                            <option value="Teachers">Teachers</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="createAnnouncement()">
+                                        <i class="fas fa-paper-plane me-2"></i>Publish Announcement
+                                    </button>
+                                </div>
+                                <div class="tab-pane fade" id="create-poster">
+                                    <h6>Create Event Poster</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Poster Title</label>
+                                        <input type="text" id="posterTitle" class="form-control" placeholder="Event name">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Event Date</label>
+                                        <input type="date" id="posterDate" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Event Time</label>
+                                        <input type="time" id="posterTime" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Location</label>
+                                        <input type="text" id="posterLocation" class="form-control" placeholder="Event location">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea id="posterDescription" class="form-control" rows="3" placeholder="Event description"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Upload Image (Optional)</label>
+                                        <input type="file" id="posterImage" class="form-control" accept="image/*">
+                                    </div>
+                                    <button class="btn btn-success" onclick="createPoster()">
+                                        <i class="fas fa-image me-2"></i>Generate Poster
+                                    </button>
+                                    <div id="posterPreview" class="mt-3"></div>
+                                </div>
+                                <div class="tab-pane fade" id="upload-video">
+                                    <h6>Upload Video Announcement</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Video Title</label>
+                                        <input type="text" id="videoTitle" class="form-control" placeholder="Enter video title">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Video Description</label>
+                                        <textarea id="videoDescription" class="form-control" rows="3" placeholder="Enter video description"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Upload Video File</label>
+                                        <input type="file" id="videoFile" class="form-control" accept="video/*">
+                                        <small class="text-muted">Supported formats: MP4, MOV, AVI (Max 100MB)</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Or Video URL</label>
+                                        <input type="url" id="videoURL" class="form-control" placeholder="https://youtube.com/watch?v=...">
+                                        <small class="text-muted">Paste YouTube, Vimeo, or other video link</small>
+                                    </div>
+                                    <button class="btn btn-info" onclick="uploadVideo()">
+                                        <i class="fas fa-upload me-2"></i>Upload Video
+                                    </button>
+                                    <div id="videoPreview" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Add Content Modal -->
             <div class="modal fade" id="addContentModal">
                 <div class="modal-dialog">
@@ -2275,6 +2501,8 @@
             users = JSON.parse(localStorage.getItem('users') || '[]');
             hrSettings = JSON.parse(localStorage.getItem('hrSettings') || JSON.stringify(hrSettings));
             smsSettings = JSON.parse(localStorage.getItem('smsSettings') || JSON.stringify(smsSettings));
+            chatGPTSettings = JSON.parse(localStorage.getItem('chatGPTSettings') || JSON.stringify(chatGPTSettings));
+            grokSettings = JSON.parse(localStorage.getItem('grokSettings') || JSON.stringify(grokSettings));
             attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords') || '{}');
             lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '[]');
             grades = JSON.parse(localStorage.getItem('grades') || '[]');
@@ -2336,6 +2564,8 @@
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('hrSettings', JSON.stringify(hrSettings));
             localStorage.setItem('smsSettings', JSON.stringify(smsSettings));
+            localStorage.setItem('chatGPTSettings', JSON.stringify(chatGPTSettings));
+            localStorage.setItem('grokSettings', JSON.stringify(grokSettings));
             localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
             localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
             localStorage.setItem('grades', JSON.stringify(grades));
@@ -5657,6 +5887,244 @@
             announcements.forEach(a => {
                 addNotification(a.title + ': ' + a.content, 'info');
             });
+        }
+        
+        // Enhanced Announcements Functions
+        function showAnnouncementsModal() {
+            renderAnnouncementsList();
+            new bootstrap.Modal(document.getElementById('announcementsModal')).show();
+        }
+        
+        function renderAnnouncementsList() {
+            const container = document.getElementById('announcementsList');
+            if (announcements.length === 0) {
+                container.innerHTML = '<p class="text-muted">No announcements yet.</p>';
+                return;
+            }
+            container.innerHTML = announcements.map(a => {
+                const priorityClass = a.priority === 'Urgent' ? 'danger' : a.priority === 'High' ? 'warning' : a.priority === 'Medium' ? 'info' : 'secondary';
+                return `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="card-title">${a.title || 'Untitled'}</h6>
+                                <span class="badge bg-${priorityClass}">${a.priority || 'Medium'}</span>
+                            </div>
+                            <p class="card-text">${a.content || ''}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>${a.audience || 'All'} | 
+                                <i class="fas fa-clock me-1"></i>${a.timestamp ? new Date(a.timestamp).toLocaleString() : 'N/A'}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function createAnnouncement() {
+            const title = document.getElementById('announcementTitle').value.trim();
+            const content = document.getElementById('announcementContent').value.trim();
+            const priority = document.getElementById('announcementPriority').value;
+            const audience = document.getElementById('announcementAudience').value;
+            
+            if (!title || !content) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const announcement = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                priority: priority,
+                audience: audience,
+                timestamp: new Date().toISOString(),
+                createdBy: currentUser.name
+            };
+            
+            announcements.push(announcement);
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // Clear form
+            document.getElementById('announcementTitle').value = '';
+            document.getElementById('announcementContent').value = '';
+            document.getElementById('announcementPriority').value = 'Medium';
+            document.getElementById('announcementAudience').value = 'All';
+            
+            renderAnnouncementsList();
+            addNotification('Announcement published successfully', 'success');
+        }
+        
+        function createPoster() {
+            const title = document.getElementById('posterTitle').value.trim();
+            const date = document.getElementById('posterDate').value;
+            const time = document.getElementById('posterTime').value;
+            const location = document.getElementById('posterLocation').value.trim();
+            const description = document.getElementById('posterDescription').value.trim();
+            
+            if (!title || !date) {
+                addNotification('Please provide at least a title and date', 'warning');
+                return;
+            }
+            
+            const poster = {
+                id: Date.now(),
+                type: 'poster',
+                title: title,
+                date: date,
+                time: time,
+                location: location,
+                description: description,
+                timestamp: new Date().toISOString(),
+                createdBy: currentUser.name
+            };
+            
+            announcements.push({
+                id: poster.id,
+                title: `Event: ${title}`,
+                content: `${description} | Date: ${date} ${time || ''} | Location: ${location}`,
+                priority: 'High',
+                audience: 'All',
+                timestamp: poster.timestamp,
+                createdBy: poster.createdBy,
+                type: 'poster'
+            });
+            
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // Display poster preview
+            document.getElementById('posterPreview').innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle me-2"></i>Poster Created!</h5>
+                    <div class="card mt-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px;">
+                        <h3 class="text-center">${title}</h3>
+                        <hr style="border-color: rgba(255,255,255,0.3);">
+                        <p><i class="fas fa-calendar me-2"></i><strong>Date:</strong> ${date}</p>
+                        ${time ? `<p><i class="fas fa-clock me-2"></i><strong>Time:</strong> ${time}</p>` : ''}
+                        ${location ? `<p><i class="fas fa-map-marker-alt me-2"></i><strong>Location:</strong> ${location}</p>` : ''}
+                        ${description ? `<p class="mt-3">${description}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Clear form
+            document.getElementById('posterTitle').value = '';
+            document.getElementById('posterDate').value = '';
+            document.getElementById('posterTime').value = '';
+            document.getElementById('posterLocation').value = '';
+            document.getElementById('posterDescription').value = '';
+            
+            renderAnnouncementsList();
+            addNotification('Poster created and published', 'success');
+        }
+        
+        function uploadVideo() {
+            const title = document.getElementById('videoTitle').value.trim();
+            const description = document.getElementById('videoDescription').value.trim();
+            const videoFile = document.getElementById('videoFile').files[0];
+            const videoURL = document.getElementById('videoURL').value.trim();
+            
+            if (!title) {
+                addNotification('Please provide a video title', 'warning');
+                return;
+            }
+            
+            if (!videoFile && !videoURL) {
+                addNotification('Please upload a video file or provide a video URL', 'warning');
+                return;
+            }
+            
+            const video = {
+                id: Date.now(),
+                type: 'video',
+                title: title,
+                description: description,
+                url: videoURL,
+                fileName: videoFile ? videoFile.name : null,
+                timestamp: new Date().toISOString(),
+                createdBy: currentUser.name
+            };
+            
+            announcements.push({
+                id: video.id,
+                title: `Video: ${title}`,
+                content: description + (videoURL ? ` | ${videoURL}` : ''),
+                priority: 'Medium',
+                audience: 'All',
+                timestamp: video.timestamp,
+                createdBy: video.createdBy,
+                type: 'video'
+            });
+            
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // Display video preview
+            let previewHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle me-2"></i>Video Uploaded!</h5>
+                    <div class="card mt-2">
+                        <div class="card-body">
+                            <h6>${title}</h6>
+                            <p>${description}</p>
+            `;
+            
+            if (videoURL) {
+                // Try to embed if it's a YouTube or Vimeo link
+                if (videoURL.includes('youtube.com') || videoURL.includes('youtu.be')) {
+                    let videoId = '';
+                    if (videoURL.includes('youtube.com/watch?v=')) {
+                        videoId = videoURL.split('v=')[1].split('&')[0];
+                    } else if (videoURL.includes('youtu.be/')) {
+                        videoId = videoURL.split('youtu.be/')[1].split('?')[0];
+                    }
+                    if (videoId) {
+                        previewHTML += `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                    }
+                } else {
+                    previewHTML += `<p><a href="${videoURL}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-external-link-alt me-2"></i>View Video</a></p>`;
+                }
+            } else if (videoFile) {
+                previewHTML += `<p><i class="fas fa-file-video me-2"></i>File: ${videoFile.name}</p>`;
+            }
+            
+            previewHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('videoPreview').innerHTML = previewHTML;
+            
+            // Clear form
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoDescription').value = '';
+            document.getElementById('videoFile').value = '';
+            document.getElementById('videoURL').value = '';
+            
+            renderAnnouncementsList();
+            addNotification('Video uploaded and published', 'success');
+        }
+        
+        function clearAllCommunications() {
+            if (confirm('Are you sure you want to clear all notifications and messages? This action cannot be undone.')) {
+                // Clear notifications
+                localStorage.removeItem('notifications');
+                document.getElementById('notificationBadge').style.display = 'none';
+                document.getElementById('notificationBadge').textContent = '0';
+                
+                // Clear messages
+                messages = [];
+                
+                // Clear live chat messages
+                liveChatMessages = [];
+                localStorage.removeItem('liveChatMessages');
+                
+                saveData();
+                renderMessages();
+                renderLiveChatMessages();
+                
+                addNotification('All communications cleared', 'success');
+            }
         }
         
         // Live Chat Functionality
