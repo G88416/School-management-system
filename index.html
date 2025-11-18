@@ -14,22 +14,37 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script> <!-- Stripe SDK -->
     <style>
+        :root {
+            /* Default Theme (Purple Gradient) */
+            --primary-gradient-start: #667eea;
+            --primary-gradient-end: #764ba2;
+            --text-color: #fff;
+            --card-bg: rgba(255, 255, 255, 0.25);
+            --card-bg-hover: rgba(255, 255, 255, 0.35);
+            --sidebar-bg: rgba(255, 255, 255, 0.15);
+            --sidebar-border: rgba(255, 255, 255, 0.3);
+            --table-bg: rgba(255, 255, 255, 0.1);
+            --table-th-bg: rgba(255, 255, 255, 0.2);
+            --btn-toggle-bg: rgba(255, 255, 255, 0.2);
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
+            background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+            color: var(--text-color);
             min-height: 100vh;
+            transition: background 0.5s ease;
         }
         .sidebar {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--sidebar-bg);
             backdrop-filter: blur(15px);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            border-right: 1px solid var(--sidebar-border);
             height: 100vh;
             position: fixed;
             width: 260px;
             padding: 20px;
             overflow-y: auto;
-            transition: width 0.3s ease;
+            transition: width 0.3s ease, background 0.5s ease;
             z-index: 1000;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
         }
@@ -62,8 +77,8 @@
         }
         .content.expanded { margin-left: 70px; }
         .card-metric {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, var(--card-bg), var(--card-bg-hover));
+            border: 1px solid var(--sidebar-border);
             border-radius: 15px;
             backdrop-filter: blur(10px);
             transition: all 0.3s;
@@ -72,15 +87,16 @@
         .card-metric:hover { 
             transform: translateY(-8px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.25));
+            background: linear-gradient(135deg, var(--card-bg-hover), var(--card-bg));
         }
         .table {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--table-bg);
             border-radius: 15px;
             overflow: hidden;
             backdrop-filter: blur(10px);
+            transition: background 0.5s ease;
         }
-        .table th { background: rgba(255, 255, 255, 0.2); color: #fff; }
+        .table th { background: var(--table-th-bg); color: var(--text-color); transition: background 0.5s ease; }
         .modal-content {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -92,9 +108,10 @@
             top: 20px;
             left: 270px;
             z-index: 1001;
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--btn-toggle-bg);
             border: none;
-            color: #fff;
+            color: var(--text-color);
+            transition: background 0.5s ease;
         }
         .btn-toggle-sidebar.expanded { left: 80px; }
         #notificationBell {
@@ -161,6 +178,49 @@
         .cert-expiry { color: #ffc107; }
         .cert-expired { color: #dc3545; }
         .lesson-plan { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; }
+        
+        /* Theme Generator Styles */
+        .theme-option {
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .theme-option:hover {
+            transform: scale(1.05);
+        }
+        .theme-preview {
+            width: 120px;
+            height: 80px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .theme-option.active .theme-preview {
+            border-color: #fff;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+        }
+        .theme-option.active .theme-check {
+            display: block !important;
+            color: #fff;
+            font-size: 2rem;
+            animation: checkPop 0.3s ease;
+        }
+        .theme-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
         
         /* Enhanced Teachers Module Styles */
         #teachers .nav-tabs {
@@ -1216,6 +1276,61 @@
                         </div>
                         <button class="btn btn-primary" onclick="saveGrokSettings()">Save Grok Settings</button>
                         <button class="btn btn-secondary ms-2" onclick="configureGrokAPI()">Configure</button>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5>Enhanced Theme Generator</h5>
+                        <p>Choose from 5 professional color themes to customize the appearance of the application.</p>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="d-flex flex-wrap gap-3" id="themeSelector">
+                                    <!-- Theme 1: Default Purple -->
+                                    <div class="theme-option" onclick="applyTheme('default')" data-theme="default">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Default Purple</div>
+                                    </div>
+                                    
+                                    <!-- Theme 2: Ocean Blue -->
+                                    <div class="theme-option" onclick="applyTheme('ocean')" data-theme="ocean">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Ocean Blue</div>
+                                    </div>
+                                    
+                                    <!-- Theme 3: Forest Green -->
+                                    <div class="theme-option" onclick="applyTheme('forest')" data-theme="forest">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Forest Green</div>
+                                    </div>
+                                    
+                                    <!-- Theme 4: Sunset Orange -->
+                                    <div class="theme-option" onclick="applyTheme('sunset')" data-theme="sunset">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #f46b45 0%, #eea849 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Sunset Orange</div>
+                                    </div>
+                                    
+                                    <!-- Theme 5: Midnight Dark -->
+                                    <div class="theme-option" onclick="applyTheme('midnight')" data-theme="midnight">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #232526 0%, #414345 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Midnight Dark</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your selected theme will be saved automatically and persist across sessions. The Default Purple theme is the original theme.
+                        </div>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -6385,6 +6500,120 @@
             }
         }
         
+        // Theme Generator Functions
+        const themes = {
+            default: {
+                name: 'Default Purple',
+                primaryGradientStart: '#667eea',
+                primaryGradientEnd: '#764ba2',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            ocean: {
+                name: 'Ocean Blue',
+                primaryGradientStart: '#1e3c72',
+                primaryGradientEnd: '#2a5298',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            forest: {
+                name: 'Forest Green',
+                primaryGradientStart: '#134e5e',
+                primaryGradientEnd: '#71b280',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            sunset: {
+                name: 'Sunset Orange',
+                primaryGradientStart: '#f46b45',
+                primaryGradientEnd: '#eea849',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            midnight: {
+                name: 'Midnight Dark',
+                primaryGradientStart: '#232526',
+                primaryGradientEnd: '#414345',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            }
+        };
+        
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            if (!theme) return;
+            
+            // Apply CSS variables
+            const root = document.documentElement;
+            root.style.setProperty('--primary-gradient-start', theme.primaryGradientStart);
+            root.style.setProperty('--primary-gradient-end', theme.primaryGradientEnd);
+            root.style.setProperty('--text-color', theme.textColor);
+            root.style.setProperty('--card-bg', theme.cardBg);
+            root.style.setProperty('--card-bg-hover', theme.cardBgHover);
+            root.style.setProperty('--sidebar-bg', theme.sidebarBg);
+            root.style.setProperty('--sidebar-border', theme.sidebarBorder);
+            root.style.setProperty('--table-bg', theme.tableBg);
+            root.style.setProperty('--table-th-bg', theme.tableThBg);
+            root.style.setProperty('--btn-toggle-bg', theme.btnToggleBg);
+            
+            // Save to localStorage
+            localStorage.setItem('selectedTheme', themeName);
+            
+            // Update UI to show active theme
+            updateThemeSelector(themeName);
+            
+            // Show notification
+            addNotification(`Theme changed to ${theme.name}`, 'success');
+        }
+        
+        function updateThemeSelector(themeName) {
+            // Remove active class from all theme options
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            // Add active class to selected theme
+            const selectedTheme = document.querySelector(`[data-theme="${themeName}"]`);
+            if (selectedTheme) {
+                selectedTheme.classList.add('active');
+            }
+        }
+        
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+            applyTheme(savedTheme);
+        }
+        
         // Vault Functions
         function updateVaultMetrics() {
             document.getElementById('vaultTotalItems').textContent = dataVault.length;
@@ -7410,6 +7639,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         // Initialize
         loadData();
         populateSelects();
+        loadSavedTheme(); // Load saved theme on page load
         document.getElementById('payrollMonthFilter').value = new Date().toISOString().slice(0,7);
         document.getElementById('bulkAttendanceDate').value = new Date().toISOString().split('T')[0];
         if (document.getElementById('calendarMonth')) {
