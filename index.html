@@ -540,6 +540,9 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#teacher-chat" onclick="renderTeacherChat()">Chat</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#teacher-incidents" onclick="loadTeacherIncidents()">Incident Reports</a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="lesson-plans">
@@ -844,6 +847,46 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="tab-pane fade" id="teacher-incidents">
+                        <h4>Incident Reports (Read-Only)</h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>View incident reports for your students. These reports are managed by the administration.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-control" id="teacherIncidentTypeFilter" onchange="loadTeacherIncidents()">
+                                    <option value="">All Types</option>
+                                    <option value="behavioral">Behavioral</option>
+                                    <option value="academic">Academic</option>
+                                    <option value="medical">Medical</option>
+                                    <option value="disciplinary">Disciplinary</option>
+                                    <option value="positive">Positive Recognition</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-control" id="teacherIncidentStudentFilter" onchange="loadTeacherIncidents()">
+                                    <option value="">All Students</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="date" class="form-control" id="teacherIncidentDateFilter" onchange="loadTeacherIncidents()">
+                            </div>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Description</th>
+                                    <th>Action Taken</th>
+                                    <th>Reported By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherIncidentsTable"></tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -1376,11 +1419,23 @@
             <!-- Reports -->
             <section id="reports" class="section d-none admin-only">
                 <h2>Reports</h2>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button class="btn btn-primary" onclick="showAddIncidentModal()">
+                            <i class="fas fa-plus me-2"></i>Add Incident Report
+                        </button>
+                        <button class="btn btn-info ms-2" onclick="viewAllIncidents()">
+                            <i class="fas fa-list me-2"></i>View All Incidents
+                        </button>
+                    </div>
+                </div>
                 <select id="reportType" class="form-select mb-3" style="width: auto;">
                     <option value="attendance">Attendance Report</option>
                     <option value="fees">Fee Report</option>
                     <option value="exams">Exam Report</option>
                     <option value="hr">HR Report</option>
+                    <option value="incidents">Incident Reports</option>
+                    <option value="events">Events Report</option>
                 </select>
                 <button class="btn btn-primary mb-3" onclick="generateReport()">Generate</button>
                 <button class="btn btn-success mb-3" onclick="exportReport()">Export</button>
@@ -6994,10 +7049,56 @@
                 case 'hr':
                     report = 'HR Report: ' + staff.length + ' staff';
                     break;
+                case 'incidents':
+                    report = `Incident Reports: ${incidentReports.length} total reports<br>
+                             High Severity: ${incidentReports.filter(i => i.severity === 'high').length}<br>
+                             Medium Severity: ${incidentReports.filter(i => i.severity === 'medium').length}<br>
+                             Low Severity: ${incidentReports.filter(i => i.severity === 'low').length}`;
+                    break;
+                case 'events':
+                    const today = new Date().toISOString().split('T')[0];
+                    report = `School Events: ${schoolEvents.length} total events<br>
+                             Upcoming: ${schoolEvents.filter(e => e.date >= today).length}<br>
+                             Past: ${schoolEvents.filter(e => e.date < today).length}<br>
+                             Notifications Sent: ${schoolEvents.filter(e => e.notificationsSent > 0).length}`;
+                    break;
             }
             document.getElementById('reportOutput').innerHTML = `<div class="report-card">${report}</div>`;
             document.getElementById('reportOutput').classList.remove('d-none');
         }
+        
+        function viewAllIncidents() {
+            const reportOutput = document.getElementById('reportOutput');
+            reportOutput.classList.remove('d-none');
+            
+            let html = '<h4>All Incident Reports</h4>';
+            html += '<table class="table table-striped"><thead><tr>';
+            html += '<th>Date</th><th>Student</th><th>Type</th><th>Severity</th><th>Description</th><th>Action</th><th>Reporter</th>';
+            html += '</tr></thead><tbody>';
+            
+            incidentReports.forEach(incident => {
+                const severityBadge = incident.severity === 'high' ? 'bg-danger' : 
+                                    incident.severity === 'medium' ? 'bg-warning' : 'bg-info';
+                html += `<tr>
+                    <td>${incident.date}</td>
+                    <td>${incident.studentName}</td>
+                    <td><span class="badge bg-secondary">${incident.type}</span></td>
+                    <td><span class="badge ${severityBadge}">${incident.severity}</span></td>
+                    <td>${incident.description}</td>
+                    <td>${incident.action || '-'}</td>
+                    <td>${incident.reportedBy}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            
+            if (incidentReports.length === 0) {
+                html = '<p class="text-center text-muted">No incident reports found.</p>';
+            }
+            
+            reportOutput.innerHTML = html;
+        }
+        
         function exportReport() {
             addNotification('Report exported (mock)', 'success');
         }
@@ -9202,6 +9303,62 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             document.getElementById('incidentSeverity').value = '';
             document.getElementById('incidentDescription').value = '';
             document.getElementById('incidentAction').value = '';
+        }
+        
+        // ========================================
+        // TEACHER INCIDENT REPORT FUNCTIONS
+        // ========================================
+        
+        function loadTeacherIncidents() {
+            if (!currentUser || currentUser.role !== 'teacher') return;
+            
+            const typeFilter = document.getElementById('teacherIncidentTypeFilter')?.value || '';
+            const studentFilter = document.getElementById('teacherIncidentStudentFilter')?.value || '';
+            const dateFilter = document.getElementById('teacherIncidentDateFilter')?.value || '';
+            
+            let filteredIncidents = incidentReports;
+            
+            if (typeFilter) {
+                filteredIncidents = filteredIncidents.filter(i => i.type === typeFilter);
+            }
+            if (studentFilter) {
+                filteredIncidents = filteredIncidents.filter(i => i.studentId == studentFilter);
+            }
+            if (dateFilter) {
+                filteredIncidents = filteredIncidents.filter(i => i.date === dateFilter);
+            }
+            
+            // Populate student filter if not already populated
+            const studentSelect = document.getElementById('teacherIncidentStudentFilter');
+            if (studentSelect && studentSelect.options.length === 1) {
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.name} ${student.surname || ''} (${student.grade || 'N/A'})`;
+                    studentSelect.appendChild(option);
+                });
+            }
+            
+            const tbody = document.getElementById('teacherIncidentsTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = filteredIncidents.map(incident => {
+                const severityBadge = incident.severity === 'high' ? 'bg-danger' : 
+                                    incident.severity === 'medium' ? 'bg-warning' : 'bg-info';
+                return `<tr>
+                    <td>${incident.date}</td>
+                    <td>${incident.studentName}</td>
+                    <td><span class="badge bg-secondary">${incident.type}</span></td>
+                    <td><span class="badge ${severityBadge}">${incident.severity}</span></td>
+                    <td>${incident.description}</td>
+                    <td>${incident.action || '-'}</td>
+                    <td>${incident.reportedBy}</td>
+                </tr>`;
+            }).join('');
+            
+            if (filteredIncidents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No incident reports found.</td></tr>';
+            }
         }
 
         // Search debounces
