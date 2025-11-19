@@ -2890,6 +2890,193 @@
                 </div>
             </div>
         </div>
+        <!-- Add Event Modal -->
+        <div class="modal fade" id="addEventModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add School Event</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="eventName" class="form-control mb-2" placeholder="Event Name *" required>
+                        <select id="eventType" class="form-control mb-2">
+                            <option value="">Select Event Type *</option>
+                            <option value="excursion">Excursion</option>
+                            <option value="fundraising">Fundraising</option>
+                            <option value="sports">Sports Day</option>
+                            <option value="cultural">Cultural Event</option>
+                            <option value="academic">Academic Event</option>
+                            <option value="meeting">Parent-Teacher Meeting</option>
+                            <option value="ceremony">Ceremony</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <input type="date" id="eventDate" class="form-control mb-2" placeholder="Event Date *" required>
+                        <input type="time" id="eventTime" class="form-control mb-2" placeholder="Event Time *" required>
+                        <input type="text" id="eventLocation" class="form-control mb-2" placeholder="Location *" required>
+                        <textarea id="eventDescription" class="form-control mb-2" rows="3" placeholder="Event Description"></textarea>
+                        <select id="eventParticipants" class="form-control mb-2">
+                            <option value="all">All Students & Staff</option>
+                            <option value="students">Students Only</option>
+                            <option value="staff">Staff Only</option>
+                            <option value="parents">Parents Only</option>
+                            <option value="specific">Specific Grades</option>
+                        </select>
+                        <div id="specificGradesContainer" class="d-none mb-2">
+                            <input type="text" id="eventSpecificGrades" class="form-control" placeholder="Enter grades (e.g., Grade 8, Grade 9)">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="checkbox" id="eventSendNotification" class="form-check-input" checked>
+                            <label class="form-check-label" for="eventSendNotification">
+                                Send automatic notifications to parents and teachers
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="addEvent()">
+                            <i class="fas fa-plus me-2"></i>Add Event
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Excursion Modal -->
+        <div class="modal fade" id="addExcursionModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Excursion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="excursionName" class="form-control mb-2" placeholder="Excursion Name *" required>
+                        <input type="date" id="excursionDate" class="form-control mb-2" placeholder="Date *" required>
+                        <input type="time" id="excursionTime" class="form-control mb-2" placeholder="Departure Time *" required>
+                        <input type="text" id="excursionDestination" class="form-control mb-2" placeholder="Destination *" required>
+                        <input type="number" id="excursionCost" class="form-control mb-2" placeholder="Cost per Student (R)" min="0">
+                        <textarea id="excursionDescription" class="form-control mb-2" rows="3" placeholder="Description and requirements"></textarea>
+                        <input type="text" id="excursionGrades" class="form-control mb-2" placeholder="Grades participating (e.g., Grade 8, Grade 9)">
+                        <input type="date" id="excursionDeadline" class="form-control mb-2" placeholder="Permission slip deadline">
+                        <div class="form-check mb-2">
+                            <input type="checkbox" id="excursionSendNotification" class="form-check-input" checked>
+                            <label class="form-check-label" for="excursionSendNotification">
+                                Send automatic notifications to parents and teachers
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" onclick="addExcursion()">
+                            <i class="fas fa-bus me-2"></i>Add Excursion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Fundraising Modal -->
+        <div class="modal fade" id="addFundraisingModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Fundraising Event</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="fundraisingName" class="form-control mb-2" placeholder="Event Name *" required>
+                        <input type="date" id="fundraisingDate" class="form-control mb-2" placeholder="Date *" required>
+                        <input type="time" id="fundraisingTime" class="form-control mb-2" placeholder="Time *" required>
+                        <input type="text" id="fundraisingLocation" class="form-control mb-2" placeholder="Location *" required>
+                        <input type="number" id="fundraisingGoal" class="form-control mb-2" placeholder="Fundraising Goal (R)" min="0">
+                        <textarea id="fundraisingDescription" class="form-control mb-2" rows="3" placeholder="Description and purpose"></textarea>
+                        <input type="text" id="fundraisingContact" class="form-control mb-2" placeholder="Contact Person">
+                        <div class="form-check mb-2">
+                            <input type="checkbox" id="fundraisingSendNotification" class="form-check-input" checked>
+                            <label class="form-check-label" for="fundraisingSendNotification">
+                                Send automatic notifications to parents and teachers
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" onclick="addFundraising()">
+                            <i class="fas fa-hand-holding-usd me-2"></i>Add Fundraising
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Request Meeting Modal -->
+        <div class="modal fade" id="requestMeetingModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Request Meeting with Teacher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <select id="meetingTeacher" class="form-control mb-2">
+                            <option value="">Select Teacher *</option>
+                        </select>
+                        <select id="meetingType" class="form-control mb-2">
+                            <option value="">Meeting Type *</option>
+                            <option value="virtual">Virtual Meeting</option>
+                            <option value="in-person">In-Person Meeting</option>
+                        </select>
+                        <input type="date" id="meetingDate" class="form-control mb-2" placeholder="Preferred Date *" required>
+                        <input type="time" id="meetingTime" class="form-control mb-2" placeholder="Preferred Time *" required>
+                        <textarea id="meetingReason" class="form-control mb-2" rows="3" placeholder="Reason for meeting *" required></textarea>
+                        <input type="text" id="meetingContact" class="form-control mb-2" placeholder="Your Contact Number">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="submitMeetingRequest()">
+                            <i class="fas fa-calendar-plus me-2"></i>Request Meeting
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Incident Report Modal (Admin Only) -->
+        <div class="modal fade" id="addIncidentModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Incident Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <select id="incidentStudent" class="form-control mb-2">
+                            <option value="">Select Student *</option>
+                        </select>
+                        <select id="incidentType" class="form-control mb-2">
+                            <option value="">Incident Type *</option>
+                            <option value="behavioral">Behavioral</option>
+                            <option value="academic">Academic</option>
+                            <option value="medical">Medical</option>
+                            <option value="disciplinary">Disciplinary</option>
+                            <option value="positive">Positive Recognition</option>
+                        </select>
+                        <select id="incidentSeverity" class="form-control mb-2">
+                            <option value="">Severity *</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <input type="date" id="incidentDate" class="form-control mb-2" value="" required>
+                        <textarea id="incidentDescription" class="form-control mb-2" rows="3" placeholder="Incident Description *" required></textarea>
+                        <textarea id="incidentAction" class="form-control mb-2" rows="2" placeholder="Action Taken"></textarea>
+                        <input type="text" id="incidentReporter" class="form-control mb-2" placeholder="Reported By" value="">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="addIncidentReport()">
+                            <i class="fas fa-plus me-2"></i>Add Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -2933,6 +3120,10 @@
         var selectedChatStudent = null;
         var isOnline = navigator.onLine;
         var offlineQueue = [];
+        var schoolEvents = [];
+        var meetingRequests = [];
+        var incidentReports = [];
+        var wellnessPrograms = [];
         // MX-4051 PDF Data
         var mx4051Data = [
             { class: '1A', accession: '2890', surname: 'CHAUKE', first_name: 'Nobule', educator: 'K MOGANE' },
@@ -3010,6 +3201,10 @@
             uploadedWork = JSON.parse(localStorage.getItem('uploadedWork') || '[]');
             calendarEvents = JSON.parse(localStorage.getItem('calendarEvents') || '[]');
             dataVault = JSON.parse(localStorage.getItem('dataVault') || '[]');
+            schoolEvents = JSON.parse(localStorage.getItem('schoolEvents') || '[]');
+            meetingRequests = JSON.parse(localStorage.getItem('meetingRequests') || '[]');
+            incidentReports = JSON.parse(localStorage.getItem('incidentReports') || '[]');
+            wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
             integrateEducatorsAsStaff();
             if (students.length === 0) generateDemoData();
         }
@@ -3076,6 +3271,10 @@
             localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
             localStorage.setItem('adminMessages', JSON.stringify(adminMessages));
             localStorage.setItem('offlineQueue', JSON.stringify(offlineQueue));
+            localStorage.setItem('schoolEvents', JSON.stringify(schoolEvents));
+            localStorage.setItem('meetingRequests', JSON.stringify(meetingRequests));
+            localStorage.setItem('incidentReports', JSON.stringify(incidentReports));
+            localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
         }
         // Login function
         function login() {
@@ -3145,6 +3344,7 @@
                 case 'exams': renderExams(); break;
                 case 'hr': renderHR(); break;
                 case 'communication': renderMessages(); break;
+                case 'eventsManagement': loadEventsManagement(); break;
                 case 'content': renderContents(); break;
                 case 'reports': break;
                 case 'settings': loadSettings(); updateVaultMetrics(); break;
@@ -8430,6 +8630,579 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                 });
             }
         });
+
+        // ========================================
+        // EVENTS MANAGEMENT FUNCTIONS
+        // ========================================
+        
+        function loadEventsManagement() {
+            renderEventsTable();
+            updateEventsMetrics();
+            populateEventSelects();
+        }
+        
+        function renderEventsTable() {
+            const typeFilter = document.getElementById('eventTypeFilter')?.value || '';
+            const dateFilter = document.getElementById('eventDateFilter')?.value || '';
+            const searchTerm = document.getElementById('eventSearch')?.value.toLowerCase() || '';
+            
+            let filteredEvents = schoolEvents;
+            
+            if (typeFilter) {
+                filteredEvents = filteredEvents.filter(e => e.type === typeFilter);
+            }
+            if (dateFilter) {
+                filteredEvents = filteredEvents.filter(e => e.date === dateFilter);
+            }
+            if (searchTerm) {
+                filteredEvents = filteredEvents.filter(e => 
+                    e.name.toLowerCase().includes(searchTerm) || 
+                    e.location.toLowerCase().includes(searchTerm) ||
+                    e.description?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            const tbody = document.getElementById('eventsTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = filteredEvents.map(event => {
+                const statusBadge = event.status === 'upcoming' ? 'bg-primary' : 
+                                  event.status === 'completed' ? 'bg-success' : 'bg-secondary';
+                const notificationBadge = event.notificationsSent ? 
+                    `<span class="badge bg-success"><i class="fas fa-check"></i> Sent (${event.notificationsSent})</span>` :
+                    `<span class="badge bg-warning"><i class="fas fa-times"></i> Not Sent</span>`;
+                
+                return `<tr>
+                    <td>${event.name}</td>
+                    <td><span class="badge bg-info">${event.type}</span></td>
+                    <td>${event.date}</td>
+                    <td>${event.time}</td>
+                    <td>${event.location}</td>
+                    <td>${event.participants || 'All'}</td>
+                    <td><span class="badge ${statusBadge}">${event.status}</span></td>
+                    <td>${notificationBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editEvent(${event.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvent(${event.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${!event.notificationsSent ? `<button class="btn btn-sm btn-success" onclick="sendEventNotifications(${event.id})">
+                            <i class="fas fa-bell"></i> Send
+                        </button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function updateEventsMetrics() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('totalEvents').textContent = schoolEvents.length;
+            document.getElementById('upcomingEvents').textContent = schoolEvents.filter(e => e.date >= today).length;
+            document.getElementById('pastEvents').textContent = schoolEvents.filter(e => e.date < today).length;
+            document.getElementById('eventNotificationsSent').textContent = schoolEvents.filter(e => e.notificationsSent > 0).length;
+        }
+        
+        function filterEvents() {
+            renderEventsTable();
+        }
+        
+        function showAddEventModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
+            modal.show();
+            
+            // Handle participants selection
+            document.getElementById('eventParticipants').addEventListener('change', function() {
+                const specificGradesContainer = document.getElementById('specificGradesContainer');
+                if (this.value === 'specific') {
+                    specificGradesContainer.classList.remove('d-none');
+                } else {
+                    specificGradesContainer.classList.add('d-none');
+                }
+            });
+        }
+        
+        function addEvent() {
+            const name = document.getElementById('eventName').value.trim();
+            const type = document.getElementById('eventType').value;
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const location = document.getElementById('eventLocation').value.trim();
+            const description = document.getElementById('eventDescription').value.trim();
+            const participants = document.getElementById('eventParticipants').value;
+            const specificGrades = document.getElementById('eventSpecificGrades')?.value || '';
+            const sendNotification = document.getElementById('eventSendNotification').checked;
+            
+            if (!name || !type || !date || !time || !location) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const event = {
+                id: Date.now(),
+                name: name,
+                type: type,
+                date: date,
+                time: time,
+                location: location,
+                description: description,
+                participants: participants === 'specific' ? specificGrades : participants,
+                status: date >= new Date().toISOString().split('T')[0] ? 'upcoming' : 'completed',
+                notificationsSent: 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            schoolEvents.push(event);
+            saveData();
+            
+            if (sendNotification) {
+                sendEventNotifications(event.id);
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+            renderEventsTable();
+            updateEventsMetrics();
+            addNotification('Event added successfully!', 'success');
+            logAudit('Add Event', `Added event: ${name}`, 'Low');
+            
+            // Clear form
+            document.getElementById('eventName').value = '';
+            document.getElementById('eventType').value = '';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventLocation').value = '';
+            document.getElementById('eventDescription').value = '';
+        }
+        
+        function showAddExcursionModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addExcursionModal'));
+            modal.show();
+        }
+        
+        function addExcursion() {
+            const name = document.getElementById('excursionName').value.trim();
+            const date = document.getElementById('excursionDate').value;
+            const time = document.getElementById('excursionTime').value;
+            const destination = document.getElementById('excursionDestination').value.trim();
+            const cost = document.getElementById('excursionCost').value;
+            const description = document.getElementById('excursionDescription').value.trim();
+            const grades = document.getElementById('excursionGrades').value.trim();
+            const deadline = document.getElementById('excursionDeadline').value;
+            const sendNotification = document.getElementById('excursionSendNotification').checked;
+            
+            if (!name || !date || !time || !destination) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const event = {
+                id: Date.now(),
+                name: name,
+                type: 'excursion',
+                date: date,
+                time: time,
+                location: destination,
+                description: `${description}\nCost: R${cost || '0'}\nPermission deadline: ${deadline || 'TBA'}`,
+                participants: grades || 'All',
+                status: date >= new Date().toISOString().split('T')[0] ? 'upcoming' : 'completed',
+                notificationsSent: 0,
+                createdAt: new Date().toISOString(),
+                cost: cost,
+                deadline: deadline
+            };
+            
+            schoolEvents.push(event);
+            saveData();
+            
+            if (sendNotification) {
+                sendEventNotifications(event.id);
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('addExcursionModal')).hide();
+            renderEventsTable();
+            updateEventsMetrics();
+            addNotification('Excursion added successfully!', 'success');
+            logAudit('Add Excursion', `Added excursion: ${name}`, 'Low');
+            
+            // Clear form
+            document.getElementById('excursionName').value = '';
+            document.getElementById('excursionDate').value = '';
+            document.getElementById('excursionTime').value = '';
+            document.getElementById('excursionDestination').value = '';
+            document.getElementById('excursionCost').value = '';
+            document.getElementById('excursionDescription').value = '';
+            document.getElementById('excursionGrades').value = '';
+            document.getElementById('excursionDeadline').value = '';
+        }
+        
+        function showAddFundraisingModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addFundraisingModal'));
+            modal.show();
+        }
+        
+        function addFundraising() {
+            const name = document.getElementById('fundraisingName').value.trim();
+            const date = document.getElementById('fundraisingDate').value;
+            const time = document.getElementById('fundraisingTime').value;
+            const location = document.getElementById('fundraisingLocation').value.trim();
+            const goal = document.getElementById('fundraisingGoal').value;
+            const description = document.getElementById('fundraisingDescription').value.trim();
+            const contact = document.getElementById('fundraisingContact').value.trim();
+            const sendNotification = document.getElementById('fundraisingSendNotification').checked;
+            
+            if (!name || !date || !time || !location) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const event = {
+                id: Date.now(),
+                name: name,
+                type: 'fundraising',
+                date: date,
+                time: time,
+                location: location,
+                description: `${description}\nFundraising Goal: R${goal || '0'}\nContact: ${contact || 'School Office'}`,
+                participants: 'All',
+                status: date >= new Date().toISOString().split('T')[0] ? 'upcoming' : 'completed',
+                notificationsSent: 0,
+                createdAt: new Date().toISOString(),
+                goal: goal
+            };
+            
+            schoolEvents.push(event);
+            saveData();
+            
+            if (sendNotification) {
+                sendEventNotifications(event.id);
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('addFundraisingModal')).hide();
+            renderEventsTable();
+            updateEventsMetrics();
+            addNotification('Fundraising event added successfully!', 'success');
+            logAudit('Add Fundraising', `Added fundraising: ${name}`, 'Low');
+            
+            // Clear form
+            document.getElementById('fundraisingName').value = '';
+            document.getElementById('fundraisingDate').value = '';
+            document.getElementById('fundraisingTime').value = '';
+            document.getElementById('fundraisingLocation').value = '';
+            document.getElementById('fundraisingGoal').value = '';
+            document.getElementById('fundraisingDescription').value = '';
+            document.getElementById('fundraisingContact').value = '';
+        }
+        
+        function sendEventNotifications(eventId) {
+            const event = schoolEvents.find(e => e.id === eventId);
+            if (!event) return;
+            
+            // Simulate sending notifications
+            let recipientCount = 0;
+            
+            // In a real system, this would send actual notifications
+            // For now, we'll just simulate it
+            
+            // Notify parents
+            if (event.participants === 'all' || event.participants === 'students' || event.participants === 'parents') {
+                recipientCount += students.length; // All parents
+            }
+            
+            // Notify teachers
+            if (event.participants === 'all' || event.participants === 'staff') {
+                recipientCount += staff.filter(s => s.role === 'Teacher').length;
+            }
+            
+            event.notificationsSent = recipientCount;
+            event.notificationSentAt = new Date().toISOString();
+            saveData();
+            
+            renderEventsTable();
+            addNotification(`Notifications sent to ${recipientCount} recipients`, 'success');
+            
+            // Add to notification system
+            addNotification(`Event Notification: ${event.name} on ${event.date} at ${event.time}. Location: ${event.location}`, 'info');
+        }
+        
+        function editEvent(eventId) {
+            addNotification('Edit functionality coming soon!', 'info');
+        }
+        
+        function deleteEvent(eventId) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                const eventIndex = schoolEvents.findIndex(e => e.id === eventId);
+                if (eventIndex > -1) {
+                    const event = schoolEvents[eventIndex];
+                    schoolEvents.splice(eventIndex, 1);
+                    saveData();
+                    renderEventsTable();
+                    updateEventsMetrics();
+                    addNotification('Event deleted successfully', 'success');
+                    logAudit('Delete Event', `Deleted event: ${event.name}`, 'Medium');
+                }
+            }
+        }
+        
+        function showUpcomingEventsCalendar() {
+            addNotification('Calendar view coming soon!', 'info');
+        }
+        
+        function populateEventSelects() {
+            // Populate meeting teacher select
+            const meetingTeacherSelect = document.getElementById('meetingTeacher');
+            if (meetingTeacherSelect) {
+                const teachers = staff.filter(s => s.role === 'Teacher');
+                meetingTeacherSelect.innerHTML = '<option value="">Select Teacher *</option>' +
+                    teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            }
+            
+            // Populate incident student select
+            const incidentStudentSelect = document.getElementById('incidentStudent');
+            if (incidentStudentSelect) {
+                incidentStudentSelect.innerHTML = '<option value="">Select Student *</option>' +
+                    students.map(s => `<option value="${s.id}">${s.name} ${s.surname || ''} (${s.grade || 'N/A'})</option>`).join('');
+            }
+        }
+        
+        // ========================================
+        // PARENT PORTAL FUNCTIONS
+        // ========================================
+        
+        function showRequestMeetingModal() {
+            populateEventSelects();
+            const modal = new bootstrap.Modal(document.getElementById('requestMeetingModal'));
+            modal.show();
+        }
+        
+        function submitMeetingRequest() {
+            const teacherId = document.getElementById('meetingTeacher').value;
+            const type = document.getElementById('meetingType').value;
+            const date = document.getElementById('meetingDate').value;
+            const time = document.getElementById('meetingTime').value;
+            const reason = document.getElementById('meetingReason').value.trim();
+            const contact = document.getElementById('meetingContact').value.trim();
+            
+            if (!teacherId || !type || !date || !time || !reason) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const teacher = staff.find(s => s.id == teacherId);
+            if (!teacher) {
+                addNotification('Teacher not found', 'error');
+                return;
+            }
+            
+            const request = {
+                id: Date.now(),
+                parentName: currentUser.name,
+                teacherId: teacherId,
+                teacherName: teacher.name,
+                type: type,
+                requestedDate: date,
+                requestedTime: time,
+                reason: reason,
+                contact: contact,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            meetingRequests.push(request);
+            saveData();
+            
+            bootstrap.Modal.getInstance(document.getElementById('requestMeetingModal')).hide();
+            loadParentMeetingRequests();
+            addNotification('Meeting request submitted successfully!', 'success');
+            
+            // Clear form
+            document.getElementById('meetingTeacher').value = '';
+            document.getElementById('meetingType').value = '';
+            document.getElementById('meetingDate').value = '';
+            document.getElementById('meetingTime').value = '';
+            document.getElementById('meetingReason').value = '';
+            document.getElementById('meetingContact').value = '';
+        }
+        
+        function loadParentMeetingRequests() {
+            if (!currentUser || currentUser.role !== 'parent') return;
+            
+            const myRequests = meetingRequests.filter(r => r.parentName === currentUser.name);
+            const tbody = document.getElementById('parentMeetingRequestsTable');
+            
+            if (!tbody) return;
+            
+            tbody.innerHTML = myRequests.map(req => {
+                const statusBadge = req.status === 'pending' ? 'bg-warning' : 
+                                  req.status === 'approved' ? 'bg-success' : 'bg-danger';
+                return `<tr>
+                    <td>${req.teacherName}</td>
+                    <td><span class="badge bg-info">${req.type}</span></td>
+                    <td>${req.requestedDate}</td>
+                    <td>${req.requestedTime}</td>
+                    <td><span class="badge ${statusBadge}">${req.status}</span></td>
+                    <td>${req.notes || '-'}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function sendParentChat() {
+            const input = document.getElementById('parentChatInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                addNotification('Please enter a message', 'warning');
+                return;
+            }
+            
+            const chatMessage = {
+                id: Date.now(),
+                from: currentUser.name,
+                role: 'parent',
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add to a parent chat array (you can extend this)
+            let parentChats = JSON.parse(localStorage.getItem('parentChats') || '[]');
+            parentChats.push(chatMessage);
+            localStorage.setItem('parentChats', JSON.stringify(parentChats));
+            
+            input.value = '';
+            loadParentChatMessages();
+            addNotification('Message sent!', 'success');
+        }
+        
+        function loadParentChatMessages() {
+            const container = document.getElementById('parentChatMessages');
+            if (!container) return;
+            
+            let parentChats = JSON.parse(localStorage.getItem('parentChats') || '[]');
+            
+            if (parentChats.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">No messages yet. Start a conversation!</p>';
+                return;
+            }
+            
+            container.innerHTML = parentChats.map(chat => {
+                const isSent = chat.role === 'parent';
+                return `
+                    <div class="mb-3 ${isSent ? 'text-end' : 'text-start'}">
+                        <div class="d-inline-block" style="max-width: 70%; background: ${isSent ? 'rgba(0, 123, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)'}; 
+                             padding: 10px; border-radius: 10px;">
+                            <small class="text-muted">${chat.from}</small>
+                            <div style="font-size: 0.9rem;">${chat.message}</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                ${new Date(chat.timestamp).toLocaleString()}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function loadParentIncidents() {
+            if (!currentUser || currentUser.role !== 'parent') return;
+            
+            // Get child's student ID (in a real system, this would be properly linked)
+            const childStudent = students[0]; // Simplified for demo
+            if (!childStudent) return;
+            
+            const typeFilter = document.getElementById('parentIncidentTypeFilter')?.value || '';
+            const dateFilter = document.getElementById('parentIncidentDateFilter')?.value || '';
+            
+            let filteredIncidents = incidentReports.filter(i => i.studentId == childStudent.id);
+            
+            if (typeFilter) {
+                filteredIncidents = filteredIncidents.filter(i => i.type === typeFilter);
+            }
+            if (dateFilter) {
+                filteredIncidents = filteredIncidents.filter(i => i.date === dateFilter);
+            }
+            
+            const tbody = document.getElementById('parentIncidentsTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = filteredIncidents.map(incident => {
+                const severityBadge = incident.severity === 'high' ? 'bg-danger' : 
+                                    incident.severity === 'medium' ? 'bg-warning' : 'bg-info';
+                return `<tr>
+                    <td>${incident.date}</td>
+                    <td><span class="badge bg-secondary">${incident.type}</span></td>
+                    <td><span class="badge ${severityBadge}">${incident.severity}</span></td>
+                    <td>${incident.description}</td>
+                    <td>${incident.action || '-'}</td>
+                    <td>${incident.reportedBy}</td>
+                </tr>`;
+            }).join('');
+            
+            if (filteredIncidents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No incident reports found.</td></tr>';
+            }
+        }
+        
+        // ========================================
+        // INCIDENT REPORT FUNCTIONS
+        // ========================================
+        
+        function showAddIncidentModal() {
+            populateEventSelects();
+            const modal = new bootstrap.Modal(document.getElementById('addIncidentModal'));
+            // Set current date and reporter
+            document.getElementById('incidentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('incidentReporter').value = currentUser.name;
+            modal.show();
+        }
+        
+        function addIncidentReport() {
+            const studentId = document.getElementById('incidentStudent').value;
+            const type = document.getElementById('incidentType').value;
+            const severity = document.getElementById('incidentSeverity').value;
+            const date = document.getElementById('incidentDate').value;
+            const description = document.getElementById('incidentDescription').value.trim();
+            const action = document.getElementById('incidentAction').value.trim();
+            const reportedBy = document.getElementById('incidentReporter').value.trim();
+            
+            if (!studentId || !type || !severity || !date || !description) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const student = students.find(s => s.id == studentId);
+            if (!student) {
+                addNotification('Student not found', 'error');
+                return;
+            }
+            
+            const incident = {
+                id: Date.now(),
+                studentId: studentId,
+                studentName: student.name + ' ' + (student.surname || ''),
+                type: type,
+                severity: severity,
+                date: date,
+                description: description,
+                action: action,
+                reportedBy: reportedBy,
+                createdAt: new Date().toISOString()
+            };
+            
+            incidentReports.push(incident);
+            saveData();
+            
+            bootstrap.Modal.getInstance(document.getElementById('addIncidentModal')).hide();
+            addNotification('Incident report added successfully!', 'success');
+            logAudit('Add Incident', `Added incident report for ${student.name}`, 'Medium');
+            
+            // Clear form
+            document.getElementById('incidentStudent').value = '';
+            document.getElementById('incidentType').value = '';
+            document.getElementById('incidentSeverity').value = '';
+            document.getElementById('incidentDescription').value = '';
+            document.getElementById('incidentAction').value = '';
+        }
 
         // Search debounces
         document.getElementById('admissionSearch').addEventListener('input', debounce(renderAdmissions, 300));
