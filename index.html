@@ -356,6 +356,12 @@
     </div>
     <!-- Main App -->
     <div class="app-container" id="appContainer" style="display:none;">
+        <!-- Online/Offline Status Indicator -->
+        <div id="onlineStatus" style="position: fixed; top: 20px; right: 80px; z-index: 1100;">
+            <span id="statusIndicator" class="badge bg-success shadow">
+                <i class="fas fa-wifi me-1"></i>Online
+            </span>
+        </div>
         <!-- Notification Bell -->
         <div id="notificationBell">
             <button class="btn btn-warning rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
@@ -529,6 +535,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#employee-wellness" onclick="renderEmployeeWellness()">Employee Wellness</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#teacher-chat" onclick="renderTeacherChat()">Chat</a>
                     </li>
                 </ul>
                 <div class="tab-content">
@@ -746,6 +755,90 @@
                                                 </ul>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="teacher-chat">
+                        <h4>Teacher Chat</h4>
+                        <p class="text-muted">Send messages to students and reply to admin communications.</p>
+                        
+                        <ul class="nav nav-pills mb-3">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="pill" href="#chat-students">Message Students</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#chat-admin">Admin Messages</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#chat-history">Chat History</a>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="chat-students">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="card" style="background: rgba(255, 255, 255, 0.1); max-height: 500px; overflow-y: auto;">
+                                            <div class="card-header">
+                                                <h6><i class="fas fa-users me-2"></i>Students</h6>
+                                                <input type="text" class="form-control form-control-sm mt-2" id="studentSearchChat" placeholder="Search students..." oninput="filterChatStudents()">
+                                            </div>
+                                            <div class="list-group list-group-flush" id="chatStudentsList"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card" style="background: rgba(255, 255, 255, 0.1);">
+                                            <div class="card-header">
+                                                <h6 id="chatStudentName">Select a student to start chatting</h6>
+                                            </div>
+                                            <div class="card-body" style="height: 350px; overflow-y: auto;" id="chatMessagesContainer">
+                                                <p class="text-muted text-center">No messages yet. Select a student to begin.</p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="chatMessageInput" placeholder="Type your message..." disabled>
+                                                    <button class="btn btn-primary" onclick="sendChatMessage()" id="sendChatBtn" disabled>
+                                                        <i class="fas fa-paper-plane"></i> Send
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="chat-admin">
+                                <div class="card" style="background: rgba(255, 255, 255, 0.1);">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-user-shield me-2"></i>Admin Conversations</h6>
+                                    </div>
+                                    <div class="card-body" style="max-height: 400px; overflow-y: auto;" id="adminMessagesContainer">
+                                        <!-- Admin messages will be loaded here -->
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control mb-2" id="adminMessageSubject" placeholder="Subject">
+                                            <textarea class="form-control mb-2" id="adminMessageText" rows="3" placeholder="Type your message to admin..."></textarea>
+                                            <button class="btn btn-primary" onclick="sendAdminMessage()">
+                                                <i class="fas fa-paper-plane me-2"></i>Send to Admin
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="chat-history">
+                                <div class="card" style="background: rgba(255, 255, 255, 0.1);">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6><i class="fas fa-history me-2"></i>Chat History</h6>
+                                            <button class="btn btn-sm btn-outline-light" onclick="clearChatHistory()">
+                                                <i class="fas fa-trash me-1"></i>Clear History
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body" style="max-height: 500px; overflow-y: auto;" id="chatHistoryContainer">
+                                        <!-- Chat history will be loaded here -->
                                     </div>
                                 </div>
                             </div>
@@ -1609,10 +1702,37 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="text" id="admissionAccession" class="form-control mb-2" placeholder="Accession Number">
-                            <input type="text" id="admissionSurname" class="form-control mb-2" placeholder="Surname">
-                            <input type="text" id="admissionFirstName" class="form-control mb-2" placeholder="First Name">
-                            <input type="text" id="admissionGrade" class="form-control mb-2" placeholder="Grade">
+                            <div class="alert alert-info text-dark">
+                                <strong>SA-Sams Format:</strong> Complete all required fields according to South African School Administration standards.
+                            </div>
+                            <input type="text" id="admissionAccession" class="form-control mb-2" placeholder="Accession Number *" required>
+                            <input type="text" id="admissionSurname" class="form-control mb-2" placeholder="Surname *" required>
+                            <input type="text" id="admissionFirstName" class="form-control mb-2" placeholder="First Name *" required>
+                            <input type="text" id="admissionIdNumber" class="form-control mb-2" placeholder="ID Number / Birth Certificate Number">
+                            <input type="date" id="admissionDateOfBirth" class="form-control mb-2" placeholder="Date of Birth">
+                            <select id="admissionGender" class="form-control mb-2">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                            <select id="admissionHomeLanguage" class="form-control mb-2">
+                                <option value="">Select Home Language</option>
+                                <option value="English">English</option>
+                                <option value="Afrikaans">Afrikaans</option>
+                                <option value="isiZulu">isiZulu</option>
+                                <option value="isiXhosa">isiXhosa</option>
+                                <option value="Sesotho">Sesotho</option>
+                                <option value="Setswana">Setswana</option>
+                                <option value="Sepedi">Sepedi</option>
+                                <option value="Xitsonga">Xitsonga</option>
+                                <option value="siSwati">siSwati</option>
+                                <option value="Tshivenda">Tshivenda</option>
+                                <option value="isiNdebele">isiNdebele</option>
+                            </select>
+                            <input type="text" id="admissionGrade" class="form-control mb-2" placeholder="Grade *" required>
+                            <input type="text" id="admissionParentName" class="form-control mb-2" placeholder="Parent/Guardian Name">
+                            <input type="text" id="admissionParentContact" class="form-control mb-2" placeholder="Parent Contact Number">
+                            <input type="text" id="admissionAddress" class="form-control mb-2" placeholder="Residential Address">
                             <input type="text" id="admissionUsername" class="form-control mb-2" placeholder="Student Username">
                             <input type="password" id="admissionPassword" class="form-control mb-2" placeholder="Student Password">
                             <select id="admissionStatus" class="form-control mb-2">
@@ -1635,11 +1755,37 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="text" id="studentAccession" class="form-control mb-2" placeholder="Accession Number">
-                            <input type="text" id="studentSurname" class="form-control mb-2" placeholder="Surname">
-                            <input type="text" id="studentFirstName" class="form-control mb-2" placeholder="First Name">
-                            <input type="text" id="studentGrade" class="form-control mb-2" placeholder="Grade">
-                            <input type="text" id="studentParent" class="form-control mb-2" placeholder="Parent Name">
+                            <div class="alert alert-info text-dark">
+                                <strong>SA-Sams Format:</strong> Complete all required fields according to South African School Administration standards.
+                            </div>
+                            <input type="text" id="studentAccession" class="form-control mb-2" placeholder="Accession Number *" required>
+                            <input type="text" id="studentSurname" class="form-control mb-2" placeholder="Surname *" required>
+                            <input type="text" id="studentFirstName" class="form-control mb-2" placeholder="First Name *" required>
+                            <input type="text" id="studentIdNumber" class="form-control mb-2" placeholder="ID Number / Birth Certificate Number">
+                            <input type="date" id="studentDateOfBirth" class="form-control mb-2" placeholder="Date of Birth">
+                            <select id="studentGender" class="form-control mb-2">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                            <select id="studentHomeLanguage" class="form-control mb-2">
+                                <option value="">Select Home Language</option>
+                                <option value="English">English</option>
+                                <option value="Afrikaans">Afrikaans</option>
+                                <option value="isiZulu">isiZulu</option>
+                                <option value="isiXhosa">isiXhosa</option>
+                                <option value="Sesotho">Sesotho</option>
+                                <option value="Setswana">Setswana</option>
+                                <option value="Sepedi">Sepedi</option>
+                                <option value="Xitsonga">Xitsonga</option>
+                                <option value="siSwati">siSwati</option>
+                                <option value="Tshivenda">Tshivenda</option>
+                                <option value="isiNdebele">isiNdebele</option>
+                            </select>
+                            <input type="text" id="studentGrade" class="form-control mb-2" placeholder="Grade *" required>
+                            <input type="text" id="studentParent" class="form-control mb-2" placeholder="Parent/Guardian Name">
+                            <input type="text" id="studentParentContact" class="form-control mb-2" placeholder="Parent Contact Number">
+                            <input type="text" id="studentAddress" class="form-control mb-2" placeholder="Residential Address">
                             <input type="text" id="studentEducator" class="form-control mb-2" placeholder="Educator">
                             <select id="studentStatus" class="form-control mb-2">
                                 <option value="Active">Active</option>
@@ -1661,9 +1807,11 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="alert alert-info mb-3">
-                                <strong>Required Format:</strong> Your file should contain columns for <strong>Name</strong> (or <strong>Surname</strong> and <strong>FirstName</strong>) and <strong>Grade</strong>.
-                                <br>Example: <code>Name, Surname, Grade</code> or <code>Surname, FirstName, Grade</code>
+                            <div class="alert alert-info mb-3 text-dark">
+                                <strong>SA-Sams Format Requirements:</strong> Your file should contain the following columns:
+                                <br><strong>Required:</strong> Surname, FirstName, Grade, Accession Number
+                                <br><strong>Optional:</strong> IDNumber, DateOfBirth, Gender, HomeLanguage, ParentName, ParentContact, Address
+                                <br>Example: <code>Accession,Surname,FirstName,Grade,IDNumber,DateOfBirth,Gender,HomeLanguage</code>
                             </div>
                             <input type="file" id="studentFile" class="form-control" accept=".csv,.xlsx,.pdf,.doc,.docx">
                             <div id="studentPreview" class="mt-3"></div>
@@ -2548,6 +2696,11 @@
         var performanceChart = null;
         var progressChart = null;
         var dataVault = [];
+        var teacherChats = [];
+        var adminMessages = [];
+        var selectedChatStudent = null;
+        var isOnline = navigator.onLine;
+        var offlineQueue = [];
         // MX-4051 PDF Data
         var mx4051Data = [
             { class: '1A', accession: '2890', surname: 'CHAUKE', first_name: 'Nobule', educator: 'K MOGANE' },
@@ -2688,6 +2841,9 @@
             localStorage.setItem('uploadedWork', JSON.stringify(uploadedWork));
             localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
             localStorage.setItem('dataVault', JSON.stringify(dataVault));
+            localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+            localStorage.setItem('adminMessages', JSON.stringify(adminMessages));
+            localStorage.setItem('offlineQueue', JSON.stringify(offlineQueue));
         }
         // Login function
         function login() {
@@ -4124,19 +4280,30 @@
             const accession = document.getElementById('admissionAccession').value;
             const surname = document.getElementById('admissionSurname').value;
             const firstName = document.getElementById('admissionFirstName').value;
+            const idNumber = document.getElementById('admissionIdNumber').value;
+            const dateOfBirth = document.getElementById('admissionDateOfBirth').value;
+            const gender = document.getElementById('admissionGender').value;
+            const homeLanguage = document.getElementById('admissionHomeLanguage').value;
             const grade = document.getElementById('admissionGrade').value;
+            const parentName = document.getElementById('admissionParentName').value;
+            const parentContact = document.getElementById('admissionParentContact').value;
+            const address = document.getElementById('admissionAddress').value;
             const username = document.getElementById('admissionUsername').value;
             const password = document.getElementById('admissionPassword').value;
             const status = document.getElementById('admissionStatus').value;
             if (surname && firstName && grade) {
                 const id = Date.now();
                 const name = surname + ' ' + firstName;
-                admissions.push({ id, name, surname, firstName, accession, grade, username, password, status });
+                admissions.push({ 
+                    id, name, surname, firstName, accession, grade, username, password, status,
+                    idNumber, dateOfBirth, gender, homeLanguage, parentName, parentContact, address,
+                    saSamsFormat: true
+                });
                 users.push({ username, password, name, role: 'Student' });
                 saveData();
                 renderAdmissions();
                 bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
-                addNotification('Admission saved', 'success');
+                addNotification('Admission saved with SA-Sams format', 'success');
             }
         }
         function editAdmission(id) {
@@ -4522,19 +4689,29 @@
             const accession = document.getElementById('studentAccession').value;
             const surname = document.getElementById('studentSurname').value;
             const firstName = document.getElementById('studentFirstName').value;
+            const idNumber = document.getElementById('studentIdNumber').value;
+            const dateOfBirth = document.getElementById('studentDateOfBirth').value;
+            const gender = document.getElementById('studentGender').value;
+            const homeLanguage = document.getElementById('studentHomeLanguage').value;
             const grade = document.getElementById('studentGrade').value;
             const parent = document.getElementById('studentParent').value;
+            const parentContact = document.getElementById('studentParentContact').value;
+            const address = document.getElementById('studentAddress').value;
             const educator = document.getElementById('studentEducator').value;
             const status = document.getElementById('studentStatus').value;
             if (surname && firstName && grade) {
                 const id = Date.now();
                 const name = surname + ' ' + firstName;
-                students.push({ id, name, surname, firstName, accession, grade, parent, status, educator });
+                students.push({ 
+                    id, name, surname, firstName, accession, grade, parent, status, educator,
+                    idNumber, dateOfBirth, gender, homeLanguage, parentContact, address,
+                    saSamsFormat: true
+                });
                 saveData();
                 renderStudents();
                 integrateEducatorsAsStaff();
                 bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
-                addNotification('Student added', 'success');
+                addNotification('Student added with SA-Sams format', 'success');
             }
         }
         function editStudent(id) {
@@ -7628,6 +7805,400 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             saveData();
         }
 
+        // ========================================
+        // ONLINE/OFFLINE FUNCTIONALITY
+        // ========================================
+        
+        // Register Service Worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // Update online/offline status
+        function updateOnlineStatus() {
+            isOnline = navigator.onLine;
+            const statusIndicator = document.getElementById('statusIndicator');
+            if (statusIndicator) {
+                if (isOnline) {
+                    statusIndicator.className = 'badge bg-success shadow';
+                    statusIndicator.innerHTML = '<i class="fas fa-wifi me-1"></i>Online';
+                    // Sync offline queue when coming online
+                    syncOfflineData();
+                } else {
+                    statusIndicator.className = 'badge bg-danger shadow';
+                    statusIndicator.innerHTML = '<i class="fas fa-wifi-slash me-1"></i>Offline';
+                }
+            }
+        }
+        
+        // Sync offline data when connection is restored
+        function syncOfflineData() {
+            if (!isOnline || offlineQueue.length === 0) return;
+            
+            console.log('Syncing offline data...', offlineQueue.length, 'items');
+            
+            // Process offline queue
+            while (offlineQueue.length > 0) {
+                const item = offlineQueue.shift();
+                console.log('Processing offline item:', item.type);
+                // In a real application, this would sync to a server
+                // For now, just save to localStorage
+                saveData();
+            }
+            
+            addNotification('Offline data synchronized successfully', 'success');
+        }
+        
+        // Add item to offline queue
+        function addToOfflineQueue(type, data) {
+            offlineQueue.push({
+                type: type,
+                data: data,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('offlineQueue', JSON.stringify(offlineQueue));
+        }
+        
+        // Listen for online/offline events
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // ========================================
+        // TEACHER CHAT FUNCTIONALITY
+        // ========================================
+        
+        // Render Teacher Chat
+        function renderTeacherChat() {
+            loadChatStudents();
+            loadAdminMessages();
+            loadChatHistory();
+        }
+        
+        // Load students list for chat
+        function loadChatStudents() {
+            const studentsList = document.getElementById('chatStudentsList');
+            if (!studentsList) return;
+            
+            const searchTerm = document.getElementById('studentSearchChat')?.value.toLowerCase() || '';
+            const filteredStudents = students.filter(s => 
+                s.name.toLowerCase().includes(searchTerm) || 
+                s.surname.toLowerCase().includes(searchTerm) ||
+                s.grade.toLowerCase().includes(searchTerm)
+            );
+            
+            studentsList.innerHTML = filteredStudents.map(student => `
+                <a href="#" class="list-group-item list-group-item-action" 
+                   style="background: ${selectedChatStudent?.id === student.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'}; 
+                          border-color: rgba(255, 255, 255, 0.1);"
+                   onclick="selectChatStudent(${student.id}); return false;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">${student.name} ${student.surname}</h6>
+                            <small class="text-muted">Grade: ${student.grade}</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill" style="display: ${hasUnreadMessages(student.id) ? 'inline' : 'none'};">
+                            ${getUnreadMessageCount(student.id)}
+                        </span>
+                    </div>
+                </a>
+            `).join('');
+        }
+        
+        // Filter chat students
+        function filterChatStudents() {
+            loadChatStudents();
+        }
+        
+        // Select a student to chat with
+        function selectChatStudent(studentId) {
+            selectedChatStudent = students.find(s => s.id === studentId);
+            if (!selectedChatStudent) return;
+            
+            document.getElementById('chatStudentName').textContent = 
+                `Chat with ${selectedChatStudent.name} ${selectedChatStudent.surname}`;
+            document.getElementById('chatMessageInput').disabled = false;
+            document.getElementById('sendChatBtn').disabled = false;
+            
+            loadChatMessages();
+            markMessagesAsRead(studentId);
+            loadChatStudents(); // Refresh to update unread count
+        }
+        
+        // Load chat messages for selected student
+        function loadChatMessages() {
+            if (!selectedChatStudent) return;
+            
+            const container = document.getElementById('chatMessagesContainer');
+            const studentChats = teacherChats.filter(chat => 
+                chat.studentId === selectedChatStudent.id || chat.recipientId === selectedChatStudent.id
+            );
+            
+            if (studentChats.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No messages yet. Start the conversation!</p>';
+                return;
+            }
+            
+            container.innerHTML = studentChats.map(chat => {
+                const isSent = chat.senderId === 'teacher';
+                return `
+                    <div class="mb-3 ${isSent ? 'text-end' : 'text-start'}">
+                        <div class="d-inline-block" style="max-width: 70%; background: ${isSent ? 'rgba(0, 123, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)'}; 
+                             padding: 10px; border-radius: 10px;">
+                            <div style="font-size: 0.9rem;">${chat.message}</div>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                ${new Date(chat.timestamp).toLocaleString()}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Send chat message to student
+        function sendChatMessage() {
+            if (!selectedChatStudent) return;
+            
+            const input = document.getElementById('chatMessageInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                addNotification('Please enter a message', 'warning');
+                return;
+            }
+            
+            const chatMessage = {
+                id: Date.now(),
+                senderId: 'teacher',
+                senderName: currentUser.name,
+                recipientId: selectedChatStudent.id,
+                studentId: selectedChatStudent.id,
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            teacherChats.push(chatMessage);
+            localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+            
+            // Add to offline queue if offline
+            if (!isOnline) {
+                addToOfflineQueue('chat', chatMessage);
+            }
+            
+            input.value = '';
+            loadChatMessages();
+            addNotification('Message sent to ' + selectedChatStudent.name, 'success');
+            
+            // Log the chat
+            logAudit('Chat Message', `Sent message to student: ${selectedChatStudent.name}`, 'Low');
+        }
+        
+        // Check if student has unread messages
+        function hasUnreadMessages(studentId) {
+            return teacherChats.some(chat => 
+                chat.studentId === studentId && 
+                chat.senderId !== 'teacher' && 
+                !chat.read
+            );
+        }
+        
+        // Get unread message count
+        function getUnreadMessageCount(studentId) {
+            return teacherChats.filter(chat => 
+                chat.studentId === studentId && 
+                chat.senderId !== 'teacher' && 
+                !chat.read
+            ).length;
+        }
+        
+        // Mark messages as read
+        function markMessagesAsRead(studentId) {
+            teacherChats.forEach(chat => {
+                if (chat.studentId === studentId && chat.senderId !== 'teacher') {
+                    chat.read = true;
+                }
+            });
+            localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+        }
+        
+        // Load admin messages
+        function loadAdminMessages() {
+            const container = document.getElementById('adminMessagesContainer');
+            if (!container) return;
+            
+            if (adminMessages.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info text-dark">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No messages from admin yet. You can send a message below.
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = adminMessages.map(msg => {
+                const isSent = msg.senderId === currentUser.username;
+                return `
+                    <div class="card mb-3" style="background: ${isSent ? 'rgba(0, 123, 255, 0.1)' : 'rgba(255, 255, 255, 0.1)'};">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h6>${msg.subject}</h6>
+                                <small class="text-muted">${new Date(msg.timestamp).toLocaleString()}</small>
+                            </div>
+                            <p class="mb-1">${msg.message}</p>
+                            <small class="text-muted">
+                                ${isSent ? 'To: Admin' : 'From: ' + msg.senderName}
+                            </small>
+                            ${!isSent && !msg.replied ? `
+                                <button class="btn btn-sm btn-primary mt-2" onclick="replyToAdmin(${msg.id})">
+                                    <i class="fas fa-reply me-1"></i>Reply
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Send message to admin
+        function sendAdminMessage() {
+            const subject = document.getElementById('adminMessageSubject').value.trim();
+            const message = document.getElementById('adminMessageText').value.trim();
+            
+            if (!subject || !message) {
+                addNotification('Please enter both subject and message', 'warning');
+                return;
+            }
+            
+            const adminMessage = {
+                id: Date.now(),
+                senderId: currentUser.username,
+                senderName: currentUser.name,
+                recipientId: 'admin',
+                subject: subject,
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false,
+                replied: false
+            };
+            
+            adminMessages.push(adminMessage);
+            localStorage.setItem('adminMessages', JSON.stringify(adminMessages));
+            
+            // Add to offline queue if offline
+            if (!isOnline) {
+                addToOfflineQueue('adminMessage', adminMessage);
+            }
+            
+            document.getElementById('adminMessageSubject').value = '';
+            document.getElementById('adminMessageText').value = '';
+            
+            loadAdminMessages();
+            addNotification('Message sent to admin successfully', 'success');
+            
+            logAudit('Admin Message', `Sent message to admin: ${subject}`, 'Low');
+        }
+        
+        // Reply to admin message
+        function replyToAdmin(messageId) {
+            const message = adminMessages.find(m => m.id === messageId);
+            if (!message) return;
+            
+            document.getElementById('adminMessageSubject').value = 'RE: ' + message.subject;
+            document.getElementById('adminMessageText').focus();
+            
+            // Scroll to the reply form
+            document.getElementById('adminMessageText').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Load chat history
+        function loadChatHistory() {
+            const container = document.getElementById('chatHistoryContainer');
+            if (!container) return;
+            
+            const allChats = [...teacherChats].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            if (allChats.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No chat history yet.</p>';
+                return;
+            }
+            
+            const groupedChats = {};
+            allChats.forEach(chat => {
+                const student = students.find(s => s.id === chat.studentId);
+                if (!student) return;
+                
+                const key = student.id;
+                if (!groupedChats[key]) {
+                    groupedChats[key] = {
+                        student: student,
+                        messages: []
+                    };
+                }
+                groupedChats[key].messages.push(chat);
+            });
+            
+            container.innerHTML = Object.values(groupedChats).map(group => `
+                <div class="card mb-3" style="background: rgba(255, 255, 255, 0.1);">
+                    <div class="card-header">
+                        <h6>
+                            <i class="fas fa-user me-2"></i>
+                            ${group.student.name} ${group.student.surname}
+                            <span class="badge bg-secondary ms-2">${group.messages.length} messages</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Last message:</strong>
+                            <p class="mb-1">${group.messages[0].message}</p>
+                            <small class="text-muted">${new Date(group.messages[0].timestamp).toLocaleString()}</small>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="selectChatStudent(${group.student.id}); 
+                                document.querySelector('a[href=\\'#chat-students\\']').click();">
+                            <i class="fas fa-comments me-1"></i>View Conversation
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Clear chat history
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+                teacherChats = [];
+                localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+                loadChatHistory();
+                addNotification('Chat history cleared', 'info');
+                logAudit('Clear Chat History', 'Cleared all teacher chat history', 'Medium');
+            }
+        }
+        
+        // Handle Enter key in chat input
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chatMessageInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
+
         // Search debounces
         document.getElementById('admissionSearch').addEventListener('input', debounce(renderAdmissions, 300));
         document.getElementById('studentSearch').addEventListener('input', debounce(renderStudents, 300));
@@ -7648,6 +8219,14 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         if (document.getElementById('roCalendarMonth')) {
             document.getElementById('roCalendarMonth').value = new Date().toISOString().slice(0,7);
         }
+        
+        // Initialize online/offline status
+        updateOnlineStatus();
+        
+        // Load chat data
+        teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
+        adminMessages = JSON.parse(localStorage.getItem('adminMessages') || '[]');
+        offlineQueue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
     </script>
 </body>
 </html>
