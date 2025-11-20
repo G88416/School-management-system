@@ -3349,6 +3349,41 @@
             wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
             integrateEducatorsAsStaff();
             if (students.length === 0) generateDemoData();
+            if (admissions.length === 0) initializeAdmissionData();
+        }
+        // Initialize admission data with default students
+        function initializeAdmissionData() {
+            const initialAdmissions = [
+                { accession: '1', surname: 'AGYAPONG', firstName: 'Princess', gender: 'F', grade: 'Grade 04', classValue: '4A', cell: '0738012103', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Olivia', motherSurname: 'AGYAPONG', motherEmail: '', motherCell: '' },
+                { accession: '2', surname: 'ARRIES', firstName: 'Kaylin', gender: 'F', grade: 'Grade 09', classValue: '9A', cell: '0835918224', email: '', homeLanguage: 'English', fatherName: 'Francois', fatherSurname: 'ARRIES', fatherEmail: '', fatherCell: '0783660823', motherName: 'Sharoline', motherSurname: 'ARRIES', motherEmail: 'SHAROLINEARRIES@GMAIL.COM', motherCell: '0680554938' },
+                { accession: '3', surname: 'BALOYI', firstName: 'Onkgopoditse', gender: 'M', grade: 'Grade 07', classValue: '7A', cell: '0648264275', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Sharon', motherSurname: 'BALOYI', motherEmail: '', motherCell: '0727841024' },
+                { accession: '4', surname: 'BAMIDELE', firstName: 'Michelle', gender: 'F', grade: 'Grade 08', classValue: '8A', cell: '0766696262', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Joyce', motherSurname: 'MOTSEPE', motherEmail: '', motherCell: '' },
+                { accession: '5', surname: 'BOYS', firstName: 'Ginolia', gender: 'F', grade: 'Grade 05', classValue: '5A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Thandi', motherSurname: 'BOYS', motherEmail: '', motherCell: '0681182017' },
+                { accession: '6', surname: 'CHAKA', firstName: 'Tumelo', gender: 'M', grade: 'Grade 09', classValue: '9A', cell: '0760522944', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: 'MAGOLEGO', fatherEmail: '', fatherCell: '', motherName: 'Dimakatso', motherSurname: 'CHAKA', motherEmail: '', motherCell: '' },
+                { accession: '7', surname: 'CHAUKE', firstName: 'Nobuhle', gender: 'F', grade: 'Grade 10', classValue: '10A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Emelina Nomsa', motherSurname: 'CHAUKE', motherEmail: '', motherCell: '0726002475' },
+                { accession: '8', surname: 'CHAUKE', firstName: 'Siyanda', gender: 'F', grade: 'Grade 07', classValue: '7A', cell: '0793247842', email: '', homeLanguage: 'English', fatherName: 'Bafana', fatherSurname: 'CHAUKE', fatherEmail: '', fatherCell: '', motherName: '', motherSurname: '', motherEmail: '', motherCell: '' },
+                { accession: '9', surname: 'CHIMBIRO', firstName: 'Alaine', gender: 'F', grade: 'Grade 08', classValue: '8A', cell: '0734638108', email: '', homeLanguage: 'English', fatherName: 'Chikwando', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Nyarai', motherSurname: 'CHIMBIRO', motherEmail: '', motherCell: '' },
+                { accession: '10', surname: 'CHIRUME', firstName: 'Mafaro', gender: 'F', grade: 'Grade 05', classValue: '5A', cell: '0732157461', email: '', homeLanguage: 'English', fatherName: 'Francis', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Pers', motherSurname: 'CHIRUME', motherEmail: '', motherCell: '0732157462' },
+                { accession: '11', surname: 'CHIVIMA', firstName: 'Jayden', gender: 'M', grade: 'Grade 05', classValue: '5A', cell: '0739202633', email: '', homeLanguage: 'English', fatherName: 'Anywau', fatherSurname: 'CHIVIMA', fatherEmail: '', fatherCell: '', motherName: 'Faustina', motherSurname: 'MAKAINGANWA', motherEmail: '', motherCell: '' },
+                { accession: '12', surname: 'CHIVIMA', firstName: 'Jayla', gender: 'F', grade: 'Grade 02', classValue: '2A', cell: '0739202633', email: '', homeLanguage: 'English', fatherName: 'Anuwau', fatherSurname: 'CHIRIMA', fatherEmail: '', fatherCell: '', motherName: 'Faustina', motherSurname: '', motherEmail: '', motherCell: '' },
+                { accession: '213', surname: 'ZWANE', firstName: 'Nqubeko', gender: 'F', grade: 'Grade 09', classValue: '9A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Brenda', motherSurname: 'ZWANE', motherEmail: '', motherCell: '' }
+            ];
+            
+            initialAdmissions.forEach(admission => {
+                const id = Date.now() + Math.random();
+                const name = admission.firstName + ' ' + admission.surname;
+                admissions.push({
+                    id,
+                    name,
+                    ...admission,
+                    username: '',
+                    password: '',
+                    status: 'Pending',
+                    saSamsFormat: true
+                });
+            });
+            
+            saveData();
         }
         // Generate demo data
         function generateDemoData() {
