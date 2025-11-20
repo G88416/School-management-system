@@ -421,8 +421,67 @@
                     <input type="text" class="form-control" placeholder="Search admissions..." id="admissionSearch">
                     <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
                 </div>
-                <table class="table table-striped">
-                    <thead><tr><th>Student Number</th><th>Surname</th><th>First Name</th><th>Gender</th><th>Grade</th><th>Class</th><th>Cell</th><th>Email</th><th>Language</th><th>Father Name</th><th>Father Surname</th><th>Father Email</th><th>Father Cell</th><th>Mother Name</th><th>Mother Surname</th><th>Mother Email</th><th>Mother Cell</th></tr></thead>
+                <style>
+                    #admission table.sasams-format {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 12px;
+                        background: rgba(255, 255, 255, 0.95);
+                        color: #333;
+                    }
+                    #admission table.sasams-format th,
+                    #admission table.sasams-format td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    #admission table.sasams-format th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                        color: #333;
+                    }
+                    #admission table.sasams-format tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    #admission table.sasams-format caption {
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        font-size: 14px;
+                        color: #333;
+                        background: rgba(255, 255, 255, 0.95);
+                        padding: 10px;
+                        border-radius: 5px;
+                    }
+                </style>
+                <table class="sasams-format">
+                    <caption id="sasamsCaption">SA-SAMS v25.3.0 - Learner and Parent Info (3.1.13) - <span id="admissionReportDate"></span></caption>
+                    <thead>
+                        <tr>
+                            <th colspan="9">LEARNER DETAILS</th>
+                            <th colspan="4">FATHER DETAILS</th>
+                            <th colspan="4">MOTHER DETAILS</th>
+                        </tr>
+                        <tr>
+                            <th>Number</th>
+                            <th>Surname</th>
+                            <th>First Name</th>
+                            <th>Gender</th>
+                            <th>Grade</th>
+                            <th>Class</th>
+                            <th>Cell#</th>
+                            <th>Email</th>
+                            <th>Language</th>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Cell#</th>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Cell#</th>
+                        </tr>
+                    </thead>
                     <tbody id="admissionTable"></tbody>
                 </table>
             </section>
@@ -1982,44 +2041,76 @@
             <!-- Modals -->
             <!-- New Admission Modal -->
             <div class="modal fade" id="addAdmissionModal">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">New Admission</h5>
+                            <h5 class="modal-title">New Admission - SA-SAMS Format</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="alert alert-info text-dark">
                                 <strong>SA-Sams Format:</strong> Complete all required fields according to South African School Administration standards.
                             </div>
-                            <input type="text" id="admissionAccession" class="form-control mb-2" placeholder="Accession Number *" required>
-                            <input type="text" id="admissionSurname" class="form-control mb-2" placeholder="Surname *" required>
-                            <input type="text" id="admissionFirstName" class="form-control mb-2" placeholder="First Name *" required>
-                            <input type="text" id="admissionIdNumber" class="form-control mb-2" placeholder="ID Number / Birth Certificate Number">
-                            <input type="date" id="admissionDateOfBirth" class="form-control mb-2" placeholder="Date of Birth">
-                            <select id="admissionGender" class="form-control mb-2">
-                                <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                            <select id="admissionHomeLanguage" class="form-control mb-2">
-                                <option value="">Select Home Language</option>
-                                <option value="English">English</option>
-                                <option value="Afrikaans">Afrikaans</option>
-                                <option value="isiZulu">isiZulu</option>
-                                <option value="isiXhosa">isiXhosa</option>
-                                <option value="Sesotho">Sesotho</option>
-                                <option value="Setswana">Setswana</option>
-                                <option value="Sepedi">Sepedi</option>
-                                <option value="Xitsonga">Xitsonga</option>
-                                <option value="siSwati">siSwati</option>
-                                <option value="Tshivenda">Tshivenda</option>
-                                <option value="isiNdebele">isiNdebele</option>
-                            </select>
-                            <input type="text" id="admissionGrade" class="form-control mb-2" placeholder="Grade *" required>
-                            <input type="text" id="admissionParentName" class="form-control mb-2" placeholder="Parent/Guardian Name">
-                            <input type="text" id="admissionParentContact" class="form-control mb-2" placeholder="Parent Contact Number">
-                            <input type="text" id="admissionAddress" class="form-control mb-2" placeholder="Residential Address">
+                            <h6 class="text-dark mt-3">Learner Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="admissionAccession" class="form-control mb-2" placeholder="Student Number *" required>
+                                    <input type="text" id="admissionSurname" class="form-control mb-2" placeholder="Surname *" required>
+                                    <input type="text" id="admissionFirstName" class="form-control mb-2" placeholder="First Name *" required>
+                                    <select id="admissionGender" class="form-control mb-2">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" id="admissionGrade" class="form-control mb-2" placeholder="Grade *" required>
+                                    <input type="text" id="admissionClass" class="form-control mb-2" placeholder="Class">
+                                    <input type="text" id="admissionCell" class="form-control mb-2" placeholder="Cell#">
+                                    <input type="email" id="admissionEmail" class="form-control mb-2" placeholder="Email">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <select id="admissionHomeLanguage" class="form-control mb-2">
+                                        <option value="">Select Home Language</option>
+                                        <option value="English">English</option>
+                                        <option value="Afrikaans">Afrikaans</option>
+                                        <option value="isiZulu">isiZulu</option>
+                                        <option value="isiXhosa">isiXhosa</option>
+                                        <option value="Sesotho">Sesotho</option>
+                                        <option value="Setswana">Setswana</option>
+                                        <option value="Sepedi">Sepedi</option>
+                                        <option value="Xitsonga">Xitsonga</option>
+                                        <option value="siSwati">siSwati</option>
+                                        <option value="Tshivenda">Tshivenda</option>
+                                        <option value="isiNdebele">isiNdebele</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <h6 class="text-dark mt-3">Father Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="admissionFatherName" class="form-control mb-2" placeholder="Father Name">
+                                    <input type="text" id="admissionFatherSurname" class="form-control mb-2" placeholder="Father Surname">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="email" id="admissionFatherEmail" class="form-control mb-2" placeholder="Father Email">
+                                    <input type="text" id="admissionFatherCell" class="form-control mb-2" placeholder="Father Cell#">
+                                </div>
+                            </div>
+                            <h6 class="text-dark mt-3">Mother Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="admissionMotherName" class="form-control mb-2" placeholder="Mother Name">
+                                    <input type="text" id="admissionMotherSurname" class="form-control mb-2" placeholder="Mother Surname">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="email" id="admissionMotherEmail" class="form-control mb-2" placeholder="Mother Email">
+                                    <input type="text" id="admissionMotherCell" class="form-control mb-2" placeholder="Mother Cell#">
+                                </div>
+                            </div>
+                            <h6 class="text-dark mt-3">Additional Information</h6>
                             <input type="text" id="admissionUsername" class="form-control mb-2" placeholder="Student Username">
                             <input type="password" id="admissionPassword" class="form-control mb-2" placeholder="Student Password">
                             <select id="admissionStatus" class="form-control mb-2">
@@ -4742,6 +4833,11 @@
             new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
         }
         function renderAdmissions() {
+            // Update the report date in the caption
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+            document.getElementById('admissionReportDate').textContent = dateStr;
+            
             const search = document.getElementById('admissionSearch').value.toLowerCase();
             const filtered = admissions.filter(a => {
                 const surname = a.surname || a.name?.split(' ')[0] || '';
@@ -4750,16 +4846,30 @@
                 return surname.toLowerCase().includes(search) || 
                        firstName.toLowerCase().includes(search) || 
                        fullName.toLowerCase().includes(search) ||
-                       a.grade.toLowerCase().includes(search);
+                       (a.grade && a.grade.toLowerCase().includes(search));
             });
             document.getElementById('admissionTable').innerHTML = filtered.map(a => {
                 const surname = a.surname || a.name?.split(' ')[0] || '';
                 const firstName = a.firstName || a.name?.split(' ').slice(1).join(' ') || '';
                 return `
                 <tr>
-                    <td>${firstName}</td>
+                    <td>${a.accession || ''}</td>
                     <td>${surname}</td>
-                    <td>${a.grade}</td>
+                    <td>${firstName}</td>
+                    <td>${a.gender || ''}</td>
+                    <td>${a.grade || ''}</td>
+                    <td>${a.classValue || ''}</td>
+                    <td>${a.cell || ''}</td>
+                    <td>${a.email || ''}</td>
+                    <td>${a.homeLanguage || ''}</td>
+                    <td>${a.fatherName || ''}</td>
+                    <td>${a.fatherSurname || ''}</td>
+                    <td>${a.fatherEmail || ''}</td>
+                    <td>${a.fatherCell || ''}</td>
+                    <td>${a.motherName || ''}</td>
+                    <td>${a.motherSurname || ''}</td>
+                    <td>${a.motherEmail || ''}</td>
+                    <td>${a.motherCell || ''}</td>
                 </tr>
             `}).join('');
         }
@@ -4767,14 +4877,20 @@
             const accession = document.getElementById('admissionAccession').value;
             const surname = document.getElementById('admissionSurname').value;
             const firstName = document.getElementById('admissionFirstName').value;
-            const idNumber = document.getElementById('admissionIdNumber').value;
-            const dateOfBirth = document.getElementById('admissionDateOfBirth').value;
             const gender = document.getElementById('admissionGender').value;
             const homeLanguage = document.getElementById('admissionHomeLanguage').value;
             const grade = document.getElementById('admissionGrade').value;
-            const parentName = document.getElementById('admissionParentName').value;
-            const parentContact = document.getElementById('admissionParentContact').value;
-            const address = document.getElementById('admissionAddress').value;
+            const classValue = document.getElementById('admissionClass').value;
+            const cell = document.getElementById('admissionCell').value;
+            const email = document.getElementById('admissionEmail').value;
+            const fatherName = document.getElementById('admissionFatherName').value;
+            const fatherSurname = document.getElementById('admissionFatherSurname').value;
+            const fatherEmail = document.getElementById('admissionFatherEmail').value;
+            const fatherCell = document.getElementById('admissionFatherCell').value;
+            const motherName = document.getElementById('admissionMotherName').value;
+            const motherSurname = document.getElementById('admissionMotherSurname').value;
+            const motherEmail = document.getElementById('admissionMotherEmail').value;
+            const motherCell = document.getElementById('admissionMotherCell').value;
             const username = document.getElementById('admissionUsername').value;
             const password = document.getElementById('admissionPassword').value;
             const status = document.getElementById('admissionStatus').value;
@@ -4782,11 +4898,15 @@
                 const id = Date.now();
                 const name = surname + ' ' + firstName;
                 admissions.push({ 
-                    id, name, surname, firstName, accession, grade, username, password, status,
-                    idNumber, dateOfBirth, gender, homeLanguage, parentName, parentContact, address,
+                    id, name, surname, firstName, accession, grade, classValue, cell, email, 
+                    username, password, status, gender, homeLanguage,
+                    fatherName, fatherSurname, fatherEmail, fatherCell,
+                    motherName, motherSurname, motherEmail, motherCell,
                     saSamsFormat: true
                 });
-                users.push({ username, password, name, role: 'Student' });
+                if (username && password) {
+                    users.push({ username, password, name, role: 'Student' });
+                }
                 saveData();
                 renderAdmissions();
                 bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
