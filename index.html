@@ -4521,8 +4521,8 @@
             }
         }
 
-        // Wellness Program Storage
-        let wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
+        // Wellness Program Storage (wellnessPrograms already declared on line 3181)
+        wellnessPrograms = JSON.parse(localStorage.getItem('wellnessPrograms') || '[]');
         let wellnessResources = JSON.parse(localStorage.getItem('wellnessResources') || '[]');
         
         function showAddWellnessProgramModal() {
