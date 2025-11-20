@@ -3351,255 +3351,24 @@
             if (students.length === 0) generateDemoData();
             if (admissions.length === 0) initializeAdmissionData();
         }
-        // Initialize admission data with default students - ALL 213 STUDENTS
+        // Initialize admission data with default students
         function initializeAdmissionData() {
-            // Raw student data from problem statement - tab-separated format
-            // Format: Number, Surname, FirstName, Gender, Grade, Class, Cell#, Email, Language, FatherName, FatherSurname, FatherEmail, FatherCell, MotherName, MotherSurname, MotherEmail, MotherCell
-            const rawStudentData = `1	AGYAPONG	Princess	F	Grade 04	4A	0738012103		English					Olivia	AGYAPONG		
-2	ARRIES	Kaylin	F	Grade 09	9A	0835918224		English	Francois	ARRIES		0783660823	Sharoline	ARRIES	SHAROLINEARRIES@GMAIL.COM	0680554938
-3	BALOYI	Onkgopoditse	M	Grade 07	7A	0648264275		English					Sharon	BALOYI		0727841024
-4	BAMIDELE	Michelle	F	Grade 08	8A	0766696262		English					Joyce	MOTSEPE		
-5	BOYS	Ginolia	F	Grade 05	5A			English					Thandi	BOYS		0681182017
-6	CHAKA	Tumelo	M	Grade 09	9A	0760522944		English		MAGOLEGO			Dimakatso	CHAKA		
-7	CHAUKE	Nobuhle	F	Grade 10	10A			English					Emelina Nomsa	CHAUKE		0726002475
-8	CHAUKE	Siyanda	F	Grade 07	7A	0793247842		English	Bafana	CHAUKE						
-9	CHIMBIRO	Alaine	F	Grade 08	8A	0734638108		English	Chikwando				Nyarai	CHIMBIRO		
-10	CHIRUME	Mafaro	F	Grade 05	5A	0732157461		English	Francis				Pers	CHIRUME		0732157462
-11	CHIVIMA	Jayden	M	Grade 05	5A	0739202633		English	Anywau	CHIVIMA			Faustina	MAKAINGANWA		
-12	CHIVIMA	Jayla	F	Grade 02	2A	0739202633		English	Anuwau	CHIRIMA			Faustina			
-13	DELEKILE	Boiketlo	F	Grade R	RA	0787123382		English					Ziyanda	DELEKI		
-14	DELEKILE	Mbali	F	Grade 09	9A	0837438666		English					Nomzamo	DELEKILE		
-15	DZUKUSO	Ruvimbo	F	Grade 04	4A	074099665		English	Archbold	DZUKUSO			Pieti	ZHIRA		
-16	FRANCIS	Phetogo	F	Grade 07	7A	0710256321		English	Johannes				Lesego	FRANCIS		
-17	GWESHE	Rufaro	F	Grade 06	6A	0749145762		English	Desmond	GWESHE		0636900874	Huruva			
-18	GWESHE	Tinotenda	F	Grade 07	7A	0626855114		English	Desmond	GWESHE			Julie	HURUVA		
-19	HAMZAT	Mercy	F	Grade 03	3A	0715603020		English	Hamzat				Tebogo	MASITE		
-20	HLALETHWA	Berritta	F	Grade R	RA	0782257768		English		NKWANA			Palesa	HLALETHWA		
-21	HLONGWANE	Kgotso	M	Grade 10	10A	0797886667		English					Emily	HLONGWANE		0820517718
-22	HLONGWANE	Tiyani	M	Grade R	RA			English					Cynthia	HLONGWANE		
-23	JEKE	Perpetual	F	Grade R	RA			English					Hildah	BALOYI		
-24	KEKANA	Dimpho	M	Grade 10	10A			English					Palesa	KEKANA		
-25	KGAPHOLA	Itebogeleng	M	Grade R	RA	0837144622		English					Poriia	SEEKOEI		
-26	KGOSANA	Lehlogonolo	M	Grade 09	9A	0785877954		English	Mpho	LETWABA		0734009661	Ingrid	KGOSANA		
-27	KGOSANA	Polelo	M	Grade 04	4A	0791142645		English	Mpho	LETWAA			Christinah	KGOSANA		0785877954
-28	KGWETE	Mulalo	M	Grade 06	6A			English	Alpheus	KGWETE		0711062122			
-29	KHOZA	Kgomotso	M	Grade 09	9A	0834221060		English	Daniel	MABUNDA			Julliet	KHOZA		0834221060
-30	KHOZA	Kgosi	M	Grade 03	3A			English					Julliet	KHOZA		0834221060
-31	KHOZA	Laybon	M	Grade 08	8A			English					Nkateko	KHOZA		
-32	KHUMALO	Melisizwe	M	Grade 01	1A			English	Nkeku	KHUMALO					
-33	KUNENE	Mojalefa	M	Grade 10	10A	0761929171		English	Christy	KUNENE	CHRISTY.KUNENE@GMAIL.COM	0784575151	Thembi	KUNENE		0713919278
-34	LAMOLA	Amogelang	F	Grade 06	6A	0765197804		English	Andy	MAHLANGU					
-35	LANDANE	Thato	M	Grade 04	4A	0731875351		English	Ambrose				Pelo	HLABANGWANE		
-36	LEBAMBO	Atlegang	F	Grade 03	3A			English					Sphiwe	LEBAMBO		0649541623
-37	LEBISI	James	M	Grade 10	10A	0681449791		English	James	LEBISI		0784376819			
-38	LEKGANYANE	Kaiki	F	Grade 07	7A	0790610833		English	Makgako	LEKGANYANE		0720971689	Solane	LEKGANYANE		0721123998
-39	LEKHOTWANE	Lethabo	F	Grade R	RA			English					Khumotso	LEKHOTWANE		
-40	LEPAKU	Ontshiametso	M	Grade 02	2A	0766585443		English					Dineo Georginah	LEPAKU		0769840436
-41	LETSIKE	Suprise	M	Grade 02	2A			English					Matema	LETSIKE		0614558443
-42	LISIMATI	Conland	M	Grade 08	8A	0823635637		English					Primrose	INGWANI		
-43	LONGWE	Amelia	F	Grade 04	4A	0781820641		English	Matheus	LONGWE			Natasha	MWANSA		
-44	LONGWE	Anita	F	Grade 07	7A	0781820641		English	Mathes	LONGWE		0781820641	Natasha	MWANGA		
-45	LUKHULENI	Nikiwe	F	Grade 08	8A	0727983157		English					Isizulu	LEKHULENI		
-46	MABASO	Surprise	M	Grade 10	10A			English					Thulile Precious	MABASO		
-47	MABUELA	Gomolemo	M	Grade 06	6A	0735606807		English	Stephens				Lorraine	MABUELA		
-48	MADEDE	Angela	F	Grade 07	7A	0822698218		English	Morgan				Privillage	MUZATA		
-49	MADEDE	Prince	M	Grade 03	3A	0713159498		English	Morgn				Privillage	MUZATA		
-50	MAELE	Rearabilwe	M	Grade 07	7A	0679237470		English	Kgomotso				Chrmaine	MAKU		0826446996
-51	MAENGEDZE	Victor	M	Grade 10	10A	0788911237		English		MAENGEDZE			Loveness	PEYIYE		
-52	MAEPA	Botshelo	F	Grade 08	8A			English					Dimakatso	MAEPA		
-53	MAHLANGU	Abigail	F	Grade 01	1A	0609429366		English	Musa	MAHLANGU			Ntshenekane	LEKHOTWANE		0728619891
-54	MAHLANGU	Mahlatse	M	Grade 10	10A			English					Petricia	MAHLANGU		0791434414
-55	MAHLANGU	Thalia	F	Grade R	RA			English					Jennifer	LEKHOTWANE		
-56	MAHLANGU	Zoe	F	Grade 05	5A	0636793507		English					Letta	MAHLANGU		
-57	MAHWAMURE	Evan	M	Grade R	RA			English					Kudzai	CHINGARANDE		
-58	MAILA	Lesedi	F	Grade 02	2A	0715156789		English					Matopong	MAILA		
-59	MAILA	Sandile	M	Grade 10	10A			English					Ivy	MAILA		073245924180
-60	MAKHELE	Thabiso	M	Grade 07	7A	0713030723		English	Paul	MAKHELE			Moropane	MOAGI		0826734069
-61	MAKHELE	Tlotliso	F	Grade 01	1A	0713030723		English	Paul	MAKHELE						
-62	MAKOLA	Kagisho	M	Grade 05	5A	0174485266		English		NCHABELENG			Phelehlave	MAKOLA		
-63	MAKOLA	Nhlamulo	F	Grade 01	1A	0722723971		English					Dimakatso	MAKOLA		
-64	MAKOLA	Ofentse	F	Grade 07	7A	0604126344		English	Londrick	SEUPE			Getrude	MAKOLA		0711729998
-65	MAKWEVERA	Kim	F	Grade 05	5A	0626130952		English					Judith	MAKWRVERA		
-66	MALATA	Thego	F	Grade 03	3A	0715034732		English					Lerato	MALATA		0715034732
-67	MALEBYE	Siyabonga	M	Grade 06	6A	0738974171		English					Juliah	MALEBYE		
-68	MALEKA	Dumisile	M	Grade R	RA			English					Sannah	MALEKA		
-69	MALEKE	Bokang	M	Grade R	RA	07239096		English					Petunia	MKABELA		
-70	MALEPE	Phemelo	M	Grade 05	5A	0760891344		English					Maitumelo	MALEPE		
-71	MAMPHOLO	Zwavhudi	M	Grade 05	5A	0765710251		English					Rebone	MAMPHOLO		0765710251
-72	MANALA	Rethabile	F	Grade 01	1A	0728098382		English	Abrey				Matobole	MANALA		
-73	MANCHIDI	Khutso	M	Grade 10	10A			English	Tjlamsgale	MANCHIDI		0670342063			
-74	MANDEYA	Anashe	F	Grade 04	4A	0722864753		English	Kudakwashe	MANDEYA					
-75	MANGANYE	Faith	F	Grade 03	3A	0711482175		English	Muzi				Maria	MANGANYE		
-76	MANGENJANI	Cliff	M	Grade 09	9A			English	Clive	MANGENYANI			Lindiwe	NTULI		
-77	MANGWATO	Kabelo	M	Grade 07	7A	0711128530		English	Thabang	LEPOTA		0724695759		MANGWATO		
-78	MANYIKE	Kamogelo	F	Grade 02	2A	0768338293		English					Lindiwe	MANYIKE		
-79	MANYIKE	Thandolwethu	M	Grade 04	4A	0604349048		English	Johannes	MAHLANGU			Phindile	MANYIKE		
-80	MAREDI	Khumo	M	Grade 03	3A			English					Diana	MREDI		072261539
-81	MAREDI	Stanley	M	Grade 07	7A	0835960702		English	Innocent				Diana	MAREDI		
-82	MARIRI	Lethabo	M	Grade 09	9A	0606870046		English	Solomon	MOAGI			Penelope	MARIRI		0849011176
-83	MARUFU	Tumelo	M	Grade 10	10A			English	Shepherrd	MARUFU					
-84	MASHABA	Hlompho	M	Grade R	RA			English	Mashaba	MASHABA					
-85	MASHABA	Kobeli	M	Grade 08	8A	0724811082		English					Mikateko	MASHABA		
-86	MASHAYAMOMBE	Brian	M	Grade 03	3A	0743722612		English					Steve	MASHAYAMOMBE		
-87	MASILELA	Dineo	F	Grade 03	3A	0790446054		English					Bathabile	MASILELA		
-88	MASINGA	Oratilwe	F	Grade 02	2A	0719014898		English					Jane	MASINGA		
-89	MASINGA	Rearabiloe	F	Grade 02	2A			English	Ngangamuni	MACHEKE					
-90	MATEKOANE	Koketso	M	Grade 04	4A	0183642604		English	Bernard	MARAKALALA			Maria			
-91	MATHEBULA	Lungile	F	Grade 10	10A	0796805801		English	James	MAHLALELA					
-92	MATHEBULA	Rivoningo	F	Grade 07	7A	0710412798		English					Millie	MATHEBULA		
-93	MATHEGA	Opelong	M	Grade 07	7A	0725791972		English	Rakwena				Dorcas	MATHEGA		072591972
-94	MATSILA	Tebogo	F	Grade 09	9A	0614049594		English					Mapula	MATSILA		
-95	MATSILA	Tlotliso	F	Grade 03	3A			English					Mapula	MATSILA		0814566424
-96	MAUBANE	Thabang	F	Grade 07	7A	0823635652		English					Mokete	NYALUNGA		
-97	MAUNGANIDZE	Constance	F	Grade 06	6A	0734267361		English	Douglas	MAUNGANIDZE			Mukunyu			
-98	MAUNGANIDZE	Prosper	M	Grade 02	2A			English	Douglas	MAYUNGANIDZE					
-99	MDLOVU	Makayla	M	Grade 02	2A	0781112438		English	Sibonelo	MPUNGOSE			Neglecia	MDLOVU		
-100	MDLULI	Tshepo	M	Grade 10	10A			English					Koketso	MDLULI		
-101	MENTOOR	Chuene	M	Grade 09	9A	0824397657		English					Lesego	MENTOOR		
-102	MHANGANI	Rhulani	F	Grade 09	9A			English	Mpho	MHLANGANI			Dinah			
-103	MHLABENI	Mnqobi	M	Grade 01	1A	0735939520		English					Judith	MHLABENI		
-104	MNISI	Lehlogonolo	M	Grade 05	5A	0826878961		English	Johannes	MAMPANE		0796106158		MNISI		
-105	MODIBA	Bokamoso	F	Grade 06	6A	0764797308		English	Moeti	MODIBA			Khaiso			
-106	MOEKELETSI	Maropeng	M	Grade R	RA			English					Sebwana	MOEKELETSI		
-107	MOFOKENG	Khuthitsho	F	Grade 02	2A	0722008854		English					Nation	MOFOKENG		0766132342
-108	MOHLALA	Lesedi	F	Grade 06	6A	0799133695		English		MOHLALA			Letta	MOHLALA		0799105695
-109	MOHLALA	Lesego	F	Grade 09	9A	0799105695		English	Joseph	MONIALA		0769543408	Joseph			
-110	MOHLALA	Oratile	M	Grade 01	1A			English					Annah Mapula	MOHLALA		
-111	MOHLAMONYANE	Dimakatso	F	Grade 09	9A	0762753972		English	Abram	MOLOANTOA					
-112	MOKALAPA	Nomusa	F	Grade 03	3A	06996681		English		MAHLANGU			Mohlakwana	MOKALAPA		
-113	MOKHOTHU	Lehlohonolo	M	Grade 02	2A			English	Simon	TSHABALALA		0606115934			
-114	MOKOENA	Gryaor	M	Grade R	RA			English					Dina	MOKOENA		
-115	MOKOENA	Owami	M	Grade 07	7A	0781443501		English					Anna	MOKOENA		
-116	MOLEKWA	Christinah	F	Grade R	RA	0637441569		English	Jackson	NGWENYA			Zandile			
-117	MOLOTO	Dimpho	F	Grade 06	6A			English					Grace	MOLOTO	gracemoloto3@gmail.com	0661885138
-118	MONALE	Reabetswe	M	Grade 09	9A	0659428683		English					Tshepiso	MONALE		
-119	MONAMA	Thami	M	Grade 10	10A	0713155135		English					Theresa	MONAMA		
-120	MONYEKI	Mpho	M	Grade 10	10A	0765223412		English					Josephina	MONYEKI		
-121	MOSOMA	Keitumetse	F	Grade 04	4A	0818634148		English					Forgiveness	MOSOMA		
-122	MOSOMANE	Bokamoso	F	Grade 02	2A			English					Kgothatso	MOSOMANE	BOITUMELO.MOSOMANE@GMAIL.COM	0682357909
-123	MOSOMANE	Keabetswe	F	Grade R	RA	0682357909		English					Kgothatso	MOSOMANE		
-124	MOTENA	Njabulo	M	Grade 03	3A			English					Maria Connie	MOTEMA		
-125	MOTLHODI	Rorisang	F	Grade R	RA			English					Matseko	MOTLHODI		
-126	MOTONG	Kgotalo	F	Grade 03	3A			English					Winnie	MOTONG		0760162916
-127	MOTONG	Kulani	M	Grade 05	5A			English					Winnie	MOTONG		0766916110
-128	MPHAHLELE	Thabo	M	Grade 04	4A	0662579294		English	Sello	LETSOALO		0823520608			
-129	MPHASHA	Matlala	M	Grade 03	3A	0818547003		English	Matome				Tintswalo	MPHASHA		
-130	MTHIMUNYE	Ofentse	M	Grade 04	4A	0682406374		English	Tshite	MADIHLABA				MOKWANA		
-131	MTSHWENE	Methembe	F	Grade 08	8A	0661812543		English					Jeaneth	MTSHWENE		
-132	MUGORE	Dephine	F	Grade 04	4A			English					Kudzai	CHINGARANDE		
-133	MUSUSA	Jayden	M	Grade 07	7A	0765983346		English	Muchineyi	MUSUSA			Dambaza	MAJURY		
-134	MUSUSA	Sean	M	Grade 04	4A	0765983346		English	Muchineyi	MUSUSA					
-135	MUTEMA	Ian	M	Grade 02	2A			English	Rodney	MUTEMA		0849678108	Sibmbisai	MUTEMA		0652106526
-136	MUTYORARINGA	Lennon	M	Grade 07	7A	0723040849		English				0723060849	Stella	MUTYORARINGA		
-137	MUTYORARINGA	Lennon	M	Grade 07	7A	0723040849		English					Stella	MUTYORARINGA		
-138	MUZENDA	Joyce	F	Grade 06	6A	0847114393		English	Mazenda	EDISON			Patience	HOVE		
-139	MZIMBA	Thapelo	M	Grade 08	8A	0842993607		English	Levy	MZIMBA		0820403170	Adolphin			
-140	NAZO	Owethu	F	Grade R	RA			English	Siyabonga	NAZO					
-141	NCUBE	Chriselda	F	Grade 05	5A	0789818509		English	Sifiso	NCUBE			Nomsa	KUTUDZA		
-142	NCUBE	Mpumelelo	M	Grade 07	7A	0624284401		English					Moreblessing	NTINI		
-143	NDABA	Molemo	M	Grade R	RA	0793209815		English	Joel	RAMOSHABA			Priscilla	NDABA		
-144	NDALA	Leonard	M	Grade 07	7A	0729465451		English					Martha	NDAL		
-145	NDHLOVU	Palesa	F	Grade 08	8A	0674967607		English					Assah	NDHLOVU		0712949125
-146	NDLELA	Iminathi	M	Grade 08	8A	0655565886		English	sefso				Neziswa	NOBANGELA		
-147	NDLOVU	Innocent	M	Grade 04	4A	067610360		English	Ephios	MATSANE		0762805947			
-148	NDLOVU	Nelson	M	Grade 04	4A	0604800281		English					Amanda	NDLOVU		
-149	NDOU	Kevin	M	Grade R	RA			English					Emily	NDOU		
-150	NDOU	Mutondi	F	Grade 02	2A			English					Lerato	NDOU		
-151	NDOU	Vendros	M	Grade R	RA			English					Emily	NDOU		
-152	NDUKULU	Isabella	F	Grade R	RA			English					Mashudu	NDUKULU		
-153	NGOBENI	Princess	F	Grade 03	3A			English					Mihloti	NGOENI		0786770806
-154	NGOMANE	Nosibusiso	F	Grade 05	5A	0897288019		English	Sizo	NGOMANE					
-155	NGWENYAMA	Phillip	M	Grade 10	10A	0699037446		English					Clever	NGWENYAMA		
-156	NHAMBI	Jimmy	M	Grade 03	3A			English	Moses	NTHAMBI					
-157	NKABINDE	Ofentse	F	Grade 02	2A			English					Nonhlanhla	NKABINDE		
-158	NKADIMENG	Thabang	M	Grade 09	9A	0682875371		English					Itumeleng	NKADIMENG	THATO.MOKWENA@GMAIL.COM	0782552261
-159	NKOANA	Tlotlang	F	Grade 05	5A	0798992865		English					Stella	NKOANA		
-160	NKUNA	Ntsako	M	Grade 02	2A	0791674875		English					Marry	NKUNA		0660616578
-161	NKWE	Mohau	F	Grade 04	4A	0721181022		English					Mpuseng	NKWE		
-162	NTULI	Ntokozo	F	Grade 06	6A	0810515455		English	Bridgt				Simphiwe	NTULI		
-163	NTULI	Ntokozo	F	Grade 06	6A	0810515455		English					Simphiwe	NTULI		
-164	NYADZANI	Ompha	F	Grade 02	2A			English	Avhatakali Lesley	NYADZANI		0765063317			
-165	NYAMANE	Mackyla	F	Grade 05	5A	0764788227		English					Silvence Sebongile	NYAMANE		0764788227
-166	NYAMAROPA	Nyasha	F	Grade 02	2A			English	Forward	NYAMAROPA		0611075328	Sibusisiwe	HLONGWANE	HLONGWANEBUSI@GMAIL.COM	
-167	NYARUVEMBO	Sonia	F	Grade 03	3A	0746200360		English	Taban	NYARUVEMBO					
-168	PAPO	Reitumetse	F	Grade 09	9A	0605576391		English					Onicca	PAPO		
-169	PHALANE	Serogole	F	Grade 10	10A	0722172577		English					Thuru	PHALANE		
-170	PHALANE	Tumelo	M	Grade 09	9A	0766820226		English					Joyce	PHALANE		0860497999
-171	PHETLA	Gift	M	Grade 05	5A	0725691292		English	Melusi				Florence	NCUBE		
-172	PHIRI	Alemekezeke	F	Grade R	RA			English	Lefa P	PHIRI					
-173	PHIRI	Onthatile	F	Grade 10	10A			English					Ayanda	PHIRI		
-174	RAKGALAKANE	Thabo	M	Grade 03	3A			English					Suzan	RAKGALAKANE		
-175	RAKGOTHO	Thapelo	M	Grade 03	3A			English	Thabo	RAKGOTHO		0722599853			
-176	RAKOMA	Amogelang	M	Grade 10	10A	0608079614		English					Lesego	RAKOMA		0726501927
-177	RAMOKGATLA	Bokamoso	M	Grade 02	2A	0822952941		English	Karinne				Thoko	RAMOKGATLA		0606411435
-178	RAMOKGOPA	Katlego	M	Grade 08	8A	0839464815		English	Mack				Mmapula	RAMOKGOPA		
-179	RATSHIVHADELO	Oluga	F	Grade 03	3A	0715663036		English	Mashudu	RATSHIVHADELO					
-180	SADIKGE	Khuliso	M	Grade 03	3A	0820806467		English	Mulalo	SADIKGE				NGAKO		
-181	SEEMA	Fezile	M	Grade 05	5A	0728450730		English	Raymond	MASEMOLA					
-182	SEFAKO	Thandeka	F	Grade 05	5A	0679277866		English	Banny				Ivy	SEFAKO		
-183	SEGODI	Masego Kayla	F	Grade R	RA			English					Nthabiseng Revien	SEGODI		
-184	SELEKA	Amohelang	M	Grade 06	6A	0729898507		English					Zondi	SELEKA		
-185	SELEMELA	Tshegofatso	F	Grade 09	9A			English	Mashilo	MAGORO					
-186	SELEPE	Karabo	M	Grade 07	7A	0716231064		English					Pinky	SELEPE		
-187	SERETLO	Odirile	M	Grade 10	10A	0828725943		English	Thabiso				Letta	NYAKALE		
-188	SESHWENG	Kgasietsile	M	Grade 01	1A			English					Mphedi	SESHANG		
-189	SGUDLA	Justice	M	Grade 09	9A	0768027363		English	Mlungisi	TAITO					
-190	SHIBAMBU	Nkateko	F	Grade 05	5A	0615365661		English	Lazarus	SHIBAMBO			Vironica	MKHONDO		
-191	SHUMBA	Nelson	M	Grade 09	9A	0814964733		English	Moses	SHUMBA		0826433477		NDABA		
-192	SHUMBA	Zakhele	M	Grade 10	10A			English					Thoko	RAMAKGATLA		0820870157
-193	SIMBINI	Amokelani	M	Grade 09	9A			English					Mamiki	SIMBINI		07907196
-194	SINGO	Vhuthu	F	Grade 05	5A			English	Livhuwani Rodney	SINGO		0731273422				0832702980
-195	SKOSANA	Ngobile	F	Grade 08	8A	0722469383		English	Percy	TJIANE		0617629522			
-196	TAU	Happiness	M	Grade 03	3A	0791514602		English	Eric	THUBANE					
-197	THOBAKGALE	Atlegang	M	Grade 10	10A	0824362308		English					Mashego	THOBAKGALE		
-198	TICK	Angel	F	Grade 09	9A	0787114211		English	Jackson	TICK			Nleya			
-199	TICK	Samuel	M	Grade 02	2A			English	Jackson	TICK	N/A	0761294251			HANNAHNBEYA@GMAIL.COM	0625398674
-200	TJALE	Tokollo	M	Grade 08	8A	0796175000		English					Vellery	TJALE		
-201	TLADI	Boitumelo	F	Grade 05	5A	0825463158		English	Thabo	MOKWANA					
-202	TLADI	Masego	M	Grade 01	1A	0825463158		English	Thabo	MOKWANA					
-203	TLADI	Steve	M	Grade 09	9A	0825443158		English	Thabo				Nancy	TLADI		0825463158
-204	TWALA	Asimbonge	F	Grade 04	4A	0796522700		English					Ns	TWALA		
-205	TYULU	Ikhona	F	Grade 07	7A	0648223127		English					Ntombie	TYULU		0648223127
-206	XABA	Nqobile	F	Grade R	RA	0793583738		English					Nonkululeko	XABA		
-207	XOZWA	Precious	F	Grade 02	2A	0723537400		English	George	LEBISI			Tembi	XOZWA		
-208	YUDA	Keagan	M	Grade 01	1A			English					Mitchelle	MASHONGANYIKA		
-209	ZIMBWA	Agnes	F	Grade 04	4A	0653625473		English	Kudakwashe	ZIMBWA		0691569583	Tenda			
-210	ZINDERE	Wajeed	M	Grade 03	3A	0739945030		English					Jane	ZINDERE		
-211	ZINDERE	Waleed	M	Grade 03	3A	0836213919		English					Jane	ZINDERE		
-212	ZINDERE	Yasmis	F	Grade 09	9A	0832321195		English					Jane	ZINDERE		
-213	ZWANE	Nqubeko	F	Grade 09	9A			English					Brenda	ZWANE`;
+            const initialAdmissions = [
+                { accession: '1', surname: 'AGYAPONG', firstName: 'Princess', gender: 'F', grade: 'Grade 04', classValue: '4A', cell: '0738012103', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Olivia', motherSurname: 'AGYAPONG', motherEmail: '', motherCell: '' },
+                { accession: '2', surname: 'ARRIES', firstName: 'Kaylin', gender: 'F', grade: 'Grade 09', classValue: '9A', cell: '0835918224', email: '', homeLanguage: 'English', fatherName: 'Francois', fatherSurname: 'ARRIES', fatherEmail: '', fatherCell: '0783660823', motherName: 'Sharoline', motherSurname: 'ARRIES', motherEmail: 'SHAROLINEARRIES@GMAIL.COM', motherCell: '0680554938' },
+                { accession: '3', surname: 'BALOYI', firstName: 'Onkgopoditse', gender: 'M', grade: 'Grade 07', classValue: '7A', cell: '0648264275', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Sharon', motherSurname: 'BALOYI', motherEmail: '', motherCell: '0727841024' },
+                { accession: '4', surname: 'BAMIDELE', firstName: 'Michelle', gender: 'F', grade: 'Grade 08', classValue: '8A', cell: '0766696262', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Joyce', motherSurname: 'MOTSEPE', motherEmail: '', motherCell: '' },
+                { accession: '5', surname: 'BOYS', firstName: 'Ginolia', gender: 'F', grade: 'Grade 05', classValue: '5A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Thandi', motherSurname: 'BOYS', motherEmail: '', motherCell: '0681182017' },
+                { accession: '6', surname: 'CHAKA', firstName: 'Tumelo', gender: 'M', grade: 'Grade 09', classValue: '9A', cell: '0760522944', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: 'MAGOLEGO', fatherEmail: '', fatherCell: '', motherName: 'Dimakatso', motherSurname: 'CHAKA', motherEmail: '', motherCell: '' },
+                { accession: '7', surname: 'CHAUKE', firstName: 'Nobuhle', gender: 'F', grade: 'Grade 10', classValue: '10A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Emelina Nomsa', motherSurname: 'CHAUKE', motherEmail: '', motherCell: '0726002475' },
+                { accession: '8', surname: 'CHAUKE', firstName: 'Siyanda', gender: 'F', grade: 'Grade 07', classValue: '7A', cell: '0793247842', email: '', homeLanguage: 'English', fatherName: 'Bafana', fatherSurname: 'CHAUKE', fatherEmail: '', fatherCell: '', motherName: '', motherSurname: '', motherEmail: '', motherCell: '' },
+                { accession: '9', surname: 'CHIMBIRO', firstName: 'Alaine', gender: 'F', grade: 'Grade 08', classValue: '8A', cell: '0734638108', email: '', homeLanguage: 'English', fatherName: 'Chikwando', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Nyarai', motherSurname: 'CHIMBIRO', motherEmail: '', motherCell: '' },
+                { accession: '10', surname: 'CHIRUME', firstName: 'Mafaro', gender: 'F', grade: 'Grade 05', classValue: '5A', cell: '0732157461', email: '', homeLanguage: 'English', fatherName: 'Francis', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Pers', motherSurname: 'CHIRUME', motherEmail: '', motherCell: '0732157462' },
+                { accession: '11', surname: 'CHIVIMA', firstName: 'Jayden', gender: 'M', grade: 'Grade 05', classValue: '5A', cell: '0739202633', email: '', homeLanguage: 'English', fatherName: 'Anywau', fatherSurname: 'CHIVIMA', fatherEmail: '', fatherCell: '', motherName: 'Faustina', motherSurname: 'MAKAINGANWA', motherEmail: '', motherCell: '' },
+                { accession: '12', surname: 'CHIVIMA', firstName: 'Jayla', gender: 'F', grade: 'Grade 02', classValue: '2A', cell: '0739202633', email: '', homeLanguage: 'English', fatherName: 'Anuwau', fatherSurname: 'CHIRIMA', fatherEmail: '', fatherCell: '', motherName: 'Faustina', motherSurname: '', motherEmail: '', motherCell: '' },
+                { accession: '213', surname: 'ZWANE', firstName: 'Nqubeko', gender: 'F', grade: 'Grade 09', classValue: '9A', cell: '', email: '', homeLanguage: 'English', fatherName: '', fatherSurname: '', fatherEmail: '', fatherCell: '', motherName: 'Brenda', motherSurname: 'ZWANE', motherEmail: '', motherCell: '' }
+            ];
             
-            // Parse the raw data
-            const lines = rawStudentData.trim().split('\n');
-            const initialAdmissions = [];
-            
-            lines.forEach(line => {
-                const parts = line.split('\t');
-                if (parts.length >= 9) {
-                    const admission = {
-                        accession: parts[0].trim(),
-                        surname: parts[1].trim(),
-                        firstName: parts[2].trim(),
-                        gender: parts[3].trim(),
-                        grade: parts[4].trim(),
-                        classValue: parts[5].trim(),
-                        cell: parts[6].trim(),
-                        email: parts[7].trim(),
-                        homeLanguage: parts[8].trim(),
-                        fatherName: parts.length > 9 ? parts[9].trim() : '',
-                        fatherSurname: parts.length > 10 ? parts[10].trim() : '',
-                        fatherEmail: parts.length > 11 ? parts[11].trim() : '',
-                        fatherCell: parts.length > 12 ? parts[12].trim() : '',
-                        motherName: parts.length > 13 ? parts[13].trim() : '',
-                        motherSurname: parts.length > 14 ? parts[14].trim() : '',
-                        motherEmail: parts.length > 15 ? parts[15].trim() : '',
-                        motherCell: parts.length > 16 ? parts[16].trim() : ''
-                    };
-                    initialAdmissions.push(admission);
-                }
-            });
-            
-            // Add all parsed admissions to the system
             initialAdmissions.forEach(admission => {
                 const id = Date.now() + Math.random();
                 const name = admission.firstName + ' ' + admission.surname;
@@ -3612,21 +3381,9 @@
                     status: 'Pending',
                     saSamsFormat: true
                 });
-                
-                // Also add to students array for Student Information System
-                students.push({
-                    id,
-                    name,
-                    ...admission,
-                    parent: admission.motherName + ' ' + admission.motherSurname,
-                    status: 'Active',
-                    educator: '',
-                    saSamsFormat: true
-                });
             });
             
             saveData();
-            console.log(`Initialized ${initialAdmissions.length} students in admission and student information systems`);
         }
         // Generate demo data
         function generateDemoData() {
