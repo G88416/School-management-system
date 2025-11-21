@@ -5366,6 +5366,27 @@
             return String(val).trim();
         }
         
+        // Helper: find student by number, name, and optionally grade to avoid false positives
+        function findStudentByLearner(learner) {
+            return students.find(s => {
+                // First try exact number match
+                if (s.accession === learner.number && learner.number) {
+                    return true;
+                }
+                // Then try name + grade match for better accuracy
+                if (s.surname === learner.surname && 
+                    s.firstName === learner.firstName && 
+                    s.grade === learner.grade) {
+                    return true;
+                }
+                // Finally try just name match (less reliable)
+                if (s.surname === learner.surname && s.firstName === learner.firstName) {
+                    return true;
+                }
+                return false;
+            });
+        }
+        
         // Unified parser for SA-SAMS "Learner and Parent Info" Excel format
         function parseSASAMSFile(file, onSuccess) {
             const reader = new FileReader();
@@ -5379,8 +5400,8 @@
                     const worksheet = workbook.Sheets[firstSheetName];
 
                     // Convert to JSON with header row = row 2 (actual headers)
-                    // header: 1 = use first row as arrays
-                    // range: 1 = start from row 2 (0-indexed → skip title row)
+                    // header: 1 = use first row as arrays (not as keys)
+                    // range: 1 = skip first row (row 0), start reading from row 1 (Excel row 2)
                     const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
                         header: 1,     // treat every row as array
                         range: 1       // start from row 2 (0-indexed → skip title row)
@@ -5904,7 +5925,10 @@
                     status: 'Active',
                     accession: record.number,
                     educator: 'Unassigned',
-                    parent: `${record.fatherName} ${record.fatherSurname} / ${record.motherName} ${record.motherSurname}`.trim()
+                    parent: [
+                        `${record.fatherName || ''} ${record.fatherSurname || ''}`.trim(),
+                        `${record.motherName || ''} ${record.motherSurname || ''}`.trim()
+                    ].filter(p => p).join(' / ') || 'Unknown'
                 });
             });
             saveData();
@@ -6019,10 +6043,7 @@
                 const matchedRecords = [];
                 
                 learners.forEach(learner => {
-                    const student = students.find(s => 
-                        s.accession === learner.number || 
-                        (s.surname === learner.surname && s.firstName === learner.firstName)
-                    );
+                    const student = findStudentByLearner(learner);
                     
                     if (student) {
                         matchedRecords.push({
@@ -6239,10 +6260,7 @@
                 const defaultDueDate = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0]; // End of year
                 
                 learners.forEach(learner => {
-                    const student = students.find(s => 
-                        s.accession === learner.number || 
-                        (s.surname === learner.surname && s.firstName === learner.firstName)
-                    );
+                    const student = findStudentByLearner(learner);
                     
                     if (student) {
                         feeRecords.push({
