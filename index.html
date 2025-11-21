@@ -5596,8 +5596,8 @@
                     </div>`;
                     
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -5959,8 +5959,8 @@
                     </div>`;
                     
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -6188,8 +6188,8 @@
                     }
                     
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -6792,8 +6792,8 @@
                     </div>`;
                     
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
