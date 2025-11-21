@@ -5770,7 +5770,7 @@
                 return surname.toLowerCase().includes(search) || 
                        firstName.toLowerCase().includes(search) || 
                        accession.toLowerCase().includes(search) ||
-                       (s.grade && s.grade.toLowerCase().includes(search));
+                       ((s.grade || '').toLowerCase().includes(search));
             });
             document.getElementById('studentTable').innerHTML = filtered.map(s => {
                 const surname = s.surname || s.name?.split(' ')[0] || '';
@@ -5893,8 +5893,9 @@
             alert('Documents for student ' + id + ' (mock)');
         }
         function escapeHtml(text) {
+            if (text == null) return '';
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = String(text);
             return div.innerHTML;
         }
         
@@ -5968,7 +5969,7 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" onclick="editStudent(${id}); bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal')).hide();">
+                                <button type="button" class="btn btn-primary" onclick="editStudent(${parseInt(id, 10)}); bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal')).hide();">
                                     <i class="fas fa-edit me-1"></i>Edit Learner
                                 </button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
