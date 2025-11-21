@@ -602,6 +602,9 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#teacher-incidents" onclick="loadTeacherIncidents()">Incident Reports</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#work-vault" onclick="renderWorkVault()">Work Vault</a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="lesson-plans">
@@ -946,6 +949,61 @@
                             </thead>
                             <tbody id="teacherIncidentsTable"></tbody>
                         </table>
+                    </div>
+                    <div class="tab-pane fade" id="work-vault">
+                        <h4><i class="fas fa-vault me-2"></i>Work Vault - Student Submissions</h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>View all student work submissions in one place. Filter by student, class, or date.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select class="form-control" id="workVaultStudentFilter" onchange="renderWorkVault()">
+                                    <option value="">All Students</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-control" id="workVaultClassFilter" onchange="renderWorkVault()">
+                                    <option value="">All Classes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="workVaultDateFilter" onchange="renderWorkVault()">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" placeholder="Search..." id="workVaultSearch" oninput="debounce(renderWorkVault, 300)()">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-file-alt fa-2x mb-2"></i>
+                                    <h5>Total Submissions</h5>
+                                    <h3 id="totalSubmissions">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-clock fa-2x mb-2"></i>
+                                    <h5>Today's Submissions</h5>
+                                    <h3 id="todaySubmissions">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <h5>Unique Students</h5>
+                                    <h3 id="uniqueStudents">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-calendar-week fa-2x mb-2"></i>
+                                    <h5>This Week</h5>
+                                    <h3 id="weekSubmissions">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="workVaultList"></div>
                     </div>
                 </div>
             </section>
@@ -3837,7 +3895,28 @@
             document.getElementById('gradingClass').innerHTML = '<option value="">Select Class</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
         }
         // Dashboard
+        // Real-time dashboard update interval
+        let dashboardUpdateInterval = null;
+        
         function loadDashboard() {
+            updateDashboardMetrics();
+            
+            // Set up real-time updates every 30 seconds
+            if (dashboardUpdateInterval) {
+                clearInterval(dashboardUpdateInterval);
+            }
+            dashboardUpdateInterval = setInterval(() => {
+                if (document.getElementById('dashboard').classList.contains('d-none')) {
+                    // Dashboard is not visible, stop updating
+                    clearInterval(dashboardUpdateInterval);
+                    dashboardUpdateInterval = null;
+                } else {
+                    updateDashboardMetrics();
+                }
+            }, 30000); // Update every 30 seconds
+        }
+        
+        function updateDashboardMetrics() {
             document.getElementById('totalStudents').textContent = students.length;
             const today = new Date().toISOString().split('T')[0];
             const todayAttendance = attendanceRecords[today] || {};
@@ -3854,6 +3933,26 @@
             document.getElementById('openPositionsDash').textContent = jobs.filter(j => j.status === 'Open').length;
             const avgPerformance = performanceReviews.length > 0 ? Math.round(performanceReviews.reduce((sum, r) => sum + r.score, 0) / performanceReviews.length) : 0;
             document.getElementById('avgPerformanceDash').textContent = avgPerformance + '%';
+            
+            // Update last refresh time indicator
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            let refreshIndicator = document.getElementById('dashboardRefreshTime');
+            if (!refreshIndicator) {
+                // Create refresh time indicator if it doesn't exist
+                const dashboardSection = document.querySelector('#dashboard h2');
+                if (dashboardSection) {
+                    refreshIndicator = document.createElement('small');
+                    refreshIndicator.id = 'dashboardRefreshTime';
+                    refreshIndicator.className = 'text-muted ms-3';
+                    refreshIndicator.style.fontSize = '0.7rem';
+                    dashboardSection.appendChild(refreshIndicator);
+                }
+            }
+            if (refreshIndicator) {
+                refreshIndicator.innerHTML = `<i class="fas fa-sync-alt me-1"></i>Last updated: ${timeStr}`;
+            }
+            
             // Chart
             const ctx = document.getElementById('dashboardChart').getContext('2d');
             if (dashboardChart) dashboardChart.destroy();
@@ -3868,6 +3967,13 @@
                 },
                 options: { responsive: true }
             });
+        }
+        
+        // Trigger dashboard update when data changes
+        function triggerDashboardUpdate() {
+            if (!document.getElementById('dashboard').classList.contains('d-none')) {
+                updateDashboardMetrics();
+            }
         }
         // Import Class List from MX-4051 PDF
         function importClassListFromPDF() {
@@ -5181,10 +5287,17 @@
                 if (username && password) {
                     users.push({ username, password, name, role: 'Student' });
                 }
+                
+                // Auto-sync to Student Info
+                if (status === 'approved' || status === 'Approved' || status === 'enrolled') {
+                    syncAdmissionToStudentInfo(id);
+                }
+                
                 saveData();
                 renderAdmissions();
                 bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
-                addNotification('Admission saved with SA-Sams format', 'success');
+                addNotification('Admission saved with SA-Sams format and synced to Student Info', 'success');
+                triggerDashboardUpdate();
             }
         }
         function editAdmission(id) {
@@ -5208,13 +5321,22 @@
                     adm.grade = document.getElementById('admissionGrade').value;
                     adm.username = document.getElementById('admissionUsername').value;
                     adm.password = document.getElementById('admissionPassword').value;
-                    adm.status = document.getElementById('admissionStatus').value;
+                    const newStatus = document.getElementById('admissionStatus').value;
+                    const statusChanged = adm.status !== newStatus;
+                    adm.status = newStatus;
+                    
+                    // Auto-sync to Student Info if status changed to approved
+                    if (statusChanged && (newStatus === 'approved' || newStatus === 'Approved' || newStatus === 'enrolled')) {
+                        syncAdmissionToStudentInfo(adm.id);
+                    }
+                    
                     saveData();
                     renderAdmissions();
                     bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
                     saveBtn.textContent = 'Save';
                     saveBtn.onclick = saveAdmission;
-                    addNotification('Admission updated', 'success');
+                    addNotification('Admission updated and synced', 'success');
+                    triggerDashboardUpdate();
                 };
                 new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
             }
@@ -5323,20 +5445,47 @@
                     }
                 }
                 
-                // Smart name handling - combine first and last if full name not provided
+                // Enhanced Smart name handling with auto-detection
+                // Try to detect name format: "Surname, FirstName" or "FirstName Surname"
                 if (!record.name && (record.firstName || record.surname)) {
-                    record.name = `${record.surname || ''} ${record.firstName || ''}`.trim();
+                    record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
                     if (record.name) {
                         warnings.push({row: index + 1, field: 'name', message: 'Combined from first and last name'});
                     }
                 }
                 
-                // Split name if first and last not provided but name is
+                // Auto-detect name format and split accordingly
                 if (!record.firstName && !record.surname && record.name) {
-                    const nameParts = record.name.split(' ');
-                    record.surname = nameParts[0] || '';
-                    record.firstName = nameParts.slice(1).join(' ') || '';
-                    warnings.push({row: index + 1, field: 'name', message: 'Split into first and last name'});
+                    let detectedFormat = 'unknown';
+                    
+                    // Check if format is "Surname, FirstName"
+                    if (record.name.includes(',')) {
+                        const parts = record.name.split(',').map(p => p.trim());
+                        record.surname = parts[0] || '';
+                        record.firstName = parts.slice(1).join(' ') || '';
+                        detectedFormat = 'surname,firstname';
+                    } 
+                    // Check if format is "FirstName Surname" (multiple words)
+                    else if (record.name.includes(' ')) {
+                        const nameParts = record.name.trim().split(/\s+/);
+                        // Assume last word is surname, rest is first name
+                        record.surname = nameParts[nameParts.length - 1] || '';
+                        record.firstName = nameParts.slice(0, -1).join(' ') || '';
+                        detectedFormat = 'firstname surname';
+                    }
+                    // Single name - treat as first name
+                    else {
+                        record.firstName = record.name;
+                        record.surname = '';
+                        detectedFormat = 'single name';
+                    }
+                    
+                    warnings.push({row: index + 1, field: 'name', message: `Auto-detected format (${detectedFormat}) and split into first/last name`});
+                }
+                
+                // Ensure both name formats are available
+                if (!record.name && (record.firstName || record.surname)) {
+                    record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
                 }
                 
                 // Enhanced: Try to populate missing required fields with available data
@@ -5518,9 +5667,14 @@
             });
             saveData();
             renderAdmissions();
+            
+            // Auto-sync approved admissions to Student Info
+            syncAllApprovedAdmissions();
+            
             bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
             addNotification(`✅ Successfully imported ${records.length} admissions with advanced algorithm`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} admissions using advanced algorithm`, 'Low');
+            triggerDashboardUpdate();
         }
         
         function clearBulkAdmissionNotification() {
@@ -5528,6 +5682,116 @@
             document.getElementById('admissionsFile').value = '';
             document.getElementById('admissionsPreview').innerHTML = '';
             addNotification('Bulk admission import cleared', 'info');
+        }
+        
+        // ========================================
+        // SYNC ADMISSION TO STUDENT INFO AND ATTENDANCE
+        // ========================================
+        
+        function syncAdmissionToStudentInfo(admissionId) {
+            const admission = admissions.find(a => a.id === admissionId);
+            if (!admission) {
+                console.error('Admission not found:', admissionId);
+                return false;
+            }
+            
+            // Check if student already exists
+            const existingStudent = students.find(s => 
+                s.accession === admission.accession || 
+                (s.name === admission.name && s.grade === admission.grade)
+            );
+            
+            if (existingStudent) {
+                console.log('Student already exists in Student Info:', existingStudent.name);
+                return false;
+            }
+            
+            // Create student record from admission
+            const studentId = Date.now() + Math.random();
+            const newStudent = {
+                id: studentId,
+                number: admission.accession || `STU-${studentId}`,
+                name: admission.name,
+                surname: admission.surname || admission.name.split(' ')[0],
+                firstName: admission.firstName || admission.name.split(' ').slice(1).join(' '),
+                gender: admission.gender || 'Not specified',
+                grade: admission.grade,
+                class: admission.classValue || admission.grade,
+                cell: admission.cell || '',
+                email: admission.email || '',
+                language: admission.homeLanguage || 'English',
+                fatherName: admission.fatherName || '',
+                fatherSurname: admission.fatherSurname || '',
+                fatherEmail: admission.fatherEmail || '',
+                fatherCell: admission.fatherCell || '',
+                motherName: admission.motherName || '',
+                motherSurname: admission.motherSurname || '',
+                motherEmail: admission.motherEmail || '',
+                motherCell: admission.motherCell || '',
+                status: 'Active',
+                accession: admission.accession,
+                username: admission.username,
+                admissionId: admissionId,
+                enrolledDate: new Date().toISOString().split('T')[0]
+            };
+            
+            // Add to students array
+            students.push(newStudent);
+            
+            // Initialize attendance record for the student
+            const today = new Date().toISOString().split('T')[0];
+            if (!attendanceRecords[today]) {
+                attendanceRecords[today] = {};
+            }
+            
+            // Mark as present for first day
+            attendanceRecords[today][studentId] = {
+                studentId: studentId,
+                studentName: newStudent.name,
+                status: 'Present',
+                remarks: 'First day - Enrolled from admission',
+                markedAt: new Date().toISOString()
+            };
+            
+            // Save all data
+            saveData();
+            
+            // Refresh relevant sections if they're visible
+            if (!document.getElementById('students').classList.contains('d-none')) {
+                renderStudents();
+            }
+            if (!document.getElementById('attendance').classList.contains('d-none')) {
+                loadAttendance();
+            }
+            
+            console.log('Student synced to Student Info and Attendance:', newStudent.name);
+            addNotification(`Student ${newStudent.name} added to Student Info and Attendance`, 'success');
+            
+            // Log the sync action
+            logAudit('Admission Sync', `Synced admission ${admission.name} to Student Info and Attendance`, 'Low');
+            
+            return true;
+        }
+        
+        // Bulk sync all approved admissions
+        function syncAllApprovedAdmissions() {
+            const approvedAdmissions = admissions.filter(a => 
+                a.status === 'approved' || a.status === 'Approved' || a.status === 'enrolled'
+            );
+            
+            let syncedCount = 0;
+            approvedAdmissions.forEach(admission => {
+                if (syncAdmissionToStudentInfo(admission.id)) {
+                    syncedCount++;
+                }
+            });
+            
+            if (syncedCount > 0) {
+                addNotification(`Synced ${syncedCount} approved admissions to Student Info`, 'success');
+                triggerDashboardUpdate();
+            } else {
+                addNotification('No new admissions to sync', 'info');
+            }
         }
 
         // Student Management
@@ -8125,16 +8389,23 @@
                 });
             }
             
+            // Get student details from students array
+            const studentDetails = students.find(s => s.name === currentUser.name) || {};
+            
             const submission = {
                 id: Date.now(),
                 student: currentUser.name,
+                studentId: studentDetails.id || currentUser.username,
+                grade: studentDetails.grade || 'N/A',
+                class: studentDetails.class || 'N/A',
                 assignment: title,
                 subject: subject,
                 description: description,
                 files: fileList,
                 submittedDate: new Date().toISOString().split('T')[0],
+                submittedTime: new Date().toISOString(),
                 status: 'Under Review',
-                grade: '-',
+                gradeValue: '-',
                 feedback: 'Waiting for teacher review'
             };
             
@@ -8179,7 +8450,7 @@
                     <td>${sub.submittedDate}</td>
                     <td><small title="${fileNames}">${sub.files.length} file(s)</small></td>
                     <td><span class="badge bg-${statusClass}">${sub.status}</span></td>
-                    <td>${sub.grade}</td>
+                    <td>${sub.gradeValue || sub.grade || '-'}</td>
                     <td>${sub.feedback}</td>
                 </tr>`;
             });
@@ -9753,6 +10024,232 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             if (filteredIncidents.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No incident reports found.</td></tr>';
             }
+        }
+        
+        // ========================================
+        // WORK VAULT FUNCTIONS
+        // ========================================
+        
+        function renderWorkVault() {
+            if (!currentUser || currentUser.role !== 'teacher') return;
+            
+            // Get all student submissions from localStorage
+            const allSubmissions = JSON.parse(localStorage.getItem('studentSubmissions') || '[]');
+            
+            // Get filter values
+            const studentFilter = document.getElementById('workVaultStudentFilter')?.value || '';
+            const classFilter = document.getElementById('workVaultClassFilter')?.value || '';
+            const dateFilter = document.getElementById('workVaultDateFilter')?.value || '';
+            const searchTerm = document.getElementById('workVaultSearch')?.value.toLowerCase() || '';
+            
+            // Apply filters
+            let filteredSubmissions = allSubmissions;
+            
+            if (studentFilter) {
+                filteredSubmissions = filteredSubmissions.filter(s => s.student === studentFilter);
+            }
+            if (classFilter) {
+                filteredSubmissions = filteredSubmissions.filter(s => s.grade === classFilter || s.class === classFilter);
+            }
+            if (dateFilter) {
+                filteredSubmissions = filteredSubmissions.filter(s => s.submittedDate === dateFilter);
+            }
+            if (searchTerm) {
+                filteredSubmissions = filteredSubmissions.filter(s => 
+                    s.assignment.toLowerCase().includes(searchTerm) || 
+                    s.subject.toLowerCase().includes(searchTerm) ||
+                    s.student.toLowerCase().includes(searchTerm) ||
+                    s.description?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Populate student filter if not already done
+            const studentSelect = document.getElementById('workVaultStudentFilter');
+            if (studentSelect && studentSelect.options.length === 1) {
+                const uniqueStudents = [...new Set(allSubmissions.map(s => s.student))];
+                uniqueStudents.forEach(studentName => {
+                    const option = document.createElement('option');
+                    option.value = studentName;
+                    option.textContent = studentName;
+                    studentSelect.appendChild(option);
+                });
+            }
+            
+            // Populate class filter if not already done
+            const classSelect = document.getElementById('workVaultClassFilter');
+            if (classSelect && classSelect.options.length === 1) {
+                const uniqueClasses = [...new Set(allSubmissions.map(s => s.grade || s.class).filter(c => c && c !== 'N/A'))];
+                uniqueClasses.sort();
+                uniqueClasses.forEach(className => {
+                    const option = document.createElement('option');
+                    option.value = className;
+                    option.textContent = className;
+                    classSelect.appendChild(option);
+                });
+            }
+            
+            // Update metrics
+            const today = new Date().toISOString().split('T')[0];
+            const todaySubmissions = allSubmissions.filter(s => s.submittedDate === today).length;
+            const uniqueStudents = [...new Set(allSubmissions.map(s => s.student))].length;
+            
+            // Get submissions from this week
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+            const weekSubmissions = allSubmissions.filter(s => s.submittedDate >= oneWeekAgoStr).length;
+            
+            document.getElementById('totalSubmissions').textContent = allSubmissions.length;
+            document.getElementById('todaySubmissions').textContent = todaySubmissions;
+            document.getElementById('uniqueStudents').textContent = uniqueStudents;
+            document.getElementById('weekSubmissions').textContent = weekSubmissions;
+            
+            // Render submissions list
+            const listContainer = document.getElementById('workVaultList');
+            if (!listContainer) return;
+            
+            if (filteredSubmissions.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No submissions found. ${searchTerm || studentFilter || classFilter || dateFilter ? 'Try adjusting your filters.' : 'Students will see their submissions here after uploading.'}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by submitted date (newest first)
+            filteredSubmissions.sort((a, b) => new Date(b.submittedTime || b.submittedDate) - new Date(a.submittedTime || a.submittedDate));
+            
+            const html = filteredSubmissions.map(submission => {
+                const statusClass = submission.status === 'Graded' ? 'success' : 
+                                  submission.status === 'Under Review' ? 'warning' : 'info';
+                const fileNames = submission.files.map(f => f.name).join(', ');
+                const filesDisplay = submission.files.map(f => 
+                    `<span class="badge bg-secondary me-1" title="${f.size} bytes">${f.name}</span>`
+                ).join('');
+                
+                return `
+                    <div class="card mb-3" style="background: rgba(255, 255, 255, 0.1); border-left: 4px solid rgba(99, 102, 241, 0.8);">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h5 class="mb-2">
+                                        <i class="fas fa-file-alt me-2"></i>${submission.assignment}
+                                        <span class="badge bg-${statusClass} ms-2">${submission.status}</span>
+                                    </h5>
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-user me-1"></i>Student:</strong> ${submission.student}
+                                        <span class="badge bg-info ms-2">${submission.grade || submission.class || 'N/A'}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-book me-1"></i>Subject:</strong> 
+                                        <span class="badge bg-primary">${submission.subject}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-calendar me-1"></i>Submitted:</strong> ${submission.submittedDate}
+                                        ${submission.submittedTime ? `<small class="text-muted ms-1">(${new Date(submission.submittedTime).toLocaleTimeString()})</small>` : ''}
+                                    </div>
+                                    ${submission.description ? `
+                                        <div class="mb-2">
+                                            <strong><i class="fas fa-comment me-1"></i>Description:</strong><br>
+                                            <small>${submission.description}</small>
+                                        </div>
+                                    ` : ''}
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-paperclip me-1"></i>Files (${submission.files.length}):</strong><br>
+                                        ${filesDisplay}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="mb-2">
+                                        <strong>Grade:</strong> ${submission.gradeValue || submission.grade || '-'}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Feedback:</strong><br>
+                                        <small>${submission.feedback || 'No feedback yet'}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary mb-2" onclick="gradeSubmission(${submission.id})">
+                                        <i class="fas fa-pen me-1"></i>Grade Work
+                                    </button>
+                                    <button class="btn btn-sm btn-info" onclick="viewSubmissionDetails(${submission.id})">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            listContainer.innerHTML = html;
+        }
+        
+        // Grade submission function
+        function gradeSubmission(submissionId) {
+            const allSubmissions = JSON.parse(localStorage.getItem('studentSubmissions') || '[]');
+            const submission = allSubmissions.find(s => s.id === submissionId);
+            
+            if (!submission) {
+                addNotification('Submission not found', 'error');
+                return;
+            }
+            
+            const grade = prompt(`Enter grade for "${submission.assignment}" (e.g., A, B, C, 85%, etc.):`, submission.gradeValue || '');
+            if (grade === null) return; // User cancelled
+            
+            const feedback = prompt('Enter feedback for the student:', submission.feedback || '');
+            if (feedback === null) return; // User cancelled
+            
+            // Update submission
+            submission.gradeValue = grade || '-';
+            submission.grade = grade || '-';
+            submission.feedback = feedback || 'No feedback provided';
+            submission.status = grade ? 'Graded' : 'Under Review';
+            submission.gradedDate = new Date().toISOString().split('T')[0];
+            submission.gradedBy = currentUser.name;
+            
+            // Save back to localStorage
+            localStorage.setItem('studentSubmissions', JSON.stringify(allSubmissions));
+            
+            // Refresh display
+            renderWorkVault();
+            addNotification('Work graded successfully!', 'success');
+            
+            // Log the action
+            logAudit('Grade Work', `Graded ${submission.assignment} for ${submission.student}`, 'Low');
+        }
+        
+        // View submission details
+        function viewSubmissionDetails(submissionId) {
+            const allSubmissions = JSON.parse(localStorage.getItem('studentSubmissions') || '[]');
+            const submission = allSubmissions.find(s => s.id === submissionId);
+            
+            if (!submission) {
+                addNotification('Submission not found', 'error');
+                return;
+            }
+            
+            const filesList = submission.files.map(f => `- ${f.name} (${(f.size / 1024).toFixed(2)} KB)`).join('\n');
+            
+            alert(`Submission Details:
+            
+Assignment: ${submission.assignment}
+Student: ${submission.student}
+Grade/Class: ${submission.grade || submission.class || 'N/A'}
+Subject: ${submission.subject}
+Submitted: ${submission.submittedDate}
+Status: ${submission.status}
+Grade: ${submission.gradeValue || submission.grade || '-'}
+
+Description:
+${submission.description || 'No description provided'}
+
+Files:
+${filesList}
+
+Feedback:
+${submission.feedback || 'No feedback yet'}`);
         }
 
         // Search debounces
