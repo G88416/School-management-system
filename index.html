@@ -5892,6 +5892,12 @@
         function viewStudentDocuments(id) {
             alert('Documents for student ' + id + ' (mock)');
         }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         function viewStudentDetails(id) {
             const student = students.find(s => s.id === id);
             if (!student) {
@@ -5902,41 +5908,62 @@
             const surname = student.surname || student.name?.split(' ')[0] || '';
             const firstName = student.firstName || student.name?.split(' ').slice(1).join(' ') || '';
             
+            // Escape all user data to prevent XSS
+            const safeData = {
+                surname: escapeHtml(surname),
+                firstName: escapeHtml(firstName),
+                accession: escapeHtml(String(student.accession || student.id)),
+                gender: escapeHtml(student.gender || 'N/A'),
+                grade: escapeHtml(student.grade || 'N/A'),
+                className: escapeHtml(student.class || student.className || 'N/A'),
+                cell: escapeHtml(student.cell || student.contact || 'N/A'),
+                email: escapeHtml(student.email || 'N/A'),
+                language: escapeHtml(student.homeLanguage || student.language || 'N/A'),
+                fatherName: escapeHtml(student.fatherName || student.parentName || 'N/A'),
+                fatherSurname: escapeHtml(student.fatherSurname || student.parentSurname || 'N/A'),
+                fatherEmail: escapeHtml(student.fatherEmail || 'N/A'),
+                fatherCell: escapeHtml(student.fatherCell || student.fatherContact || 'N/A'),
+                motherName: escapeHtml(student.motherName || 'N/A'),
+                motherSurname: escapeHtml(student.motherSurname || 'N/A'),
+                motherEmail: escapeHtml(student.motherEmail || 'N/A'),
+                motherCell: escapeHtml(student.motherCell || student.motherContact || 'N/A')
+            };
+            
             // Create a modal to show student details with edit button
             const modalHtml = `
                 <div class="modal fade" id="studentDetailsModal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Learner Details - ${surname} ${firstName}</h5>
+                                <h5 class="modal-title">Learner Details - ${safeData.surname} ${safeData.firstName}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <h6><strong>Learner Information</strong></h6>
-                                        <p><strong>Student Number:</strong> ${student.accession || student.id}</p>
-                                        <p><strong>Surname:</strong> ${surname}</p>
-                                        <p><strong>First Name:</strong> ${firstName}</p>
-                                        <p><strong>Gender:</strong> ${student.gender || 'N/A'}</p>
-                                        <p><strong>Grade:</strong> ${student.grade || 'N/A'}</p>
-                                        <p><strong>Class:</strong> ${student.class || student.className || 'N/A'}</p>
-                                        <p><strong>Cell:</strong> ${student.cell || student.contact || 'N/A'}</p>
-                                        <p><strong>Email:</strong> ${student.email || 'N/A'}</p>
-                                        <p><strong>Language:</strong> ${student.homeLanguage || student.language || 'N/A'}</p>
+                                        <p><strong>Student Number:</strong> ${safeData.accession}</p>
+                                        <p><strong>Surname:</strong> ${safeData.surname}</p>
+                                        <p><strong>First Name:</strong> ${safeData.firstName}</p>
+                                        <p><strong>Gender:</strong> ${safeData.gender}</p>
+                                        <p><strong>Grade:</strong> ${safeData.grade}</p>
+                                        <p><strong>Class:</strong> ${safeData.className}</p>
+                                        <p><strong>Cell:</strong> ${safeData.cell}</p>
+                                        <p><strong>Email:</strong> ${safeData.email}</p>
+                                        <p><strong>Language:</strong> ${safeData.language}</p>
                                     </div>
                                     <div class="col-md-6">
                                         <h6><strong>Father Details</strong></h6>
-                                        <p><strong>Name:</strong> ${student.fatherName || student.parentName || 'N/A'}</p>
-                                        <p><strong>Surname:</strong> ${student.fatherSurname || student.parentSurname || 'N/A'}</p>
-                                        <p><strong>Email:</strong> ${student.fatherEmail || 'N/A'}</p>
-                                        <p><strong>Cell:</strong> ${student.fatherCell || student.fatherContact || 'N/A'}</p>
+                                        <p><strong>Name:</strong> ${safeData.fatherName}</p>
+                                        <p><strong>Surname:</strong> ${safeData.fatherSurname}</p>
+                                        <p><strong>Email:</strong> ${safeData.fatherEmail}</p>
+                                        <p><strong>Cell:</strong> ${safeData.fatherCell}</p>
                                         <hr>
                                         <h6><strong>Mother Details</strong></h6>
-                                        <p><strong>Name:</strong> ${student.motherName || 'N/A'}</p>
-                                        <p><strong>Surname:</strong> ${student.motherSurname || 'N/A'}</p>
-                                        <p><strong>Email:</strong> ${student.motherEmail || 'N/A'}</p>
-                                        <p><strong>Cell:</strong> ${student.motherCell || student.motherContact || 'N/A'}</p>
+                                        <p><strong>Name:</strong> ${safeData.motherName}</p>
+                                        <p><strong>Surname:</strong> ${safeData.motherSurname}</p>
+                                        <p><strong>Email:</strong> ${safeData.motherEmail}</p>
+                                        <p><strong>Cell:</strong> ${safeData.motherCell}</p>
                                     </div>
                                 </div>
                             </div>
