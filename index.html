@@ -5368,23 +5368,14 @@
         
         // Helper: find student by number, name, and optionally grade to avoid false positives
         function findStudentByLearner(learner) {
-            return students.find(s => {
-                // First try exact number match
-                if (s.accession === learner.number && learner.number) {
-                    return true;
-                }
+            return students.find(s => 
+                // First try exact number match (most reliable)
+                (s.accession === learner.number && learner.number) ||
                 // Then try name + grade match for better accuracy
-                if (s.surname === learner.surname && 
-                    s.firstName === learner.firstName && 
-                    s.grade === learner.grade) {
-                    return true;
-                }
-                // Finally try just name match (less reliable)
-                if (s.surname === learner.surname && s.firstName === learner.firstName) {
-                    return true;
-                }
-                return false;
-            });
+                (s.surname === learner.surname && s.firstName === learner.firstName && s.grade === learner.grade) ||
+                // Finally try just name match (less reliable, but needed for imports without grade)
+                (s.surname === learner.surname && s.firstName === learner.firstName)
+            );
         }
         
         // Unified parser for SA-SAMS "Learner and Parent Info" Excel format
@@ -5399,9 +5390,9 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
 
-                    // Convert to JSON with header row = row 2 (actual headers)
-                    // header: 1 = use first row as arrays (not as keys)
-                    // range: 1 = skip first row (row 0), start reading from row 1 (Excel row 2)
+                    // Convert to JSON - expecting SA-SAMS format with title in row 1, headers in row 2
+                    // header: 1 = treat rows as arrays (not as key-value objects)
+                    // range: 1 = skip Excel row 1 (0-indexed), start reading from Excel row 2
                     const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
                         header: 1,     // treat every row as array
                         range: 1       // start from row 2 (0-indexed → skip title row)
@@ -5928,7 +5919,7 @@
                     parent: [
                         `${record.fatherName || ''} ${record.fatherSurname || ''}`.trim(),
                         `${record.motherName || ''} ${record.motherSurname || ''}`.trim()
-                    ].filter(p => p).join(' / ') || 'Unknown'
+                    ].filter(p => p && p.length > 0).join(' / ') || 'Unknown'
                 });
             });
             saveData();
@@ -6717,7 +6708,8 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Use range: 1 to skip title row
+                    // Skip Excel row 1 (title/header row), start from Excel row 2
+                    // range: 1 means skip 0-indexed row 0, begin reading at row 1
                     const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
                         header: 1,
                         range: 1
