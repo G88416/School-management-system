@@ -970,7 +970,7 @@
                                 <input type="date" class="form-control" id="workVaultDateFilter" onchange="renderWorkVault()">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" class="form-control" placeholder="Search..." id="workVaultSearch" oninput="debounce(renderWorkVault, 300)()">
+                                <input type="text" class="form-control" placeholder="Search..." id="workVaultSearch" oninput="debounce(renderWorkVault, 300)">
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -5493,7 +5493,7 @@
                     if (!record[reqField] || record[reqField] === '') {
                         // If name is required but missing, try other name fields
                         if (reqField === 'name' && (record.firstName || record.surname)) {
-                            record.name = `${record.surname || ''} ${record.firstName || ''}`.trim();
+                            record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
                             if (record.name) {
                                 warnings.push({row: index + 1, field: reqField, message: 'Generated name from available fields'});
                                 missingRequired = missingRequired.filter(f => f !== reqField);
