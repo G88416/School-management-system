@@ -495,8 +495,68 @@
                     <input type="text" class="form-control" placeholder="Search student..." id="studentSearch">
                     <button class="btn btn-outline-secondary" onclick="searchStudents()">Search</button>
                 </div>
-                <table class="table table-striped">
-                    <thead><tr><th>Student Number</th><th>Surname</th><th>First Name</th><th>Gender</th><th>Grade</th><th>Class</th><th>Cell</th><th>Email</th><th>Language</th><th>Father Name</th><th>Father Surname</th><th>Father Email</th><th>Father Cell</th><th>Mother Name</th><th>Mother Surname</th><th>Mother Email</th><th>Mother Cell</th><th>Actions</th></tr></thead>
+                <style>
+                    #students table.sasams-format {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        font-size: 12px;
+                        background: rgba(255, 255, 255, 0.95);
+                        color: #333;
+                    }
+                    #students table.sasams-format th,
+                    #students table.sasams-format td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    #students table.sasams-format th {
+                        background-color: #f2f2f2;
+                        font-weight: bold;
+                        color: #333;
+                    }
+                    #students table.sasams-format tr:nth-child(even) {
+                        background-color: #f9f9f9;
+                    }
+                    #students table.sasams-format caption {
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        font-size: 14px;
+                        color: #333;
+                        background: rgba(255, 255, 255, 0.95);
+                        padding: 10px;
+                        border-radius: 5px;
+                    }
+                </style>
+                <table class="sasams-format">
+                    <caption id="studentSasamsCaption">SA-SAMS v25.3.0 - Learner and Parent Info (3.1.13) - <span id="studentReportDate"></span></caption>
+                    <thead>
+                        <tr>
+                            <th colspan="9">LEARNER DETAILS</th>
+                            <th colspan="4">FATHER DETAILS</th>
+                            <th colspan="4">MOTHER DETAILS</th>
+                            <th rowspan="2">ACTIONS</th>
+                        </tr>
+                        <tr>
+                            <th>Number</th>
+                            <th>Surname</th>
+                            <th>First Name</th>
+                            <th>Gender</th>
+                            <th>Grade</th>
+                            <th>Class</th>
+                            <th>Cell#</th>
+                            <th>Email</th>
+                            <th>Language</th>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Cell#</th>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Email</th>
+                            <th>Cell#</th>
+                        </tr>
+                    </thead>
                     <tbody id="studentTable"></tbody>
                 </table>
             </section>
@@ -518,7 +578,7 @@
                 <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
                 <button class="btn btn-danger mb-3" onclick="resetAttendance()">Reset Attendance (Save to Vault)</button>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Surname</th><th>First Name</th><th>Grade</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="attendanceTable"></tbody>
                 </table>
             </section>
@@ -5696,6 +5756,12 @@
             new bootstrap.Modal(document.getElementById('addStudentModal')).show();
         }
         function renderStudents() {
+            // Update report date
+            const reportDateEl = document.getElementById('studentReportDate');
+            if (reportDateEl) {
+                reportDateEl.textContent = new Date().toLocaleDateString();
+            }
+            
             const search = document.getElementById('studentSearch').value.toLowerCase();
             const filtered = students.filter(s => {
                 const surname = s.surname || s.name?.split(' ')[0] || '';
@@ -5704,25 +5770,52 @@
                 return surname.toLowerCase().includes(search) || 
                        firstName.toLowerCase().includes(search) || 
                        accession.toLowerCase().includes(search) ||
-                       s.grade.toLowerCase().includes(search);
+                       ((s.grade || '').toLowerCase().includes(search));
             });
             document.getElementById('studentTable').innerHTML = filtered.map(s => {
                 const surname = s.surname || s.name?.split(' ')[0] || '';
                 const firstName = s.firstName || s.name?.split(' ').slice(1).join(' ') || '';
-                const accession = s.accession || '';
+                const accession = s.accession || s.id || '';
+                const studentClass = s.class || s.className || '';
+                const cell = s.cell || s.contact || s.parentContact || '';
+                const email = s.email || '';
+                const language = s.homeLanguage || s.language || '';
+                
+                // Father details
+                const fatherName = s.fatherName || s.parentName || '';
+                const fatherSurname = s.fatherSurname || s.parentSurname || '';
+                const fatherEmail = s.fatherEmail || '';
+                const fatherCell = s.fatherCell || s.fatherContact || '';
+                
+                // Mother details
+                const motherName = s.motherName || '';
+                const motherSurname = s.motherSurname || '';
+                const motherEmail = s.motherEmail || '';
+                const motherCell = s.motherCell || s.motherContact || '';
+                
                 return `
                 <tr>
-                    <td>${s.id}</td>
                     <td>${accession}</td>
                     <td>${surname}</td>
                     <td>${firstName}</td>
-                    <td>${s.grade}</td>
-                    <td>${s.parent}</td>
-                    <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">${s.status}</span></td>
-                    <td><button class="btn btn-sm btn-info" onclick="viewStudentDocuments(${s.id})">View</button></td>
+                    <td>${s.gender || ''}</td>
+                    <td>${s.grade || ''}</td>
+                    <td>${studentClass}</td>
+                    <td>${cell}</td>
+                    <td>${email}</td>
+                    <td>${language}</td>
+                    <td>${fatherName}</td>
+                    <td>${fatherSurname}</td>
+                    <td>${fatherEmail}</td>
+                    <td>${fatherCell}</td>
+                    <td>${motherName}</td>
+                    <td>${motherSurname}</td>
+                    <td>${motherEmail}</td>
+                    <td>${motherCell}</td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="editStudent(${s.id})">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id})">Delete</button>
+                        <button class="btn btn-sm btn-info" onclick="viewStudentDetails(${s.id})">View</button>
                     </td>
                 </tr>
             `}).join('');
@@ -5798,6 +5891,111 @@
         }
         function viewStudentDocuments(id) {
             alert('Documents for student ' + id + ' (mock)');
+        }
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+        
+        function viewStudentDetails(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) {
+                addNotification('Student not found', 'error');
+                return;
+            }
+            
+            const surname = student.surname || student.name?.split(' ')[0] || '';
+            const firstName = student.firstName || student.name?.split(' ').slice(1).join(' ') || '';
+            
+            // Escape all user data to prevent XSS
+            const safeData = {
+                surname: escapeHtml(surname),
+                firstName: escapeHtml(firstName),
+                accession: escapeHtml(String(student.accession || student.id)),
+                gender: escapeHtml(student.gender || 'N/A'),
+                grade: escapeHtml(student.grade || 'N/A'),
+                className: escapeHtml(student.class || student.className || 'N/A'),
+                cell: escapeHtml(student.cell || student.contact || 'N/A'),
+                email: escapeHtml(student.email || 'N/A'),
+                language: escapeHtml(student.homeLanguage || student.language || 'N/A'),
+                fatherName: escapeHtml(student.fatherName || student.parentName || 'N/A'),
+                fatherSurname: escapeHtml(student.fatherSurname || student.parentSurname || 'N/A'),
+                fatherEmail: escapeHtml(student.fatherEmail || 'N/A'),
+                fatherCell: escapeHtml(student.fatherCell || student.fatherContact || 'N/A'),
+                motherName: escapeHtml(student.motherName || 'N/A'),
+                motherSurname: escapeHtml(student.motherSurname || 'N/A'),
+                motherEmail: escapeHtml(student.motherEmail || 'N/A'),
+                motherCell: escapeHtml(student.motherCell || student.motherContact || 'N/A')
+            };
+            
+            // Create a modal to show student details with edit button
+            const modalHtml = `
+                <div class="modal fade" id="studentDetailsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Learner Details - ${safeData.surname} ${safeData.firstName}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><strong>Learner Information</strong></h6>
+                                        <p><strong>Student Number:</strong> ${safeData.accession}</p>
+                                        <p><strong>Surname:</strong> ${safeData.surname}</p>
+                                        <p><strong>First Name:</strong> ${safeData.firstName}</p>
+                                        <p><strong>Gender:</strong> ${safeData.gender}</p>
+                                        <p><strong>Grade:</strong> ${safeData.grade}</p>
+                                        <p><strong>Class:</strong> ${safeData.className}</p>
+                                        <p><strong>Cell:</strong> ${safeData.cell}</p>
+                                        <p><strong>Email:</strong> ${safeData.email}</p>
+                                        <p><strong>Language:</strong> ${safeData.language}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><strong>Father Details</strong></h6>
+                                        <p><strong>Name:</strong> ${safeData.fatherName}</p>
+                                        <p><strong>Surname:</strong> ${safeData.fatherSurname}</p>
+                                        <p><strong>Email:</strong> ${safeData.fatherEmail}</p>
+                                        <p><strong>Cell:</strong> ${safeData.fatherCell}</p>
+                                        <hr>
+                                        <h6><strong>Mother Details</strong></h6>
+                                        <p><strong>Name:</strong> ${safeData.motherName}</p>
+                                        <p><strong>Surname:</strong> ${safeData.motherSurname}</p>
+                                        <p><strong>Email:</strong> ${safeData.motherEmail}</p>
+                                        <p><strong>Cell:</strong> ${safeData.motherCell}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick="editStudent(${parseInt(id, 10)}); bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal')).hide();">
+                                    <i class="fas fa-edit me-1"></i>Edit Learner
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('studentDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('studentDetailsModal'));
+            modal.show();
+            
+            // Clean up modal when hidden
+            document.getElementById('studentDetailsModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
         }
         function searchStudents() {
             renderStudents();
@@ -5963,12 +6161,16 @@
             const records = attendanceRecords[date] || {};
             document.getElementById('attendanceTable').innerHTML = filteredStudents.map(s => {
                 const record = records[s.id] || { status: 'Absent' };
+                const surname = s.surname || s.name?.split(' ')[0] || '';
+                const firstName = s.firstName || s.name?.split(' ').slice(1).join(' ') || s.name || '';
                 return `
                     <tr>
                         <td>${s.accession || s.id}</td>
-                        <td>${s.name}</td>
+                        <td>${surname}</td>
+                        <td>${firstName}</td>
+                        <td>${s.grade || ''}</td>
                         <td><span class="badge bg-${record.status === 'Present' ? 'success' : record.status === 'Late' ? 'warning' : 'danger'}">${record.status}</span></td>
-                        <td><button class="btn btn-sm btn-primary" onclick="showAttendanceModal(${s.id}, '${s.name}')">Edit</button></td>
+                        <td><button class="btn btn-sm btn-primary" onclick="showAttendanceModal(${s.id}, '${surname} ${firstName}')">Edit</button></td>
                     </tr>
                 `;
             }).join('');
@@ -6328,15 +6530,70 @@
             logAudit('Bulk Import', `Imported ${records.length} fee records using SA-SAMS format`, 'Low');
         }
         function sendFeeReminders() {
-            const overdue = fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date());
+            // Get all pending and overdue fees
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const overdue = fees.filter(f => {
+                const dueDate = new Date(f.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                return f.status === 'Pending' && dueDate < today;
+            });
+            
+            if (overdue.length === 0) {
+                addNotification('No overdue fees to send reminders for', 'info');
+                return;
+            }
+            
+            let successCount = 0;
+            let failCount = 0;
+            
             overdue.forEach(f => {
                 const student = students.find(s => s.id === f.studentId);
-                addNotification(`Reminder sent to ${student.name} for R${f.amount}`, 'warning');
+                if (student) {
+                    // Create a reminder record
+                    const reminder = {
+                        id: Date.now() + Math.random(),
+                        feeId: f.id,
+                        studentId: f.studentId,
+                        studentName: student.name || `${student.firstName} ${student.surname}`,
+                        amount: f.amount,
+                        dueDate: f.dueDate,
+                        sentDate: new Date().toISOString(),
+                        method: 'email/sms',
+                        status: 'sent'
+                    };
+                    
+                    // Store reminder in localStorage
+                    let reminders = JSON.parse(localStorage.getItem('feeReminders') || '[]');
+                    reminders.push(reminder);
+                    localStorage.setItem('feeReminders', JSON.stringify(reminders));
+                    
+                    // Update fee record to show reminder was sent
+                    f.lastReminderSent = new Date().toISOString();
+                    f.reminderCount = (f.reminderCount || 0) + 1;
+                    
+                    successCount++;
+                    
+                    // Add individual notification
+                    const studentName = student.name || `${student.firstName} ${student.surname}`;
+                    addNotification(`Reminder sent to ${studentName} for R${f.amount} (Due: ${f.dueDate})`, 'success');
+                } else {
+                    failCount++;
+                }
             });
-            if (overdue.length > 0) {
-                addNotification(overdue.length + ' reminders sent', 'info');
-            } else {
-                addNotification('No overdue fees', 'info');
+            
+            // Save updated fees
+            saveData();
+            renderFees();
+            
+            // Summary notification
+            if (successCount > 0) {
+                addNotification(`${successCount} fee reminder(s) sent successfully!`, 'success');
+                logAudit('Send Fee Reminders', `Sent ${successCount} fee reminders`, 'Low');
+            }
+            if (failCount > 0) {
+                addNotification(`${failCount} reminder(s) failed (student not found)`, 'warning');
             }
         }
         
@@ -10190,6 +10447,55 @@ ${submission.feedback || 'No feedback yet'}`);
         teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
         adminMessages = JSON.parse(localStorage.getItem('adminMessages') || '[]');
         offlineQueue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
+        
+        // Live messaging: Auto-refresh messages every 3 seconds when chat is active
+        let messageRefreshInterval = null;
+        
+        function startLiveMessaging() {
+            if (messageRefreshInterval) {
+                clearInterval(messageRefreshInterval);
+            }
+            
+            messageRefreshInterval = setInterval(function() {
+                // Only refresh if we're in the communication or teacher chat sections
+                const currentSection = document.querySelector('.section:not(.d-none)');
+                if (!currentSection) return;
+                
+                const sectionId = currentSection.id;
+                
+                // Refresh teacher chat if in teachers section
+                if (sectionId === 'teachers' && selectedChatStudent) {
+                    // Reload chat data from localStorage (simulating real-time updates)
+                    teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
+                    loadChatMessages();
+                    loadChatStudents(); // Refresh unread counts
+                }
+                
+                // Refresh admin messages
+                if (sectionId === 'teachers') {
+                    adminMessages = JSON.parse(localStorage.getItem('adminMessages') || '[]');
+                    loadAdminMessages();
+                }
+                
+                // Refresh chat history
+                if (sectionId === 'teachers') {
+                    const chatHistoryTab = document.querySelector('#chat-history.active');
+                    if (chatHistoryTab) {
+                        loadChatHistory();
+                    }
+                }
+            }, 3000); // Refresh every 3 seconds
+        }
+        
+        // Start live messaging when document is ready
+        startLiveMessaging();
+        
+        // Restart live messaging when switching sections
+        const originalShowSection = showSection;
+        showSection = function(section) {
+            originalShowSection(section);
+            startLiveMessaging();
+        };
     </script>
 </body>
 </html>
