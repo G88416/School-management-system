@@ -2287,6 +2287,9 @@
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                             </select>
+                            <h6 class="mt-3 mb-2 text-dark"><strong>Additional Information</strong></h6>
+                            <input type="text" id="studentUsername" class="form-control mb-2" placeholder="Username for profile login">
+                            <input type="password" id="studentPassword" class="form-control mb-2" placeholder="Password for profile login">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" onclick="saveStudent()">Save</button>
@@ -2589,35 +2592,228 @@
                                     </button>
                                 </div>
                                 <div class="tab-pane fade" id="create-poster">
-                                    <h6>Create Event Poster</h6>
-                                    <div class="mb-3">
-                                        <label class="form-label">Poster Title</label>
-                                        <input type="text" id="posterTitle" class="form-control" placeholder="Event name">
+                                    <!-- Spectacular Poster Creator – Canva-Level Beauty (100% Free & Offline) -->
+                                    <!-- Fabric.js v6 (latest 2025) -->
+                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/6.4.4/fabric.min.js"></script>
+                                    
+                                    <!-- Google Fonts (most popular for posters) -->
+                                    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Oswald:wght@700&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+                                    
+                                    <style>
+                                        #poster-creator-container { margin:0; font-family:'Montserrat',sans-serif; background:#f8f9fa; display:grid; grid-template-columns:220px 1fr 280px; height:80vh; overflow:hidden; }
+                                        #poster-left, #poster-right { background:#fff; border-right:1px solid #ddd; padding:15px; overflow-y:auto; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
+                                        #poster-right { border-left:1px solid #ddd; border-right:none; }
+                                        #poster-creator-container h2 { margin:0 0 15px; font-size:18px; color:#333; }
+                                        #poster-creator-container button, #poster-creator-container select, #poster-creator-container input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; }
+                                        #poster-creator-container button:hover { background:#f0f0f0; }
+                                        .poster-section { margin-bottom:25px; }
+                                        .poster-color-picker { height:40px; width:100%; border:none; border-radius:8px; cursor:pointer; }
+                                        #poster-canvas-wrapper { background:#eee; display:flex; align-items:center; justify-content:center; overflow:auto; }
+                                        #poster-canvas { box-shadow:0 10px 30px rgba(0,0,0,0.2); background:white; }
+                                        #poster-layers { list-style:none; padding:0; margin:0; }
+                                        #poster-layers li { padding:8px; background:#f5f5f5; margin:4px 0; border-radius:4px; cursor:pointer; display:flex; justify-content:space-between; }
+                                        #poster-layers li.active { background:#007bff; color:white; }
+                                        .poster-template-thumb { height:120px; background-size:cover; background-position:center; border-radius:8px; margin:10px 0; cursor:pointer; border:2px solid #ddd; }
+                                    </style>
+                                    
+                                    <div id="poster-creator-container">
+                                        <!-- LEFT SIDEBAR -->
+                                        <div id="poster-left">
+                                            <h2>Poster Creator</h2>
+                                            <div class="poster-section">
+                                                <button onclick="addPosterText()">Add Heading</button>
+                                                <button onclick="addPosterText('Body text here...',40)">Add Paragraph</button>
+                                                <button onclick="uploadPosterImage()">Upload Image</button>
+                                                <button onclick="addPosterShape('rect')">Rectangle</button>
+                                                <button onclick="addPosterShape('circle')">Circle</button>
+                                                <button onclick="addPosterShape('triangle')">Triangle</button>
+                                            </div>
+                                            <div class="poster-section">
+                                                <h3>Background</h3>
+                                                <input type="color" class="poster-color-picker" onchange="setPosterBgColor(this.value)" value="#ffffff">
+                                                <button onclick="unsplashPosterBg()">Random Unsplash Background</button>
+                                            </div>
+                                            <div class="poster-section">
+                                                <h3>Templates</h3>
+                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?event')" onclick="loadPosterTemplate('event')"></div>
+                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?sale')" onclick="loadPosterTemplate('sale')"></div>
+                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?motivation')" onclick="loadPosterTemplate('motivation')"></div>
+                                            </div>
+                                            <button onclick="downloadPoster()">Download PNG</button>
+                                        </div>
+                                        
+                                        <!-- CENTER CANVAS -->
+                                        <div id="poster-canvas-wrapper">
+                                            <canvas id="poster-canvas" width="800" height="1200"></canvas>
+                                        </div>
+                                        
+                                        <!-- RIGHT SIDEBAR – Properties & Layers -->
+                                        <div id="poster-right">
+                                            <h2>Properties</h2>
+                                            <div id="poster-props" style="display:none">
+                                                <select id="posterFontFamily" onchange="setPosterProp('fontFamily',this.value)">
+                                                    <option>Bebas Neue</option>
+                                                    <option>Montserrat</option>
+                                                    <option>Playfair Display</option>
+                                                    <option>Oswald</option>
+                                                    <option>Dancing Script</option>
+                                                </select>
+                                                <input type="range" id="posterFontSize" min="10" max="300" value="80" onchange="setPosterProp('fontSize',this.value)">
+                                                <input type="color" class="poster-color-picker" id="posterFill" value="#000000" onchange="setPosterProp('fill',this.value)">
+                                                <button onclick="togglePosterProp('fontWeight','bold')">Bold</button>
+                                                <button onclick="togglePosterProp('fontStyle','italic')">Italic</button>
+                                                <button onclick="setPosterProp('textAlign','center')">Center</button>
+                                                <button onclick="deletePosterActive()">Delete</button>
+                                                <button onclick="posterCanvas.bringToFront(posterActiveObject)">Bring to Front</button>
+                                            </div>
+                                            <h2>Layers</h2>
+                                            <ul id="poster-layers"></ul>
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Event Date</label>
-                                        <input type="date" id="posterDate" class="form-control">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Event Time</label>
-                                        <input type="time" id="posterTime" class="form-control">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Location</label>
-                                        <input type="text" id="posterLocation" class="form-control" placeholder="Event location">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Description</label>
-                                        <textarea id="posterDescription" class="form-control" rows="3" placeholder="Event description"></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Upload Image (Optional)</label>
-                                        <input type="file" id="posterImage" class="form-control" accept="image/*">
-                                    </div>
-                                    <button class="btn btn-success" onclick="createPoster()">
-                                        <i class="fas fa-image me-2"></i>Generate Poster
-                                    </button>
-                                    <div id="posterPreview" class="mt-3"></div>
+                                    
+                                    <script>
+                                    if (typeof posterCanvas === 'undefined') {
+                                        const posterCanvas = new fabric.Canvas('poster-canvas', { preserveObjectStacking: true });
+                                        let posterActiveObject = null;
+                                        
+                                        // Update right panel when selection changes
+                                        posterCanvas.on('selection:created', updatePosterUI);
+                                        posterCanvas.on('selection:updated', updatePosterUI);
+                                        posterCanvas.on('selection:cleared', () => { document.getElementById('poster-props').style.display='none'; updatePosterLayers(); });
+                                        
+                                        function updatePosterUI(e) {
+                                            posterActiveObject = posterCanvas.getActiveObject();
+                                            if (!posterActiveObject) return;
+                                            document.getElementById('poster-props').style.display = 'block';
+                                            if (posterActiveObject.type.includes('text')) {
+                                                document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
+                                                document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
+                                                document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
+                                            }
+                                            updatePosterLayers();
+                                        }
+                                        
+                                        function setPosterProp(prop, value) {
+                                            if (!posterActiveObject) return;
+                                            posterActiveObject.set(prop, value);
+                                            posterCanvas.renderAll();
+                                        }
+                                        function togglePosterProp(prop, value) {
+                                            if (!posterActiveObject) return;
+                                            const current = posterActiveObject.get(prop);
+                                            posterActiveObject.set(prop, current === value ? '' : value);
+                                            posterCanvas.renderAll();
+                                        }
+                                        
+                                        function addPosterText(text = 'YOUR EVENT\nHERE', size = 100) {
+                                            const textbox = new fabric.Textbox(text, {
+                                                left: 100, top: 100, width: 600,
+                                                fontSize: size,
+                                                fontFamily: 'Bebas Neue',
+                                                fill: '#212529',
+                                                textAlign: 'center',
+                                                fontWeight: 'bold',
+                                                shadow: 'rgba(0,0,0,0.3) 5px 5px 15px',
+                                                editable: true
+                                            });
+                                            posterCanvas.add(textbox);
+                                            posterCanvas.setActiveObject(textbox);
+                                        }
+                                        
+                                        function addPosterShape(type) {
+                                            let shape;
+                                            if (type==='rect') shape = new fabric.Rect({width:300, height:200, fill:'#ff5722', rx:20});
+                                            if (type==='circle') shape = new fabric.Circle({radius:150, fill:'#2196f3'});
+                                            if (type==='triangle') shape = new fabric.Triangle({width:250, height:220, fill:'#4caf50'});
+                                            shape.set({left:200, top:200, shadow:'rgba(0,0,0,0.3) 10px 10px 20px'});
+                                            posterCanvas.add(shape);
+                                            posterCanvas.setActiveObject(shape);
+                                        }
+                                        
+                                        function uploadPosterImage() {
+                                            const input = document.createElement('input');
+                                            input.type = 'file';
+                                            input.accept = 'image/*';
+                                            input.onchange = e => {
+                                                const file = e.target.files[0];
+                                                const reader = new FileReader();
+                                                reader.onload = event => fabric.Image.fromURL(event.target.result, img => {
+                                                    img.scale(0.5);
+                                                    posterCanvas.centerObject(img);
+                                                    posterCanvas.add(img);
+                                                });
+                                                reader.readAsDataURL(file);
+                                            };
+                                            input.click();
+                                        }
+                                        
+                                        function unsplashPosterBg() {
+                                            const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
+                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${keyword}`;
+                                            fabric.Image.fromURL(url, img => posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { scaleX: posterCanvas.width / img.width, scaleY: posterCanvas.height / img.height }));
+                                        }
+                                        
+                                        function setPosterBgColor(c) { posterCanvas.backgroundColor = c; posterCanvas.renderAll(); }
+                                        
+                                        function downloadPoster() {
+                                            const link = document.createElement('a');
+                                            link.download = 'my-poster.png';
+                                            link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
+                                            link.click();
+                                        }
+                                        
+                                        // Simple templates
+                                        function loadPosterTemplate(type) {
+                                            posterCanvas.clear();
+                                            if (type==='event') {
+                                                unsplashPosterBg('concert'); // random background
+                                                addPosterText('LIVE\nCONCERT',120);
+                                                addPosterText('Friday 25 Dec\nDoors open 19:00',60);
+                                            }
+                                            if (type==='sale') {
+                                                posterCanvas.backgroundColor = '#ff1744';
+                                                addPosterText('SALE\n50% OFF',150);
+                                            }
+                                            if (type==='motivation') {
+                                                unsplashPosterBg('mountain');
+                                                addPosterText('DREAM BIG\nWORK HARD',120);
+                                            }
+                                        }
+                                        
+                                        // Layers list
+                                        function updatePosterLayers() {
+                                            const list = document.getElementById('poster-layers');
+                                            list.innerHTML = '';
+                                            posterCanvas.getObjects().reverse().forEach(obj => {
+                                                const li = document.createElement('li');
+                                                li.textContent = obj.type === 'textbox' ? obj.text.slice(0,15)+'...' : obj.type;
+                                                li.onclick = () => posterCanvas.setActiveObject(obj);
+                                                if (posterCanvas.getActiveObject() === obj) li.classList.add('active');
+                                                list.appendChild(li);
+                                            });
+                                        }
+                                        
+                                        function deletePosterActive() {
+                                            if (posterActiveObject) {
+                                                posterCanvas.remove(posterActiveObject);
+                                                posterActiveObject = null;
+                                            }
+                                        }
+                                        
+                                        // Helper to convert rgb to hex for color picker
+                                        function rgbToPosterHex(color) {
+                                            if (typeof color === 'string' && color.startsWith('rgb')) {
+                                                const [r,g,b] = color.match(/\d+/g);
+                                                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                                            }
+                                            return color || '#000000';
+                                        }
+                                        
+                                        // Initial nice look
+                                        posterCanvas.backgroundColor = '#f8f9fa';
+                                        addPosterText('YOUR POSTER');
+                                    }
+                                    </script>
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
                                     <h6>Upload Video Announcement</h6>
@@ -5834,12 +6030,15 @@
             const address = document.getElementById('studentAddress').value;
             const educator = document.getElementById('studentEducator').value;
             const status = document.getElementById('studentStatus').value;
+            const username = document.getElementById('studentUsername').value;
+            const password = document.getElementById('studentPassword').value;
             if (surname && firstName && grade) {
                 const id = Date.now();
                 const name = surname + ' ' + firstName;
                 students.push({ 
                     id, name, surname, firstName, accession, grade, parent, status, educator,
                     idNumber, dateOfBirth, gender, homeLanguage, parentContact, address,
+                    username, password,
                     saSamsFormat: true
                 });
                 saveData();
@@ -5859,6 +6058,8 @@
                 document.getElementById('studentParent').value = stu.parent;
                 document.getElementById('studentEducator').value = stu.educator;
                 document.getElementById('studentStatus').value = stu.status;
+                document.getElementById('studentUsername').value = stu.username || '';
+                document.getElementById('studentPassword').value = stu.password || '';
                 // Override save to update
                 const saveBtn = document.querySelector('#addStudentModal .btn-primary');
                 saveBtn.textContent = 'Update';
@@ -5871,6 +6072,8 @@
                     stu.parent = document.getElementById('studentParent').value;
                     stu.educator = document.getElementById('studentEducator').value;
                     stu.status = document.getElementById('studentStatus').value;
+                    stu.username = document.getElementById('studentUsername').value;
+                    stu.password = document.getElementById('studentPassword').value;
                     saveData();
                     renderStudents();
                     bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
