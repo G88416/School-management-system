@@ -5387,11 +5387,8 @@
                         warnings.push({row: index + 1, field: targetField, message: `Auto-filled with default: ${value}`});
                     }
                     
-                    // Auto-generate values for certain fields if missing
-                    if ((value === null || value === '') && targetField === 'accession') {
-                        value = `AUTO-${Date.now()}-${index}`;
-                        warnings.push({row: index + 1, field: targetField, message: 'Auto-generated accession number'});
-                    }
+                    // Note: Accession numbers are no longer auto-generated
+                    // Users must provide valid accession/student numbers in their import file
                     
                     if ((value === null || value === '') && targetField === 'username') {
                         const name = record.name || record.firstName || '';
@@ -5590,26 +5587,17 @@
                     
                     const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
                     
-                    // Display preview with advanced information
+                    // Display simplified preview with essential information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        <strong>📊 Import Summary:</strong><br>
                         Total records: ${result.summary.total}<br>
                         ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}<br>
-                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                        ❌ Invalid records: ${result.summary.invalid}
                     </div>`;
                     
-                    if (result.warnings.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
-                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
-                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
-                        </div>`;
-                    }
-                    
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -5618,10 +5606,10 @@
                     if (result.validRecords.length > 0) {
                         previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                             <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Accession</th><th>Grade</th><th>Status</th><th>Username</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Number</th><th>Grade</th><th>Status</th></tr></thead>
                                 <tbody>
-                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.accession}</td><td>${r.grade}</td><td>${r.status}</td><td>${r.username}</td></tr>`).join('')}
-                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
+                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.accession || 'N/A'}</td><td>${r.grade}</td><td>${r.status}</td></tr>`).join('')}
+                                    ${result.validRecords.length > 10 ? `<tr><td colspan="4">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
                                 </tbody>
                             </table>
                         </div>`;
@@ -5962,26 +5950,17 @@
                     
                     const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
                     
-                    // Display preview with advanced information
+                    // Display simplified preview with essential information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        <strong>📊 Import Summary:</strong><br>
                         Total records: ${result.summary.total}<br>
                         ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}<br>
-                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                        ❌ Invalid records: ${result.summary.invalid}
                     </div>`;
                     
-                    if (result.warnings.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
-                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
-                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
-                        </div>`;
-                    }
-                    
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -5990,9 +5969,9 @@
                     if (result.validRecords.length > 0) {
                         previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                             <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Grade</th><th>Parent</th><th>Accession</th><th>Educator</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Grade</th><th>Parent</th><th>Number</th><th>Educator</th></tr></thead>
                                 <tbody>
-                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession}</td><td>${r.educator}</td></tr>`).join('')}
+                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession || 'N/A'}</td><td>${r.educator}</td></tr>`).join('')}
                                     ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
                                 </tbody>
                             </table>
@@ -6191,35 +6170,26 @@
                     const matchedRecords = result.validRecords.filter(r => r.matched);
                     const unmatchedRecords = result.validRecords.filter(r => !r.matched);
                     
-                    // Display preview with advanced information
+                    // Display simplified preview with essential information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        <strong>📊 Import Summary:</strong><br>
                         Total records: ${result.summary.total}<br>
                         ✅ Matched students: ${matchedRecords.length}<br>
                         ❓ Unmatched students: ${unmatchedRecords.length}<br>
-                        ❌ Invalid records: ${result.summary.invalid}<br>
-                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                        ❌ Invalid records: ${result.summary.invalid}
                     </div>`;
-                    
-                    if (result.warnings.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
-                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
-                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
-                        </div>`;
-                    }
                     
                     if (unmatchedRecords.length > 0) {
                         previewHTML += `<div class="alert alert-warning">
-                            <strong>❓ Unmatched Students (will be skipped):</strong><br>
+                            <strong>⚠️ Unmatched Students (will be skipped):</strong><br>
                             ${unmatchedRecords.slice(0, 5).map(r => `${r.studentName || r.accession || 'Unknown'}`).join('<br>')}
                             ${unmatchedRecords.length > 5 ? `<br>...and ${unmatchedRecords.length - 5} more` : ''}
                         </div>`;
                     }
                     
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
@@ -6813,26 +6783,17 @@
                     
                     const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
                     
-                    // Display preview with advanced information
+                    // Display simplified preview with essential information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        <strong>📊 Import Summary:</strong><br>
                         Total records: ${result.summary.total}<br>
                         ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}<br>
-                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                        ❌ Invalid records: ${result.summary.invalid}
                     </div>`;
                     
-                    if (result.warnings.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
-                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
-                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
-                        </div>`;
-                    }
-                    
                     if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Invalid Records (will be skipped):</strong><br>
                             ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
                             ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
                         </div>`;
