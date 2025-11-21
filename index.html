@@ -5359,180 +5359,93 @@
             new bootstrap.Modal(document.getElementById('bulkAdmissionModal')).show();
         }
         
-        // Advanced Import Algorithm - Intelligently handles missing data and flexible field mapping
-        function advancedImportParser(jsonData, fieldMappings, requiredFields = [], autoFillDefaults = {}) {
-            const validRecords = [];
-            const invalidRecords = [];
-            const warnings = [];
-            
-            jsonData.forEach((row, index) => {
-                const record = {};
-                let missingRequired = [];
-                
-                // Apply field mappings with flexible column name recognition
-                for (const [targetField, possibleColumns] of Object.entries(fieldMappings)) {
-                    let value = null;
-                    
-                    // Try each possible column name variant
-                    for (const col of possibleColumns) {
-                        if (row[col] !== undefined && row[col] !== null && row[col] !== '') {
-                            value = row[col];
-                            break;
+        // New Bophelong Bulk Import Algorithm - Using SheetJS with SA-SAMS Format
+        // Helper: clean empty cells, undefined, etc.
+        function cleanCell(val) {
+            if (val === undefined || val === null || val === '') return '';
+            return String(val).trim();
+        }
+        
+        // Helper: find student by number, name, and optionally grade to avoid false positives
+        function findStudentByLearner(learner) {
+            return students.find(s => 
+                // First try exact number match (most reliable)
+                (s.accession === learner.number && learner.number) ||
+                // Then try name + grade match for better accuracy
+                (s.surname === learner.surname && s.firstName === learner.firstName && s.grade === learner.grade) ||
+                // Finally try just name match (less reliable, but needed for imports without grade)
+                (s.surname === learner.surname && s.firstName === learner.firstName)
+            );
+        }
+        
+        // Unified parser for SA-SAMS "Learner and Parent Info" Excel format
+        function parseSASAMSFile(file, onSuccess) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // The data is usually in the first sheet
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    // Convert to JSON - expecting SA-SAMS format with title in row 1, headers in row 2
+                    // header: 1 = treat rows as arrays (not as key-value objects)
+                    // range: 1 = skip Excel row 1 (0-indexed), start reading from Excel row 2
+                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,     // treat every row as array
+                        range: 1       // start from row 2 (0-indexed → skip title row)
+                    });
+
+                    // Headers are in row 1 of our rawJson (index 0)
+                    const headers = rawJson[0];
+                    const rows = rawJson.slice(1); // actual data starts from row 2 of file
+
+                    const learners = [];
+
+                    rows.forEach(row => {
+                        // Map columns based on SA-SAMS file structure
+                        const learner = {
+                            number:         cleanCell(row[0]),
+                            surname:        cleanCell(row[1]),
+                            firstName:      cleanCell(row[2]),
+                            gender:         cleanCell(row[3]),
+                            grade:          cleanCell(row[4]),
+                            class:          cleanCell(row[5]),
+                            cell:           cleanCell(row[6]),
+                            email:          cleanCell(row[7]),
+                            language:       cleanCell(row[8]),
+
+                            // Father
+                            fatherName:     cleanCell(row[9]),
+                            fatherSurname:  cleanCell(row[10]),
+                            fatherEmail:    cleanCell(row[11]),
+                            fatherCell:     cleanCell(row[12]),
+
+                            // Mother
+                            motherName:     cleanCell(row[13]),
+                            motherSurname:  cleanCell(row[14]),
+                            motherEmail:    cleanCell(row[15]),
+                            motherCell:     cleanCell(row[16])
+                        };
+
+                        // Only push if there's at least a name or surname
+                        if (learner.surname || learner.firstName) {
+                            learners.push(learner);
                         }
-                    }
-                    
-                    // Apply auto-fill defaults for missing non-required fields
-                    if ((value === null || value === '') && autoFillDefaults[targetField] !== undefined) {
-                        value = autoFillDefaults[targetField];
-                        warnings.push({row: index + 1, field: targetField, message: `Auto-filled with default: ${value}`});
-                    }
-                    
-                    // Note: Accession numbers are no longer auto-generated
-                    // Users must provide valid accession/student numbers in their import file
-                    
-                    if ((value === null || value === '') && targetField === 'username') {
-                        const name = record.name || record.firstName || '';
-                        if (name) {
-                            value = name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
-                            warnings.push({row: index + 1, field: targetField, message: `Auto-generated username: ${value}`});
-                        }
-                    }
-                    
-                    if ((value === null || value === '') && targetField === 'password') {
-                        value = 'temp' + Math.floor(Math.random() * 10000);
-                        warnings.push({row: index + 1, field: targetField, message: 'Auto-generated temporary password'});
-                    }
-                    
-                    // Enhanced: Infer grade from other fields if missing
-                    if ((value === null || value === '') && targetField === 'grade') {
-                        // Try to infer from class, level, year fields
-                        const gradeFields = ['class', 'level', 'year', 'form'];
-                        for (const field of gradeFields) {
-                            if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
-                                value = row[field];
-                                warnings.push({row: index + 1, field: targetField, message: `Inferred grade from '${field}' field: ${value}`});
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Enhanced: Handle date formats flexibly
-                    if (targetField.includes('date') || targetField.includes('Date')) {
-                        if (value && typeof value === 'number') {
-                            // Excel date serial number conversion
-                            const excelEpoch = new Date(1900, 0, 1);
-                            const date = new Date(excelEpoch.getTime() + (value - 2) * 86400000);
-                            value = date.toISOString().split('T')[0];
-                            warnings.push({row: index + 1, field: targetField, message: 'Converted Excel date format'});
-                        }
-                    }
-                    
-                    // Enhanced: Clean and normalize text values
-                    if (value && typeof value === 'string') {
-                        value = value.trim();
-                        // Remove extra whitespace
-                        value = value.replace(/\s+/g, ' ');
-                    }
-                    
-                    record[targetField] = value || '';
-                    
-                    // Track missing required fields
-                    if (requiredFields.includes(targetField) && (!value || value === '')) {
-                        missingRequired.push(targetField);
-                    }
-                }
-                
-                // Enhanced Smart name handling with auto-detection
-                // Try to detect name format: "Surname, FirstName" or "FirstName Surname"
-                if (!record.name && (record.firstName || record.surname)) {
-                    record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
-                    if (record.name) {
-                        warnings.push({row: index + 1, field: 'name', message: 'Combined from first and last name'});
-                    }
-                }
-                
-                // Auto-detect name format and split accordingly
-                if (!record.firstName && !record.surname && record.name) {
-                    let detectedFormat = 'unknown';
-                    
-                    // Check if format is "Surname, FirstName"
-                    if (record.name.includes(',')) {
-                        const parts = record.name.split(',').map(p => p.trim());
-                        record.surname = parts[0] || '';
-                        record.firstName = parts.slice(1).join(' ') || '';
-                        detectedFormat = 'surname,firstname';
-                    } 
-                    // Check if format is "FirstName Surname" (multiple words)
-                    else if (record.name.includes(' ')) {
-                        const nameParts = record.name.trim().split(/\s+/);
-                        // Assume last word is surname, rest is first name
-                        record.surname = nameParts[nameParts.length - 1] || '';
-                        record.firstName = nameParts.slice(0, -1).join(' ') || '';
-                        detectedFormat = 'firstname surname';
-                    }
-                    // Single name - treat as first name
-                    else {
-                        record.firstName = record.name;
-                        record.surname = '';
-                        detectedFormat = 'single name';
-                    }
-                    
-                    warnings.push({row: index + 1, field: 'name', message: `Auto-detected format (${detectedFormat}) and split into first/last name`});
-                }
-                
-                // Ensure both name formats are available
-                if (!record.name && (record.firstName || record.surname)) {
-                    record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
-                }
-                
-                // Enhanced: Try to populate missing required fields with available data
-                for (const reqField of requiredFields) {
-                    if (!record[reqField] || record[reqField] === '') {
-                        // If name is required but missing, try other name fields
-                        if (reqField === 'name' && (record.firstName || record.surname)) {
-                            record.name = `${record.firstName || ''} ${record.surname || ''}`.trim();
-                            if (record.name) {
-                                warnings.push({row: index + 1, field: reqField, message: 'Generated name from available fields'});
-                                missingRequired = missingRequired.filter(f => f !== reqField);
-                            }
-                        }
-                        // Add more smart inference rules as needed
-                    }
-                }
-                
-                // Validate and categorize record
-                if (missingRequired.length === 0) {
-                    validRecords.push(record);
-                } else {
-                    // Enhanced: Try to import with partial data if at least name or identifier exists
-                    if (record.name || record.accession || record.firstName) {
-                        validRecords.push(record);
-                        warnings.push({
-                            row: index + 1, 
-                            field: 'import', 
-                            message: `Imported with missing fields (${missingRequired.join(', ')}) - using available information`
-                        });
-                    } else {
-                        invalidRecords.push({
-                            row: index + 1,
-                            reason: `Missing required fields: ${missingRequired.join(', ')} and no identifying information`,
-                            data: record
-                        });
-                    }
-                }
-            });
-            
-            return {
-                validRecords,
-                invalidRecords,
-                warnings,
-                summary: {
-                    total: jsonData.length,
-                    valid: validRecords.length,
-                    invalid: invalidRecords.length,
-                    warnings: warnings.length
+                    });
+
+                    // Call success callback with parsed data
+                    onSuccess(learners);
+
+                } catch (error) {
+                    addNotification('Error parsing file: ' + error.message, 'danger');
+                    console.error(error);
                 }
             };
+
+            reader.readAsArrayBuffer(file);
         }
         
         function uploadBulkAdmissions() {
@@ -5543,115 +5456,111 @@
             }
             
             const fileExt = file.name.split('.').pop().toLowerCase();
-            const reader = new FileReader();
             
-            reader.onload = function(e) {
-                try {
-                    let jsonData = [];
-                    
-                    // Handle different file formats
-                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        jsonData = XLSX.utils.sheet_to_json(sheet);
-                    } else if (fileExt === 'pdf') {
-                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    } else if (fileExt === 'doc' || fileExt === 'docx') {
-                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    }
-                    
-                    if (jsonData.length === 0) {
-                        addNotification('No data found in file', 'warning');
-                        return;
-                    }
-                    
-                    // Use advanced import algorithm
-                    const fieldMappings = {
-                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname'],
-                        surname: ['surname', 'Surname', 'SURNAME', 'last_name', 'Last Name', 'lastname', 'LastName'],
-                        firstName: ['firstname', 'FirstName', 'firstName', 'first_name', 'First Name', 'FIRST_NAME', 'given_name'],
-                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number', 'Accession Number', 'id', 'ID', 'student_id'],
-                        grade: ['grade', 'Grade', 'GRADE', 'class', 'Class', 'CLASS', 'level', 'Level'],
-                        status: ['status', 'Status', 'STATUS', 'state', 'State'],
-                        username: ['username', 'Username', 'USERNAME', 'user', 'User', 'login'],
-                        password: ['password', 'Password', 'PASSWORD', 'pass', 'Pass']
-                    };
-                    
-                    const requiredFields = ['grade'];
-                    const autoFillDefaults = {
-                        status: 'Pending'
-                    };
-                    
-                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
-                    
-                    // Display simplified preview with essential information
-                    let previewHTML = `<div class="alert alert-info">
-                        <strong>📊 Import Summary:</strong><br>
-                        Total records: ${result.summary.total}<br>
-                        ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}
-                    </div>`;
-                    
-                    if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
-                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
-                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
-                        </div>`;
-                    }
-                    
-                    if (result.validRecords.length > 0) {
-                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Number</th><th>Grade</th><th>Status</th></tr></thead>
-                                <tbody>
-                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.accession || 'N/A'}</td><td>${r.grade}</td><td>${r.status}</td></tr>`).join('')}
-                                    ${result.validRecords.length > 10 ? `<tr><td colspan="4">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
-                                </tbody>
-                            </table>
-                        </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmAdmissionImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Records</button>`;
-                    }
-                    
-                    document.getElementById('admissionsPreview').innerHTML = previewHTML;
-                    
-                } catch (error) {
-                    addNotification('Error parsing file: ' + error.message, 'danger');
-                    console.error(error);
-                }
-            };
+            if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                addNotification('Please use SA-SAMS Excel format (.xlsx or .xls)', 'warning');
+                return;
+            }
             
-            reader.readAsArrayBuffer(file);
+            // Use the new SA-SAMS parser
+            parseSASAMSFile(file, function(learners) {
+                // Show result
+                const resultHTML = `<div class="alert alert-info">
+                    <strong>📊 Import Summary:</strong><br>
+                    <strong>${learners.length} learners successfully parsed!</strong>
+                </div>`;
+                
+                // Preview table (SA-SAMS format)
+                let previewHTML = resultHTML + `
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-striped" style="background: white; color: #333;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th colspan="9" style="border: 1px solid #ddd; padding: 8px;">LEARNER DETAILS</th>
+                                    <th colspan="4" style="border: 1px solid #ddd; padding: 8px;">FATHER DETAILS</th>
+                                    <th colspan="4" style="border: 1px solid #ddd; padding: 8px;">MOTHER DETAILS</th>
+                                </tr>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Number</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">First Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Gender</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Grade</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Class</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Language</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${learners.slice(0, 10).map(l => `
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.number}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.surname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.firstName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.gender}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.grade}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.class}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.cell}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.email}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.language}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherSurname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherEmail}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherCell}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherSurname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherEmail}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherCell}</td>
+                                    </tr>
+                                `).join('')}
+                                ${learners.length > 10 ? `<tr><td colspan="17" style="text-align: center; padding: 8px;">...and ${learners.length - 10} more learners</td></tr>` : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-primary mt-2" onclick='confirmAdmissionImport(${JSON.stringify(learners)})'>Import ${learners.length} Records</button>
+                `;
+                
+                document.getElementById('admissionsPreview').innerHTML = previewHTML;
+            });
         }
         
         function confirmAdmissionImport(records) {
             records.forEach(record => {
                 const id = Date.now() + Math.random();
-                const name = record.name || `${record.surname} ${record.firstName}`.trim();
+                const fullName = `${record.firstName} ${record.surname}`.trim();
                 admissions.push({
                     id,
-                    name: name,
-                    surname: record.surname || name.split(' ')[0],
-                    firstName: record.firstName || name.split(' ').slice(1).join(' '),
-                    accession: record.accession,
+                    name: fullName,
+                    surname: record.surname,
+                    firstName: record.firstName,
+                    accession: record.number,
+                    gender: record.gender,
                     grade: record.grade,
-                    status: record.status,
-                    username: record.username,
-                    password: record.password
+                    classValue: record.class,
+                    cell: record.cell,
+                    email: record.email,
+                    homeLanguage: record.language,
+                    fatherName: record.fatherName,
+                    fatherSurname: record.fatherSurname,
+                    fatherEmail: record.fatherEmail,
+                    fatherCell: record.fatherCell,
+                    motherName: record.motherName,
+                    motherSurname: record.motherSurname,
+                    motherEmail: record.motherEmail,
+                    motherCell: record.motherCell,
+                    status: 'Pending',
+                    username: '',
+                    password: ''
                 });
-                
-                // Create user account if username and password provided
-                if (record.username && record.password) {
-                    users.push({ 
-                        username: record.username, 
-                        password: record.password, 
-                        name: name, 
-                        role: 'Student' 
-                    });
-                }
             });
             saveData();
             renderAdmissions();
@@ -5660,8 +5569,8 @@
             syncAllApprovedAdmissions();
             
             bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
-            addNotification(`✅ Successfully imported ${records.length} admissions with advanced algorithm`, 'success');
-            logAudit('Bulk Import', `Imported ${records.length} admissions using advanced algorithm`, 'Low');
+            addNotification(`✅ Successfully imported ${records.length} admissions using SA-SAMS format`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} admissions using SA-SAMS format`, 'Low');
             triggerDashboardUpdate();
         }
         
@@ -5904,114 +5813,121 @@
             }
             
             const fileExt = file.name.split('.').pop().toLowerCase();
-            const reader = new FileReader();
             
-            reader.onload = function(e) {
-                try {
-                    let jsonData = [];
-                    
-                    // Handle different file formats
-                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        jsonData = XLSX.utils.sheet_to_json(sheet);
-                    } else if (fileExt === 'pdf') {
-                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    } else if (fileExt === 'doc' || fileExt === 'docx') {
-                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    }
-                    
-                    if (jsonData.length === 0) {
-                        addNotification('No data found in file', 'warning');
-                        return;
-                    }
-                    
-                    // Use advanced import algorithm
-                    const fieldMappings = {
-                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname', 'student_name'],
-                        surname: ['surname', 'Surname', 'SURNAME', 'last_name', 'Last Name', 'lastname', 'LastName'],
-                        firstName: ['firstname', 'FirstName', 'firstName', 'first_name', 'First Name', 'FIRST_NAME', 'given_name'],
-                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number', 'Accession Number', 'id', 'ID', 'student_id', 'StudentID'],
-                        grade: ['grade', 'Grade', 'GRADE', 'class', 'Class', 'CLASS', 'level', 'Level'],
-                        parent: ['parent', 'Parent', 'PARENT', 'guardian', 'Guardian', 'parent_name', 'Parent Name'],
-                        educator: ['educator', 'Educator', 'EDUCATOR', 'teacher', 'Teacher', 'TEACHER', 'class_teacher'],
-                        status: ['status', 'Status', 'STATUS', 'state', 'State', 'active']
-                    };
-                    
-                    const requiredFields = ['grade'];
-                    const autoFillDefaults = {
-                        status: 'Active',
-                        parent: 'Unknown',
-                        educator: 'Unassigned'
-                    };
-                    
-                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
-                    
-                    // Display simplified preview with essential information
-                    let previewHTML = `<div class="alert alert-info">
-                        <strong>📊 Import Summary:</strong><br>
-                        Total records: ${result.summary.total}<br>
-                        ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}
-                    </div>`;
-                    
-                    if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
-                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
-                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
-                        </div>`;
-                    }
-                    
-                    if (result.validRecords.length > 0) {
-                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Grade</th><th>Parent</th><th>Number</th><th>Educator</th></tr></thead>
-                                <tbody>
-                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession || 'N/A'}</td><td>${r.educator}</td></tr>`).join('')}
-                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
-                                </tbody>
-                            </table>
-                        </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmStudentImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Students</button>`;
-                    }
-                    
-                    document.getElementById('studentPreview').innerHTML = previewHTML;
-                    
-                } catch (error) {
-                    addNotification('Error parsing file: ' + error.message, 'danger');
-                    console.error(error);
-                }
-            };
+            if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                addNotification('Please use SA-SAMS Excel format (.xlsx or .xls)', 'warning');
+                return;
+            }
             
-            reader.readAsArrayBuffer(file);
+            // Use the new SA-SAMS parser
+            parseSASAMSFile(file, function(learners) {
+                // Show result
+                const resultHTML = `<div class="alert alert-info">
+                    <strong>📊 Import Summary:</strong><br>
+                    <strong>${learners.length} learners successfully parsed!</strong>
+                </div>`;
+                
+                // Preview table (SA-SAMS format)
+                let previewHTML = resultHTML + `
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-striped" style="background: white; color: #333;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th colspan="9" style="border: 1px solid #ddd; padding: 8px;">LEARNER DETAILS</th>
+                                    <th colspan="4" style="border: 1px solid #ddd; padding: 8px;">FATHER DETAILS</th>
+                                    <th colspan="4" style="border: 1px solid #ddd; padding: 8px;">MOTHER DETAILS</th>
+                                </tr>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Number</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">First Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Gender</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Grade</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Class</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Language</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Surname</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Cell#</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${learners.slice(0, 10).map(l => `
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.number}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.surname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.firstName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.gender}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.grade}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.class}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.cell}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.email}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.language}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherSurname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherEmail}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.fatherCell}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherName}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherSurname}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherEmail}</td>
+                                        <td style="border: 1px solid #ddd; padding: 8px;">${l.motherCell}</td>
+                                    </tr>
+                                `).join('')}
+                                ${learners.length > 10 ? `<tr><td colspan="17" style="text-align: center; padding: 8px;">...and ${learners.length - 10} more learners</td></tr>` : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-primary mt-2" onclick='confirmStudentImport(${JSON.stringify(learners)})'>Import ${learners.length} Students</button>
+                `;
+                
+                document.getElementById('studentPreview').innerHTML = previewHTML;
+            });
         }
         
         function confirmStudentImport(records) {
             records.forEach(record => {
                 const id = Date.now() + Math.random();
-                const name = record.name || `${record.surname} ${record.firstName}`.trim();
+                const fullName = `${record.firstName} ${record.surname}`.trim();
                 students.push({
                     id,
-                    name: name,
-                    surname: record.surname || name.split(' ')[0],
-                    firstName: record.firstName || name.split(' ').slice(1).join(' '),
+                    name: fullName,
+                    surname: record.surname,
+                    firstName: record.firstName,
+                    gender: record.gender,
                     grade: record.grade,
-                    parent: record.parent,
-                    status: record.status,
-                    accession: record.accession,
-                    educator: record.educator
+                    class: record.class,
+                    cell: record.cell,
+                    email: record.email,
+                    language: record.language,
+                    fatherName: record.fatherName,
+                    fatherSurname: record.fatherSurname,
+                    fatherEmail: record.fatherEmail,
+                    fatherCell: record.fatherCell,
+                    motherName: record.motherName,
+                    motherSurname: record.motherSurname,
+                    motherEmail: record.motherEmail,
+                    motherCell: record.motherCell,
+                    status: 'Active',
+                    accession: record.number,
+                    educator: 'Unassigned',
+                    parent: [
+                        `${record.fatherName || ''} ${record.fatherSurname || ''}`.trim(),
+                        `${record.motherName || ''} ${record.motherSurname || ''}`.trim()
+                    ].filter(p => p && p.length > 0).join(' / ') || 'Unknown'
                 });
             });
             saveData();
             renderStudents();
             integrateEducatorsAsStaff();
             bootstrap.Modal.getInstance(document.getElementById('bulkStudentModal')).hide();
-            addNotification(`✅ Successfully imported ${records.length} students with advanced algorithm`, 'success');
-            logAudit('Bulk Import', `Imported ${records.length} students using advanced algorithm`, 'Low');
+            addNotification(`✅ Successfully imported ${records.length} students using SA-SAMS format`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} students using SA-SAMS format`, 'Low');
         }
         function resetAllStudents() {
             if (confirm('Are you sure you want to reset ALL students? All student records will be saved to the vault and cleared from the system.')) {
@@ -6105,118 +6021,71 @@
             }
             
             const fileExt = file.name.split('.').pop().toLowerCase();
-            const reader = new FileReader();
             
-            reader.onload = function(e) {
-                try {
-                    let jsonData = [];
+            if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                addNotification('Please use SA-SAMS Excel format (.xlsx or .xls)', 'warning');
+                return;
+            }
+            
+            // Use the new SA-SAMS parser
+            parseSASAMSFile(file, function(learners) {
+                // For attendance, we'll mark all imported learners as present for today
+                const today = new Date().toISOString().split('T')[0];
+                const matchedRecords = [];
+                
+                learners.forEach(learner => {
+                    const student = findStudentByLearner(learner);
                     
-                    // Handle different file formats
-                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        jsonData = XLSX.utils.sheet_to_json(sheet);
-                    } else if (fileExt === 'pdf') {
-                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    } else if (fileExt === 'doc' || fileExt === 'docx') {
-                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
+                    if (student) {
+                        matchedRecords.push({
+                            studentId: student.id,
+                            studentName: `${learner.firstName} ${learner.surname}`,
+                            date: today,
+                            status: 'Present',
+                            notes: 'Imported from SA-SAMS'
+                        });
                     }
-                    
-                    if (jsonData.length === 0) {
-                        addNotification('No data found in file', 'warning');
-                        return;
-                    }
-                    
-                    // Use advanced import algorithm
-                    const fieldMappings = {
-                        studentId: ['studentId', 'student_id', 'StudentID', 'id', 'ID', 'student_number'],
-                        studentName: ['studentName', 'student_name', 'name', 'Name', 'NAME', 'student', 'Student'],
-                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number'],
-                        date: ['date', 'Date', 'DATE', 'attendance_date', 'Attendance Date'],
-                        status: ['status', 'Status', 'STATUS', 'attendance', 'Attendance', 'present', 'Present'],
-                        notes: ['notes', 'Notes', 'NOTES', 'remarks', 'Remarks', 'comment', 'Comment']
-                    };
-                    
-                    const requiredFields = ['date', 'status'];
-                    const autoFillDefaults = {
-                        status: 'Present',
-                        notes: '',
-                        date: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
-                    
-                    // Match students by name or accession if studentId not provided
-                    result.validRecords.forEach(record => {
-                        if (!record.studentId) {
-                            const student = students.find(s => 
-                                (s.name && record.studentName && s.name.toLowerCase() === record.studentName.toLowerCase()) ||
-                                (s.accession && record.accession && s.accession === record.accession)
-                            );
-                            if (student) {
-                                record.studentId = student.id;
-                                record.matched = true;
-                            } else {
-                                record.matched = false;
-                            }
-                        } else {
-                            record.matched = true;
-                        }
-                    });
-                    
-                    const matchedRecords = result.validRecords.filter(r => r.matched);
-                    const unmatchedRecords = result.validRecords.filter(r => !r.matched);
-                    
-                    // Display simplified preview with essential information
-                    let previewHTML = `<div class="alert alert-info">
-                        <strong>📊 Import Summary:</strong><br>
-                        Total records: ${result.summary.total}<br>
-                        ✅ Matched students: ${matchedRecords.length}<br>
-                        ❓ Unmatched students: ${unmatchedRecords.length}<br>
-                        ❌ Invalid records: ${result.summary.invalid}
-                    </div>`;
-                    
-                    if (unmatchedRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-warning">
-                            <strong>⚠️ Unmatched Students (will be skipped):</strong><br>
-                            ${unmatchedRecords.slice(0, 5).map(r => `${r.studentName || r.accession || 'Unknown'}`).join('<br>')}
-                            ${unmatchedRecords.length > 5 ? `<br>...and ${unmatchedRecords.length - 5} more` : ''}
-                        </div>`;
-                    }
-                    
-                    if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
-                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
-                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
-                        </div>`;
-                    }
-                    
-                    if (matchedRecords.length > 0) {
-                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm">
-                                <thead><tr><th>Student</th><th>Date</th><th>Status</th><th>Notes</th></tr></thead>
+                });
+                
+                // Show result
+                const resultHTML = `<div class="alert alert-info">
+                    <strong>📊 Import Summary:</strong><br>
+                    Total learners in file: ${learners.length}<br>
+                    Matched students: ${matchedRecords.length}<br>
+                    Unmatched: ${learners.length - matchedRecords.length}
+                </div>`;
+                
+                let previewHTML = resultHTML;
+                
+                if (matchedRecords.length > 0) {
+                    previewHTML += `
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-striped" style="background: white; color: #333;">
+                                <thead>
+                                    <tr style="background-color: #f2f2f2;">
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Student</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    ${matchedRecords.slice(0, 10).map(r => `<tr><td>${r.studentName || 'ID: ' + r.studentId}</td><td>${r.date}</td><td>${r.status}</td><td>${r.notes}</td></tr>`).join('')}
-                                    ${matchedRecords.length > 10 ? `<tr><td colspan="4">...and ${matchedRecords.length - 10} more</td></tr>` : ''}
+                                    ${matchedRecords.slice(0, 20).map(r => `
+                                        <tr>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.studentName}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.date}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.status}</td>
+                                        </tr>
+                                    `).join('')}
+                                    ${matchedRecords.length > 20 ? `<tr><td colspan="3" style="text-align: center; padding: 8px;">...and ${matchedRecords.length - 20} more</td></tr>` : ''}
                                 </tbody>
                             </table>
-                        </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmAttendanceImport(${JSON.stringify(matchedRecords)})'>Import ${matchedRecords.length} Attendance Records</button>`;
-                    }
-                    
-                    document.getElementById('attendancePreview').innerHTML = previewHTML;
-                    
-                } catch (error) {
-                    addNotification('Error parsing file: ' + error.message, 'danger');
-                    console.error(error);
+                        </div>
+                        <button class="btn btn-primary mt-2" onclick='confirmAttendanceImport(${JSON.stringify(matchedRecords)})'>Import ${matchedRecords.length} Attendance Records</button>
+                    `;
                 }
-            };
-            
-            reader.readAsArrayBuffer(file);
+                
+                document.getElementById('attendancePreview').innerHTML = previewHTML;
+            });
         }
         
         function confirmAttendanceImport(records) {
@@ -6234,8 +6103,8 @@
             saveData();
             loadAttendance();
             bootstrap.Modal.getInstance(document.getElementById('importAttendanceModal')).hide();
-            addNotification(`✅ Successfully imported ${importedCount} attendance records with advanced algorithm`, 'success');
-            logAudit('Bulk Import', `Imported ${importedCount} attendance records using advanced algorithm`, 'Low');
+            addNotification(`✅ Successfully imported ${importedCount} attendance records using SA-SAMS format`, 'success');
+            logAudit('Bulk Import', `Imported ${importedCount} attendance records using SA-SAMS format`, 'Low');
         }
         function syncBiometricAttendance() {
             addNotification('Biometric sync simulated', 'info');
@@ -6361,9 +6230,102 @@
             new bootstrap.Modal(document.getElementById('bulkUploadFeesModal')).show();
         }
         function uploadBulkFees() {
-            // Similar to uploadBulkStudents
-            addNotification('Bulk fees uploaded (mock)', 'success');
+            const file = document.getElementById('feesFile').files[0];
+            if (!file) {
+                addNotification('Please select a file', 'warning');
+                return;
+            }
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            
+            if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                addNotification('Please use SA-SAMS Excel format (.xlsx or .xls)', 'warning');
+                return;
+            }
+            
+            // Use the new SA-SAMS parser
+            parseSASAMSFile(file, function(learners) {
+                // Create fee records for each learner
+                const feeRecords = [];
+                const defaultFeeAmount = 5000; // Default annual fee
+                const defaultDueDate = new Date(new Date().getFullYear(), 11, 31).toISOString().split('T')[0]; // End of year
+                
+                learners.forEach(learner => {
+                    const student = findStudentByLearner(learner);
+                    
+                    if (student) {
+                        feeRecords.push({
+                            studentId: student.id,
+                            studentName: `${learner.firstName} ${learner.surname}`,
+                            amount: defaultFeeAmount,
+                            dueDate: defaultDueDate,
+                            description: 'Annual School Fees',
+                            status: 'Pending'
+                        });
+                    }
+                });
+                
+                // Show result
+                const resultHTML = `<div class="alert alert-info">
+                    <strong>📊 Import Summary:</strong><br>
+                    Total learners in file: ${learners.length}<br>
+                    Matched students: ${feeRecords.length}<br>
+                    Unmatched: ${learners.length - feeRecords.length}
+                </div>`;
+                
+                let previewHTML = resultHTML;
+                
+                if (feeRecords.length > 0) {
+                    previewHTML += `
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-striped" style="background: white; color: #333;">
+                                <thead>
+                                    <tr style="background-color: #f2f2f2;">
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Student</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Amount</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Due Date</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${feeRecords.slice(0, 20).map(r => `
+                                        <tr>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.studentName}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">R${r.amount.toLocaleString()}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.dueDate}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.status}</td>
+                                        </tr>
+                                    `).join('')}
+                                    ${feeRecords.length > 20 ? `<tr><td colspan="4" style="text-align: center; padding: 8px;">...and ${feeRecords.length - 20} more</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-primary mt-2" onclick='confirmFeesImport(${JSON.stringify(feeRecords)})'>Import ${feeRecords.length} Fee Records</button>
+                    `;
+                }
+                
+                document.getElementById('feesPreview').innerHTML = previewHTML;
+            });
+        }
+        
+        function confirmFeesImport(records) {
+            records.forEach(record => {
+                const id = Date.now() + Math.random();
+                fees.push({
+                    id,
+                    studentId: record.studentId,
+                    amount: record.amount,
+                    dueDate: record.dueDate,
+                    description: record.description,
+                    status: record.status,
+                    paidDate: ''
+                });
+            });
+            saveData();
+            renderFees();
             bootstrap.Modal.getInstance(document.getElementById('bulkUploadFeesModal')).hide();
+            addNotification(`✅ Successfully imported ${records.length} fee records using SA-SAMS format`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} fee records using SA-SAMS format`, 'Low');
         }
         function sendFeeReminders() {
             const overdue = fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date());
@@ -6732,85 +6694,83 @@
             }
             
             const fileExt = file.name.split('.').pop().toLowerCase();
-            const reader = new FileReader();
             
+            if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                addNotification('Please use Excel format (.xlsx or .xls)', 'warning');
+                return;
+            }
+            
+            const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    let jsonData = [];
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Handle different file formats
-                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        jsonData = XLSX.utils.sheet_to_json(sheet);
-                    } else if (fileExt === 'pdf') {
-                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    } else if (fileExt === 'doc' || fileExt === 'docx') {
-                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
-                        jsonData = [];
-                    }
+                    // Skip Excel row 1 (title/header row), start from Excel row 2
+                    // range: 1 means skip 0-indexed row 0, begin reading at row 1
+                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,
+                        range: 1
+                    });
                     
-                    if (jsonData.length === 0) {
-                        addNotification('No data found in file', 'warning');
-                        return;
-                    }
+                    const headers = rawJson[0];
+                    const rows = rawJson.slice(1);
                     
-                    // Use advanced import algorithm
-                    const fieldMappings = {
-                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname', 'employee_name', 'staff_name'],
-                        role: ['role', 'Role', 'ROLE', 'position', 'Position', 'job_title', 'Job Title'],
-                        department: ['department', 'Department', 'DEPARTMENT', 'dept', 'Dept'],
-                        salary: ['salary', 'Salary', 'SALARY', 'wage', 'Wage', 'pay', 'Pay', 'compensation'],
-                        taxNumber: ['taxNumber', 'tax_number', 'Tax Number', 'TAX_NUMBER', 'tax', 'Tax', 'tax_id'],
-                        uifNumber: ['uifNumber', 'uif_number', 'UIF Number', 'UIF_NUMBER', 'uif', 'UIF'],
-                        certExpiry: ['certExpiry', 'cert_expiry', 'Cert Expiry', 'certificate_expiry', 'expiry_date', 'expiry'],
-                        status: ['status', 'Status', 'STATUS', 'state', 'State', 'employment_status'],
-                        username: ['username', 'Username', 'USERNAME', 'user', 'User', 'login'],
-                        password: ['password', 'Password', 'PASSWORD', 'pass', 'Pass']
-                    };
+                    const staffRecords = [];
                     
-                    const requiredFields = ['name', 'role'];
-                    const autoFillDefaults = {
-                        status: 'Active',
-                        department: 'General',
-                        salary: 0,
-                        taxNumber: 'Not Provided',
-                        uifNumber: 'Not Provided',
-                        certExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
-                    };
+                    rows.forEach(row => {
+                        const record = {
+                            name: cleanCell(row[0]),
+                            role: cleanCell(row[1]),
+                            department: cleanCell(row[2]),
+                            salary: cleanCell(row[3]),
+                            taxNumber: cleanCell(row[4]),
+                            uifNumber: cleanCell(row[5]),
+                            certExpiry: cleanCell(row[6]),
+                            status: cleanCell(row[7]) || 'Active'
+                        };
+                        
+                        if (record.name && record.role) {
+                            staffRecords.push(record);
+                        }
+                    });
                     
-                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
-                    
-                    // Display simplified preview with essential information
-                    let previewHTML = `<div class="alert alert-info">
+                    // Show result
+                    const resultHTML = `<div class="alert alert-info">
                         <strong>📊 Import Summary:</strong><br>
-                        Total records: ${result.summary.total}<br>
-                        ✅ Valid records: ${result.summary.valid}<br>
-                        ❌ Invalid records: ${result.summary.invalid}
+                        <strong>${staffRecords.length} staff members successfully parsed!</strong>
                     </div>`;
                     
-                    if (result.invalidRecords.length > 0) {
-                        previewHTML += `<div class="alert alert-danger">
-                            <strong>❌ Invalid Records (will be skipped):</strong><br>
-                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
-                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
-                        </div>`;
-                    }
-                    
-                    if (result.validRecords.length > 0) {
-                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Status</th></tr></thead>
+                    let previewHTML = resultHTML + `
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-striped" style="background: white; color: #333;">
+                                <thead>
+                                    <tr style="background-color: #f2f2f2;">
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Role</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Department</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Salary</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.role}</td><td>${r.department}</td><td>R${r.salary ? parseFloat(r.salary).toLocaleString() : '0'}</td><td>${r.status}</td></tr>`).join('')}
-                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
+                                    ${staffRecords.slice(0, 10).map(r => `
+                                        <tr>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.name}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.role}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.department}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">R${parseFloat(r.salary || 0).toLocaleString()}</td>
+                                            <td style="border: 1px solid #ddd; padding: 8px;">${r.status}</td>
+                                        </tr>
+                                    `).join('')}
+                                    ${staffRecords.length > 10 ? `<tr><td colspan="5" style="text-align: center; padding: 8px;">...and ${staffRecords.length - 10} more staff members</td></tr>` : ''}
                                 </tbody>
                             </table>
-                        </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmStaffImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Staff Members</button>`;
-                    }
+                        </div>
+                        <button class="btn btn-primary mt-2" onclick='confirmStaffImport(${JSON.stringify(staffRecords)})'>Import ${staffRecords.length} Staff Members</button>
+                    `;
                     
                     document.getElementById('staffPreview').innerHTML = previewHTML;
                     
@@ -6830,32 +6790,21 @@
                     id,
                     name: record.name,
                     role: record.role,
-                    department: record.department,
+                    department: record.department || 'General',
                     salary: parseFloat(record.salary) || 0,
-                    taxNumber: record.taxNumber,
-                    uifNumber: record.uifNumber,
-                    certExpiry: record.certExpiry,
-                    status: record.status
+                    taxNumber: record.taxNumber || 'Not Provided',
+                    uifNumber: record.uifNumber || 'Not Provided',
+                    certExpiry: record.certExpiry || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+                    status: record.status || 'Active'
                 };
-                
-                // Create user account if username and password provided
-                if (record.username && record.password) {
-                    newStaff.username = record.username;
-                    users.push({ 
-                        username: record.username, 
-                        password: record.password, 
-                        name: record.name, 
-                        role: record.role 
-                    });
-                }
                 
                 staff.push(newStaff);
             });
             saveData();
             renderStaff();
             bootstrap.Modal.getInstance(document.getElementById('bulkStaffModal')).hide();
-            addNotification(`✅ Successfully imported ${records.length} staff members with advanced algorithm`, 'success');
-            logAudit('Bulk Import', `Imported ${records.length} staff members using advanced algorithm`, 'Low');
+            addNotification(`✅ Successfully imported ${records.length} staff members using SheetJS`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} staff members using SheetJS`, 'Low');
         }
         function renderPayrolls() {
             const monthFilter = document.getElementById('payrollMonthFilter').value;
