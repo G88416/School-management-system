@@ -970,7 +970,7 @@
                                 <input type="date" class="form-control" id="workVaultDateFilter" onchange="renderWorkVault()">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" class="form-control" placeholder="Search..." id="workVaultSearch" oninput="debounce(renderWorkVault, 300)">
+                                <input type="text" class="form-control" placeholder="Search..." id="workVaultSearch" oninput="debounce(renderWorkVault, 300)()">
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -5711,9 +5711,9 @@
             const newStudent = {
                 id: studentId,
                 number: admission.accession || `STU-${studentId}`,
-                name: admission.name,
-                surname: admission.surname || admission.name.split(' ')[0],
-                firstName: admission.firstName || admission.name.split(' ').slice(1).join(' '),
+                name: admission.name || '',
+                surname: admission.surname || (admission.name ? admission.name.split(' ')[0] : ''),
+                firstName: admission.firstName || (admission.name ? admission.name.split(' ').slice(1).join(' ') : ''),
                 gender: admission.gender || 'Not specified',
                 grade: admission.grade,
                 class: admission.classValue || admission.grade,
