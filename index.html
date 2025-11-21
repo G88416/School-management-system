@@ -2288,6 +2288,7 @@
                                 <option value="Inactive">Inactive</option>
                             </select>
                             <h6 class="mt-3 mb-2 text-dark"><strong>Additional Information</strong></h6>
+                            <!-- Note: In production, implement proper authentication with secure password hashing -->
                             <input type="text" id="studentUsername" class="form-control mb-2" placeholder="Username for profile login">
                             <input type="password" id="studentPassword" class="form-control mb-2" placeholder="Password for profile login">
                         </div>
@@ -2672,9 +2673,10 @@
                                     </div>
                                     
                                     <script>
-                                    if (typeof posterCanvas === 'undefined') {
-                                        const posterCanvas = new fabric.Canvas('poster-canvas', { preserveObjectStacking: true });
-                                        let posterActiveObject = null;
+                                    let posterCanvas;
+                                    let posterActiveObject = null;
+                                    if (!posterCanvas) {
+                                        posterCanvas = new fabric.Canvas('poster-canvas', { preserveObjectStacking: true });
                                         
                                         // Update right panel when selection changes
                                         posterCanvas.on('selection:created', updatePosterUI);
@@ -2749,7 +2751,10 @@
                                         
                                         function unsplashPosterBg() {
                                             const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
-                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${keyword}`;
+                                            if (!keyword) return;
+                                            // Sanitize keyword to prevent URL injection - replace spaces with hyphens
+                                            const sanitizedKeyword = encodeURIComponent(keyword.replace(/[^\w-]/g, '').replace(/\s+/g, '-'));
+                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
                                             fabric.Image.fromURL(url, img => posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { scaleX: posterCanvas.width / img.width, scaleY: posterCanvas.height / img.height }));
                                         }
                                         
