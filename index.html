@@ -5572,12 +5572,6 @@
             }
         }
         // Biometric Login
-        function biometricLogin() {
-            alert('Biometric login simulated. Using default admin login.');
-            document.getElementById('username').value = 'admin';
-            document.getElementById('password').value = 'admin123';
-            login();
-        }
         // Update visibility
         function updateVisibility() {
             if (!currentUser) return;
@@ -13134,14 +13128,18 @@ ${submission.feedback || 'No feedback yet'}`);
             
             // Save application to admission system
             try {
+                // Generate unique ID and reference number once
+                const applicationId = Date.now();
+                const accessionNumber = 'ONLINE-' + applicationId;
+                
                 // Get existing admissions from localStorage (if in main window)
                 if (window.opener && window.opener.admissions) {
                     const admission = {
-                        id: Date.now(),
+                        id: applicationId,
                         name: formData.surname + ' ' + (formData.nickName || formData.initials),
                         surname: formData.surname,
                         firstName: formData.nickName || formData.initials,
-                        accession: 'ONLINE-' + Date.now(),
+                        accession: accessionNumber,
                         grade: formData.gradeApplied,
                         classValue: '',
                         cell: formData.learnerCell,
@@ -13175,7 +13173,7 @@ ${submission.feedback || 'No feedback yet'}`);
                     window.opener.logAudit('Online Application Submitted', 'Application from ' + admission.name, 'Medium');
                     
                     // Show success with redirect option
-                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYour application has been sent directly to the admissions office.\\n\\nReference: ' + admission.accession + '\\n\\nYou will be contacted soon.');
+                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYour application has been sent directly to the admissions office.\\n\\nReference: ' + accessionNumber + '\\n\\nYou will be contacted soon.');
                     
                     // Close window after 2 seconds
                     setTimeout(() => {
@@ -13190,11 +13188,12 @@ ${submission.feedback || 'No feedback yet'}`);
                         ...formData,
                         applicationDate: new Date().toISOString(),
                         status: 'pending',
-                        accession: 'ONLINE-' + Date.now()
+                        accession: accessionNumber,
+                        id: applicationId
                     });
                     localStorage.setItem('onlineApplications', JSON.stringify(onlineApplications));
                     
-                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nReference: ONLINE-' + Date.now() + '\\n\\nYour application will be reviewed and you will be contacted soon.');
+                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nReference: ' + accessionNumber + '\\n\\nYour application will be reviewed and you will be contacted soon.');
                 }
             } catch (err) {
                 console.error('Error saving application:', err);
