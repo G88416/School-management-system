@@ -360,33 +360,6 @@
                 <button type="button" class="btn btn-secondary w-100 mb-3" onclick="biometricLogin()">
                     <i class="fas fa-fingerprint me-2"></i>Biometric Login
                 </button>
-                <div class="text-center mb-2">
-                    <hr>
-                    <p class="mb-2"><strong>Quick Access - Login to Portal:</strong></p>
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-danger" onclick="document.getElementById('username').value='admin'; document.getElementById('password').value='admin123'; login();">
-                        <i class="fas fa-user-shield me-2"></i>Admin Portal
-                    </button>
-                    <button type="button" class="btn btn-success" onclick="document.getElementById('username').value='hod'; document.getElementById('password').value='hod123'; login();">
-                        <i class="fas fa-user-tie me-2"></i>HOD Portal
-                    </button>
-                    <button type="button" class="btn btn-info" onclick="document.getElementById('username').value='teacher'; document.getElementById('password').value='teacher123'; login();">
-                        <i class="fas fa-chalkboard-teacher me-2"></i>Teacher Portal
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="document.getElementById('username').value='parent'; document.getElementById('password').value='parent123'; login();">
-                        <i class="fas fa-users me-2"></i>Parent Portal
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('username').value='student'; document.getElementById('password').value='student123'; login();">
-                        <i class="fas fa-graduation-cap me-2"></i>Student Portal
-                    </button>
-                </div>
-                <div class="login-demo mt-3">
-                    <small class="text-muted d-block text-center">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Use quick access buttons above or enter credentials manually
-                    </small>
-                </div>
             </form>
         </div>
     </div>
@@ -3431,339 +3404,6 @@
                                         </div>
                                     </div>
                                     
-                                    <script>
-                                    let posterCanvas;
-                                    let posterActiveObject = null;
-                                    let posterInitialized = false;
-                                    
-                                    // Initialize poster creator when tab is shown
-                                    function initPosterCreator() {
-                                        if (posterInitialized) return;
-                                        posterInitialized = true;
-                                        
-                                        posterCanvas = new fabric.Canvas('poster-canvas', { 
-                                            preserveObjectStacking: true,
-                                            backgroundColor: '#f8f9fa'
-                                        });
-                                        
-                                        // Update right panel when selection changes
-                                        posterCanvas.on('selection:created', updatePosterUI);
-                                        posterCanvas.on('selection:updated', updatePosterUI);
-                                        posterCanvas.on('selection:cleared', () => { 
-                                            document.getElementById('poster-props').style.display='none'; 
-                                            updatePosterLayers(); 
-                                        });
-                                        posterCanvas.on('object:modified', updatePosterLayers);
-                                        posterCanvas.on('object:added', updatePosterLayers);
-                                        posterCanvas.on('object:removed', updatePosterLayers);
-                                        
-                                        // Initial welcome text
-                                        addPosterText('YOUR POSTER\nHERE');
-                                        updatePosterLayers();
-                                    }
-                                    
-                                    // Listen for tab shown event
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        const posterTab = document.querySelector('a[href="#create-poster"]');
-                                        if (posterTab) {
-                                            posterTab.addEventListener('shown.bs.tab', function() {
-                                                setTimeout(initPosterCreator, 100);
-                                            });
-                                        }
-                                    });
-                                    
-                                    function updatePosterUI(e) {
-                                        posterActiveObject = posterCanvas.getActiveObject();
-                                        if (!posterActiveObject) return;
-                                        document.getElementById('poster-props').style.display = 'block';
-                                        if (posterActiveObject.type.includes('text') || posterActiveObject.type === 'i-text' || posterActiveObject.type === 'textbox') {
-                                            document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
-                                            document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
-                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
-                                        } else {
-                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
-                                        }
-                                        updatePosterLayers();
-                                    }
-                                        
-                                        function setPosterProp(prop, value) {
-                                            if (!posterActiveObject) return;
-                                            if (prop === 'fontSize') value = parseInt(value);
-                                            posterActiveObject.set(prop, value);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function togglePosterProp(prop, value) {
-                                            if (!posterActiveObject) return;
-                                            const current = posterActiveObject.get(prop);
-                                            posterActiveObject.set(prop, current === value ? '' : value);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function addPosterText(text = 'YOUR EVENT\nHERE', size = 100) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const textbox = new fabric.Textbox(text, {
-                                                left: 100, 
-                                                top: 100, 
-                                                width: 600,
-                                                fontSize: size,
-                                                fontFamily: 'Bebas Neue',
-                                                fill: '#212529',
-                                                textAlign: 'center',
-                                                fontWeight: 'bold',
-                                                shadow: 'rgba(0,0,0,0.3) 5px 5px 15px',
-                                                editable: true
-                                            });
-                                            posterCanvas.add(textbox);
-                                            posterCanvas.setActiveObject(textbox);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function addPosterShape(type) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            let shape;
-                                            if (type==='rect') shape = new fabric.Rect({width:300, height:200, fill:'#ff5722', rx:20});
-                                            if (type==='circle') shape = new fabric.Circle({radius:150, fill:'#2196f3'});
-                                            if (type==='triangle') shape = new fabric.Triangle({width:250, height:220, fill:'#4caf50'});
-                                            shape.set({left:200, top:200, shadow:'rgba(0,0,0,0.3) 10px 10px 20px'});
-                                            posterCanvas.add(shape);
-                                            posterCanvas.setActiveObject(shape);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function uploadPosterImage() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const input = document.createElement('input');
-                                            input.type = 'file';
-                                            input.accept = 'image/*';
-                                            input.onchange = e => {
-                                                const file = e.target.files[0];
-                                                if (!file) return;
-                                                const reader = new FileReader();
-                                                reader.onload = event => fabric.Image.fromURL(event.target.result, img => {
-                                                    img.scale(0.5);
-                                                    posterCanvas.centerObject(img);
-                                                    posterCanvas.add(img);
-                                                    posterCanvas.renderAll();
-                                                    updatePosterLayers();
-                                                });
-                                                reader.readAsDataURL(file);
-                                            };
-                                            input.click();
-                                        }
-                                        
-                                        function unsplashPosterBg() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
-                                            if (!keyword) return;
-                                            // Sanitize keyword to prevent URL injection - replace spaces with hyphens
-                                            const sanitizedKeyword = encodeURIComponent(keyword.replace(/[^\w-]/g, '').replace(/\s+/g, '-'));
-                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                            addNotification('Loading background image...', 'info');
-                                            fabric.Image.fromURL(url, img => {
-                                                posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                    scaleX: posterCanvas.width / img.width, 
-                                                    scaleY: posterCanvas.height / img.height 
-                                                });
-                                                addNotification('Background loaded successfully!', 'success');
-                                            }, { crossOrigin: 'anonymous' });
-                                        }
-                                        
-                                        function setPosterBgColor(c) { 
-                                            if (!posterCanvas) return;
-                                            posterCanvas.backgroundColor = c; 
-                                            posterCanvas.renderAll(); 
-                                        }
-                                        
-                                        function downloadPoster() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            try {
-                                                const link = document.createElement('a');
-                                                link.download = 'my-poster-' + Date.now() + '.png';
-                                                link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
-                                                link.click();
-                                                addNotification('Poster downloaded successfully!', 'success');
-                                            } catch (error) {
-                                                addNotification('Error downloading poster: ' + error.message, 'error');
-                                            }
-                                        }
-                                        
-                                        // Simple templates
-                                        function loadPosterTemplate(type) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            posterCanvas.clear();
-                                            posterCanvas.backgroundColor = '#ffffff';
-                                            
-                                            if (type==='event') {
-                                                // Load event template
-                                                const keyword = 'concert';
-                                                const sanitizedKeyword = encodeURIComponent(keyword);
-                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                                fabric.Image.fromURL(url, img => {
-                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                        scaleX: posterCanvas.width / img.width, 
-                                                        scaleY: posterCanvas.height / img.height 
-                                                    });
-                                                    setTimeout(() => {
-                                                        addPosterText('LIVE\nCONCERT',120);
-                                                        setTimeout(() => {
-                                                            const subtext = new fabric.Textbox('Friday 25 Dec\nDoors open 19:00', {
-                                                                left: 100, top: 400, width: 600,
-                                                                fontSize: 60,
-                                                                fontFamily: 'Montserrat',
-                                                                fill: '#ffffff',
-                                                                textAlign: 'center',
-                                                                shadow: 'rgba(0,0,0,0.5) 3px 3px 10px'
-                                                            });
-                                                            posterCanvas.add(subtext);
-                                                            posterCanvas.renderAll();
-                                                            updatePosterLayers();
-                                                        }, 100);
-                                                    }, 200);
-                                                }, { crossOrigin: 'anonymous' });
-                                            }
-                                            else if (type==='sale') {
-                                                posterCanvas.backgroundColor = '#ff1744';
-                                                posterCanvas.renderAll();
-                                                setTimeout(() => {
-                                                    const mainText = new fabric.Textbox('MEGA\nSALE', {
-                                                        left: 100, top: 300, width: 600,
-                                                        fontSize: 150,
-                                                        fontFamily: 'Bebas Neue',
-                                                        fill: '#ffffff',
-                                                        textAlign: 'center',
-                                                        fontWeight: 'bold',
-                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
-                                                    });
-                                                    posterCanvas.add(mainText);
-                                                    
-                                                    const subText = new fabric.Textbox('50% OFF', {
-                                                        left: 150, top: 650, width: 500,
-                                                        fontSize: 100,
-                                                        fontFamily: 'Bebas Neue',
-                                                        fill: '#ffeb3b',
-                                                        textAlign: 'center',
-                                                        fontWeight: 'bold',
-                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
-                                                    });
-                                                    posterCanvas.add(subText);
-                                                    posterCanvas.renderAll();
-                                                    updatePosterLayers();
-                                                }, 100);
-                                            }
-                                            else if (type==='motivation') {
-                                                const keyword = 'mountain';
-                                                const sanitizedKeyword = encodeURIComponent(keyword);
-                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                                fabric.Image.fromURL(url, img => {
-                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                        scaleX: posterCanvas.width / img.width, 
-                                                        scaleY: posterCanvas.height / img.height 
-                                                    });
-                                                    setTimeout(() => {
-                                                        const mainText = new fabric.Textbox('DREAM BIG\nWORK HARD', {
-                                                            left: 100, top: 400, width: 600,
-                                                            fontSize: 120,
-                                                            fontFamily: 'Bebas Neue',
-                                                            fill: '#ffffff',
-                                                            textAlign: 'center',
-                                                            fontWeight: 'bold',
-                                                            shadow: 'rgba(0,0,0,0.8) 5px 5px 20px'
-                                                        });
-                                                        posterCanvas.add(mainText);
-                                                        posterCanvas.renderAll();
-                                                        updatePosterLayers();
-                                                    }, 200);
-                                                }, { crossOrigin: 'anonymous' });
-                                            }
-                                            addNotification('Template loaded successfully!', 'success');
-                                        }
-                                        
-                                        // Layers list
-                                        function updatePosterLayers() {
-                                            if (!posterCanvas) return;
-                                            const list = document.getElementById('poster-layers');
-                                            if (!list) return;
-                                            list.innerHTML = '';
-                                            const objects = posterCanvas.getObjects();
-                                            if (objects.length === 0) {
-                                                list.innerHTML = '<li style="text-align:center;color:#999;">No layers yet</li>';
-                                                return;
-                                            }
-                                            objects.slice().reverse().forEach((obj, index) => {
-                                                const li = document.createElement('li');
-                                                let layerName = '';
-                                                if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
-                                                    layerName = obj.text ? obj.text.slice(0,20) + (obj.text.length > 20 ? '...' : '') : 'Text';
-                                                } else if (obj.type === 'image') {
-                                                    layerName = 'Image';
-                                                } else {
-                                                    layerName = obj.type.charAt(0).toUpperCase() + obj.type.slice(1);
-                                                }
-                                                
-                                                const icon = obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text' ? '📝' : 
-                                                           obj.type === 'image' ? '🖼️' : 
-                                                           obj.type === 'rect' ? '⬜' : 
-                                                           obj.type === 'circle' ? '⭕' : 
-                                                           obj.type === 'triangle' ? '🔺' : '📦';
-                                                
-                                                li.innerHTML = `<span>${icon} ${layerName}</span><span style="font-size:11px;opacity:0.7;">Layer ${objects.length - index}</span>`;
-                                                li.onclick = () => {
-                                                    posterCanvas.setActiveObject(obj);
-                                                    posterCanvas.renderAll();
-                                                };
-                                                if (posterCanvas.getActiveObject() === obj) li.classList.add('active');
-                                                list.appendChild(li);
-                                            });
-                                        }
-                                        
-                                        function deletePosterActive() {
-                                            if (!posterCanvas) return;
-                                            const activeObj = posterCanvas.getActiveObject();
-                                            if (activeObj) {
-                                                posterCanvas.remove(activeObj);
-                                                posterActiveObject = null;
-                                                posterCanvas.renderAll();
-                                                updatePosterLayers();
-                                                addNotification('Object deleted', 'info');
-                                            }
-                                        }
-                                        
-                                        // Helper to convert rgb to hex for color picker
-                                        function rgbToPosterHex(color) {
-                                            if (!color) return '#000000';
-                                            if (typeof color === 'string' && color.startsWith('rgb')) {
-                                                const matches = color.match(/\d+/g);
-                                                if (matches && matches.length >= 3) {
-                                                    const [r,g,b] = matches;
-                                                    return "#" + ((1 << 24) + (parseInt(r) << 16) + (parseInt(g) << 8) + parseInt(b)).toString(16).slice(1);
-                                                }
-                                            }
-                                            return color || '#000000';
-                                        }
-                                    </script>
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
                                     <h6>Upload Video Announcement</h6>
@@ -4523,6 +4163,337 @@
         var dataVault = [];
         var teacherChats = [];
         var adminMessages = [];
+                                    let posterCanvas;
+                                    let posterActiveObject = null;
+                                    let posterInitialized = false;
+                                    
+                                    // Initialize poster creator when tab is shown
+                                    function initPosterCreator() {
+                                        if (posterInitialized) return;
+                                        posterInitialized = true;
+                                        
+                                        posterCanvas = new fabric.Canvas('poster-canvas', { 
+                                            preserveObjectStacking: true,
+                                            backgroundColor: '#f8f9fa'
+                                        });
+                                        
+                                        // Update right panel when selection changes
+                                        posterCanvas.on('selection:created', updatePosterUI);
+                                        posterCanvas.on('selection:updated', updatePosterUI);
+                                        posterCanvas.on('selection:cleared', () => { 
+                                            document.getElementById('poster-props').style.display='none'; 
+                                            updatePosterLayers(); 
+                                        });
+                                        posterCanvas.on('object:modified', updatePosterLayers);
+                                        posterCanvas.on('object:added', updatePosterLayers);
+                                        posterCanvas.on('object:removed', updatePosterLayers);
+                                        
+                                        // Initial welcome text
+                                        addPosterText('YOUR POSTER\nHERE');
+                                        updatePosterLayers();
+                                    }
+                                    
+                                    // Listen for tab shown event
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const posterTab = document.querySelector('a[href="#create-poster"]');
+                                        if (posterTab) {
+                                            posterTab.addEventListener('shown.bs.tab', function() {
+                                                setTimeout(initPosterCreator, 100);
+                                            });
+                                        }
+                                    });
+                                    
+                                    function updatePosterUI(e) {
+                                        posterActiveObject = posterCanvas.getActiveObject();
+                                        if (!posterActiveObject) return;
+                                        document.getElementById('poster-props').style.display = 'block';
+                                        if (posterActiveObject.type.includes('text') || posterActiveObject.type === 'i-text' || posterActiveObject.type === 'textbox') {
+                                            document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
+                                            document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
+                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
+                                        } else {
+                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
+                                        }
+                                        updatePosterLayers();
+                                    }
+                                        
+                                        function setPosterProp(prop, value) {
+                                            if (!posterActiveObject) return;
+                                            if (prop === 'fontSize') value = parseInt(value);
+                                            posterActiveObject.set(prop, value);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
+                                        }
+                                        
+                                        function togglePosterProp(prop, value) {
+                                            if (!posterActiveObject) return;
+                                            const current = posterActiveObject.get(prop);
+                                            posterActiveObject.set(prop, current === value ? '' : value);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
+                                        }
+                                        
+                                        function addPosterText(text = 'YOUR EVENT\nHERE', size = 100) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const textbox = new fabric.Textbox(text, {
+                                                left: 100, 
+                                                top: 100, 
+                                                width: 600,
+                                                fontSize: size,
+                                                fontFamily: 'Bebas Neue',
+                                                fill: '#212529',
+                                                textAlign: 'center',
+                                                fontWeight: 'bold',
+                                                shadow: 'rgba(0,0,0,0.3) 5px 5px 15px',
+                                                editable: true
+                                            });
+                                            posterCanvas.add(textbox);
+                                            posterCanvas.setActiveObject(textbox);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
+                                        }
+                                        
+                                        function addPosterShape(type) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            let shape;
+                                            if (type==='rect') shape = new fabric.Rect({width:300, height:200, fill:'#ff5722', rx:20});
+                                            if (type==='circle') shape = new fabric.Circle({radius:150, fill:'#2196f3'});
+                                            if (type==='triangle') shape = new fabric.Triangle({width:250, height:220, fill:'#4caf50'});
+                                            shape.set({left:200, top:200, shadow:'rgba(0,0,0,0.3) 10px 10px 20px'});
+                                            posterCanvas.add(shape);
+                                            posterCanvas.setActiveObject(shape);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
+                                        }
+                                        
+                                        function uploadPosterImage() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const input = document.createElement('input');
+                                            input.type = 'file';
+                                            input.accept = 'image/*';
+                                            input.onchange = e => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                const reader = new FileReader();
+                                                reader.onload = event => fabric.Image.fromURL(event.target.result, img => {
+                                                    img.scale(0.5);
+                                                    posterCanvas.centerObject(img);
+                                                    posterCanvas.add(img);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
+                                                });
+                                                reader.readAsDataURL(file);
+                                            };
+                                            input.click();
+                                        }
+                                        
+                                        function unsplashPosterBg() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
+                                            if (!keyword) return;
+                                            // Sanitize keyword to prevent URL injection - replace spaces with hyphens
+                                            const sanitizedKeyword = encodeURIComponent(keyword.replace(/[^\w-]/g, '').replace(/\s+/g, '-'));
+                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
+                                            addNotification('Loading background image...', 'info');
+                                            fabric.Image.fromURL(url, img => {
+                                                posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                    scaleX: posterCanvas.width / img.width, 
+                                                    scaleY: posterCanvas.height / img.height 
+                                                });
+                                                addNotification('Background loaded successfully!', 'success');
+                                            }, { crossOrigin: 'anonymous' });
+                                        }
+                                        
+                                        function setPosterBgColor(c) { 
+                                            if (!posterCanvas) return;
+                                            posterCanvas.backgroundColor = c; 
+                                            posterCanvas.renderAll(); 
+                                        }
+                                        
+                                        function downloadPoster() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const link = document.createElement('a');
+                                                link.download = 'my-poster-' + Date.now() + '.png';
+                                                link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
+                                                link.click();
+                                                addNotification('Poster downloaded successfully!', 'success');
+                                            } catch (error) {
+                                                addNotification('Error downloading poster: ' + error.message, 'error');
+                                            }
+                                        }
+                                        
+                                        // Simple templates
+                                        function loadPosterTemplate(type) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            posterCanvas.clear();
+                                            posterCanvas.backgroundColor = '#ffffff';
+                                            
+                                            if (type==='event') {
+                                                // Load event template
+                                                const keyword = 'concert';
+                                                const sanitizedKeyword = encodeURIComponent(keyword);
+                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
+                                                fabric.Image.fromURL(url, img => {
+                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                        scaleX: posterCanvas.width / img.width, 
+                                                        scaleY: posterCanvas.height / img.height 
+                                                    });
+                                                    setTimeout(() => {
+                                                        addPosterText('LIVE\nCONCERT',120);
+                                                        setTimeout(() => {
+                                                            const subtext = new fabric.Textbox('Friday 25 Dec\nDoors open 19:00', {
+                                                                left: 100, top: 400, width: 600,
+                                                                fontSize: 60,
+                                                                fontFamily: 'Montserrat',
+                                                                fill: '#ffffff',
+                                                                textAlign: 'center',
+                                                                shadow: 'rgba(0,0,0,0.5) 3px 3px 10px'
+                                                            });
+                                                            posterCanvas.add(subtext);
+                                                            posterCanvas.renderAll();
+                                                            updatePosterLayers();
+                                                        }, 100);
+                                                    }, 200);
+                                                }, { crossOrigin: 'anonymous' });
+                                            }
+                                            else if (type==='sale') {
+                                                posterCanvas.backgroundColor = '#ff1744';
+                                                posterCanvas.renderAll();
+                                                setTimeout(() => {
+                                                    const mainText = new fabric.Textbox('MEGA\nSALE', {
+                                                        left: 100, top: 300, width: 600,
+                                                        fontSize: 150,
+                                                        fontFamily: 'Bebas Neue',
+                                                        fill: '#ffffff',
+                                                        textAlign: 'center',
+                                                        fontWeight: 'bold',
+                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
+                                                    });
+                                                    posterCanvas.add(mainText);
+                                                    
+                                                    const subText = new fabric.Textbox('50% OFF', {
+                                                        left: 150, top: 650, width: 500,
+                                                        fontSize: 100,
+                                                        fontFamily: 'Bebas Neue',
+                                                        fill: '#ffeb3b',
+                                                        textAlign: 'center',
+                                                        fontWeight: 'bold',
+                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
+                                                    });
+                                                    posterCanvas.add(subText);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
+                                                }, 100);
+                                            }
+                                            else if (type==='motivation') {
+                                                const keyword = 'mountain';
+                                                const sanitizedKeyword = encodeURIComponent(keyword);
+                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
+                                                fabric.Image.fromURL(url, img => {
+                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                        scaleX: posterCanvas.width / img.width, 
+                                                        scaleY: posterCanvas.height / img.height 
+                                                    });
+                                                    setTimeout(() => {
+                                                        const mainText = new fabric.Textbox('DREAM BIG\nWORK HARD', {
+                                                            left: 100, top: 400, width: 600,
+                                                            fontSize: 120,
+                                                            fontFamily: 'Bebas Neue',
+                                                            fill: '#ffffff',
+                                                            textAlign: 'center',
+                                                            fontWeight: 'bold',
+                                                            shadow: 'rgba(0,0,0,0.8) 5px 5px 20px'
+                                                        });
+                                                        posterCanvas.add(mainText);
+                                                        posterCanvas.renderAll();
+                                                        updatePosterLayers();
+                                                    }, 200);
+                                                }, { crossOrigin: 'anonymous' });
+                                            }
+                                            addNotification('Template loaded successfully!', 'success');
+                                        }
+                                        
+                                        // Layers list
+                                        function updatePosterLayers() {
+                                            if (!posterCanvas) return;
+                                            const list = document.getElementById('poster-layers');
+                                            if (!list) return;
+                                            list.innerHTML = '';
+                                            const objects = posterCanvas.getObjects();
+                                            if (objects.length === 0) {
+                                                list.innerHTML = '<li style="text-align:center;color:#999;">No layers yet</li>';
+                                                return;
+                                            }
+                                            objects.slice().reverse().forEach((obj, index) => {
+                                                const li = document.createElement('li');
+                                                let layerName = '';
+                                                if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+                                                    layerName = obj.text ? obj.text.slice(0,20) + (obj.text.length > 20 ? '...' : '') : 'Text';
+                                                } else if (obj.type === 'image') {
+                                                    layerName = 'Image';
+                                                } else {
+                                                    layerName = obj.type.charAt(0).toUpperCase() + obj.type.slice(1);
+                                                }
+                                                
+                                                const icon = obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text' ? '📝' : 
+                                                           obj.type === 'image' ? '🖼️' : 
+                                                           obj.type === 'rect' ? '⬜' : 
+                                                           obj.type === 'circle' ? '⭕' : 
+                                                           obj.type === 'triangle' ? '🔺' : '📦';
+                                                
+                                                li.innerHTML = `<span>${icon} ${layerName}</span><span style="font-size:11px;opacity:0.7;">Layer ${objects.length - index}</span>`;
+                                                li.onclick = () => {
+                                                    posterCanvas.setActiveObject(obj);
+                                                    posterCanvas.renderAll();
+                                                };
+                                                if (posterCanvas.getActiveObject() === obj) li.classList.add('active');
+                                                list.appendChild(li);
+                                            });
+                                        }
+                                        
+                                        function deletePosterActive() {
+                                            if (!posterCanvas) return;
+                                            const activeObj = posterCanvas.getActiveObject();
+                                            if (activeObj) {
+                                                posterCanvas.remove(activeObj);
+                                                posterActiveObject = null;
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Object deleted', 'info');
+                                            }
+                                        }
+                                        
+                                        // Helper to convert rgb to hex for color picker
+                                        function rgbToPosterHex(color) {
+                                            if (!color) return '#000000';
+                                            if (typeof color === 'string' && color.startsWith('rgb')) {
+                                                const matches = color.match(/\d+/g);
+                                                if (matches && matches.length >= 3) {
+                                                    const [r,g,b] = matches;
+                                                    return "#" + ((1 << 24) + (parseInt(r) << 16) + (parseInt(g) << 8) + parseInt(b)).toString(16).slice(1);
+                                                }
+                                            }
+                                            return color || '#000000';
+                                        }
         var selectedChatStudent = null;
         var isOnline = navigator.onLine;
         var offlineQueue = [];
@@ -12424,7 +12395,7 @@ ${submission.feedback || 'No feedback yet'}`);
         <button type="button" onclick="window.print()" class="no-print" style="background: #28a745; margin-left: 10px;">Print Form</button>
     </form>
 
-    <script>
+    <scr` + `ipt>
         document.getElementById('enrollmentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!document.getElementById('agreeFeePolicy').checked) {
@@ -12433,7 +12404,7 @@ ${submission.feedback || 'No feedback yet'}`);
             }
             alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYou will be contacted soon.');
         });
-    </script>
+    </scr` + `ipt>
 </body>
 </html>`;
         }
