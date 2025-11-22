@@ -39,7 +39,8 @@ self.addEventListener('fetch', event => {
         
         return fetch(fetchRequest).then(response => {
           // Check if valid response
-          if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
+          // Allow basic (same-origin), cors (cross-origin with CORS), and opaque (no-cors) responses
+          if (!response || (response.status !== 200 && response.type !== 'opaque')) {
             return response;
           }
           

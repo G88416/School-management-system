@@ -13084,11 +13084,31 @@ ${submission.feedback || 'No feedback yet'}`);
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        // Show success notification if addNotification function is available
+                        setTimeout(() => {
+                            if (typeof addNotification === 'function') {
+                                addNotification('App ready for offline use!', 'success');
+                            }
+                        }, 2000);
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
+                        // Show user-friendly error notification
+                        if (typeof addNotification === 'function') {
+                            addNotification('Offline mode unavailable. Please check your connection.', 'warning');
+                        } else {
+                            console.warn('PWA: Service worker registration failed, offline functionality unavailable');
+                        }
                     });
             });
+        } else {
+            console.log('Service Worker not supported in this browser');
+            // Notify user that PWA features are not available
+            setTimeout(() => {
+                if (typeof addNotification === 'function') {
+                    addNotification('This browser does not support offline mode.', 'info');
+                }
+            }, 2000);
         }
         
         // PWA Install Prompt
