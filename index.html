@@ -729,6 +729,7 @@
                             <th colspan="9">LEARNER DETAILS</th>
                             <th colspan="4">FATHER DETAILS</th>
                             <th colspan="4">MOTHER DETAILS</th>
+                            <th rowspan="2">ACTIONS</th>
                         </tr>
                         <tr>
                             <th>Number</th>
@@ -1391,6 +1392,9 @@
                         <a class="nav-link" data-bs-toggle="tab" href="#hr-teachers" onclick="renderTeachersReadOnly()">Teachers Info (Read-Only)</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-hod-portal" onclick="renderHODPortalReadOnly()">HOD Portal (Read-Only)</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#hr-employee-wellness" onclick="renderEmployeeWellnessAdmin()">Advanced Employee Wellness</a>
                     </li>
                 </ul>
@@ -1593,6 +1597,102 @@
                                 <hr>
                                 <h5>Upcoming Events</h5>
                                 <div id="roUpcomingEventsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hr-hod-portal">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>This is a read-only view of the HOD (Head of Department) portal information for admin review.
+                        </div>
+                        
+                        <!-- HOD Dashboard Metrics (Read-Only) -->
+                        <h5><i class="fas fa-chart-line me-2"></i>HOD Dashboard Overview</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3">
+                                    <h6><i class="fas fa-chalkboard-teacher me-2"></i>Total Teachers</h6>
+                                    <h3 id="roHodTotalTeachers">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3">
+                                    <h6><i class="fas fa-check-circle me-2"></i>Active Today</h6>
+                                    <h3 id="roHodActiveTeachers">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3">
+                                    <h6><i class="fas fa-file-alt me-2"></i>Lesson Plans</h6>
+                                    <h3 id="roHodTotalLessonPlans">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3">
+                                    <h6><i class="fas fa-percentage me-2"></i>Avg Performance</h6>
+                                    <h3 id="roHodAvgPerformance">0%</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Teacher Monitoring Summary -->
+                        <h5><i class="fas fa-user-check me-2"></i>Teacher Monitoring Summary</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                                    <h6>Lesson Plans Submitted</h6>
+                                    <h3 id="roMonitorLessonPlansCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-graduation-cap fa-2x mb-2"></i>
+                                    <h6>Grades Entered</h6>
+                                    <h3 id="roMonitorGradesCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                    <h6>Attendance Marked</h6>
+                                    <h3 id="roMonitorAttendanceCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-comments fa-2x mb-2"></i>
+                                    <h6>Communications</h6>
+                                    <h3 id="roMonitorCommCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Teacher Activities -->
+                        <h5><i class="fas fa-bell me-2"></i>Recent Teacher Activities</h5>
+                        <div class="card card-metric p-3 mb-4">
+                            <div id="roHodRecentActivities" style="max-height:300px;overflow-y:auto;">
+                                <p class="text-muted text-center">Loading activities...</p>
+                            </div>
+                        </div>
+
+                        <!-- Teacher Activity Log -->
+                        <h5><i class="fas fa-list me-2"></i>Teacher Activity Log (Last 20 Entries)</h5>
+                        <div class="card card-metric p-3">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Teacher</th>
+                                            <th>Activity</th>
+                                            <th>Date & Time</th>
+                                            <th>Details</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="roTeacherActivityLog">
+                                        <tr><td colspan="5" class="text-center text-muted">Loading activity log...</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -1953,7 +2053,7 @@
                 <div class="row mt-4">
                     <div class="col-md-12">
                         <h5>Enhanced Theme Generator</h5>
-                        <p>Choose from 5 professional color themes to customize the appearance of the application.</p>
+                        <p>Choose from 12 professional color themes to customize the appearance of the application.</p>
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="d-flex flex-wrap gap-3" id="themeSelector">
@@ -1996,12 +2096,68 @@
                                         </div>
                                         <div class="theme-name">Midnight Dark</div>
                                     </div>
+                                    
+                                    <!-- Theme 6: Rose Pink -->
+                                    <div class="theme-option" onclick="applyTheme('rose')" data-theme="rose">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Rose Pink</div>
+                                    </div>
+                                    
+                                    <!-- Theme 7: Emerald -->
+                                    <div class="theme-option" onclick="applyTheme('emerald')" data-theme="emerald">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Emerald</div>
+                                    </div>
+                                    
+                                    <!-- Theme 8: Crimson Red -->
+                                    <div class="theme-option" onclick="applyTheme('crimson')" data-theme="crimson">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Crimson Red</div>
+                                    </div>
+                                    
+                                    <!-- Theme 9: Royal Gold -->
+                                    <div class="theme-option" onclick="applyTheme('royal')" data-theme="royal">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #141e30 0%, #243b55 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Royal Gold</div>
+                                    </div>
+                                    
+                                    <!-- Theme 10: Cosmic Purple -->
+                                    <div class="theme-option" onclick="applyTheme('cosmic')" data-theme="cosmic">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Cosmic Purple</div>
+                                    </div>
+                                    
+                                    <!-- Theme 11: Aqua Marine -->
+                                    <div class="theme-option" onclick="applyTheme('aqua')" data-theme="aqua">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Aqua Marine</div>
+                                    </div>
+                                    
+                                    <!-- Theme 12: Autumn Leaves -->
+                                    <div class="theme-option" onclick="applyTheme('autumn')" data-theme="autumn">
+                                        <div class="theme-preview" style="background: linear-gradient(135deg, #DAD299 0%, #B0DAB9 100%);">
+                                            <i class="fas fa-check theme-check d-none"></i>
+                                        </div>
+                                        <div class="theme-name">Autumn Leaves</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            Your selected theme will be saved automatically and persist across sessions. The Default Purple theme is the original theme.
+                            Your selected theme will be saved automatically and persist across sessions. Choose from 12 beautiful themes!
                         </div>
                     </div>
                 </div>
@@ -2874,128 +3030,217 @@
                                             font-family:'Montserrat',sans-serif; 
                                             background:#f8f9fa; 
                                             display:grid; 
-                                            grid-template-columns:220px 1fr 280px; 
-                                            height:80vh; 
+                                            grid-template-columns:260px 1fr 300px; 
+                                            height:85vh; 
                                             overflow:hidden; 
-                                            border-radius:15px;
+                                            border-radius:20px;
+                                            box-shadow:0 10px 50px rgba(0,0,0,0.15);
                                         }
                                         #poster-left, #poster-right { 
-                                            background:rgba(255, 255, 255, 0.95); 
-                                            border-right:1px solid rgba(255,255,255,0.3); 
-                                            padding:15px; 
+                                            background:rgba(255, 255, 255, 0.98); 
+                                            border-right:1px solid rgba(0,0,0,0.08); 
+                                            padding:20px; 
                                             overflow-y:auto; 
-                                            box-shadow:0 4px 20px rgba(0,0,0,0.1); 
-                                            backdrop-filter: blur(10px);
+                                            box-shadow:0 4px 20px rgba(0,0,0,0.08); 
+                                            backdrop-filter: blur(15px);
+                                            scrollbar-width: thin;
                                         }
-                                        #poster-right { border-left:1px solid rgba(255,255,255,0.3); border-right:none; }
-                                        #poster-creator-container h2 { margin:0 0 15px; font-size:18px; color:#333; font-weight:600; }
-                                        #poster-creator-container h3 { margin:0 0 10px; font-size:14px; color:#555; font-weight:600; }
+                                        #poster-right { border-left:1px solid rgba(0,0,0,0.08); border-right:none; }
+                                        #poster-creator-container h2 { 
+                                            margin:0 0 20px; 
+                                            font-size:20px; 
+                                            color:#1a1a1a; 
+                                            font-weight:700;
+                                            text-align:center;
+                                            padding-bottom:10px;
+                                            border-bottom:2px solid #007bff;
+                                        }
+                                        #poster-creator-container h3 { 
+                                            margin:0 0 12px; 
+                                            font-size:15px; 
+                                            color:#444; 
+                                            font-weight:600;
+                                        }
                                         #poster-creator-container button, 
                                         #poster-creator-container select, 
                                         #poster-creator-container input:not([type="color"]):not([type="range"]) { 
                                             width:100%; 
-                                            padding:10px; 
+                                            padding:12px 14px; 
                                             margin:8px 0; 
-                                            border-radius:8px; 
-                                            border:1px solid #ddd; 
+                                            border-radius:10px; 
+                                            border:1px solid #e0e0e0; 
                                             background:#fff; 
                                             cursor:pointer; 
-                                            transition:all 0.3s;
+                                            transition:all 0.3s ease;
                                             font-size:14px;
+                                            font-weight:500;
+                                        }
+                                        #poster-creator-container button { 
+                                            background:linear-gradient(135deg, #667eea, #764ba2);
+                                            color:#fff;
+                                            border:none;
+                                            box-shadow:0 2px 8px rgba(102,126,234,0.3);
                                         }
                                         #poster-creator-container button:hover { 
-                                            background:#007bff; 
-                                            color:#fff; 
-                                            transform:translateY(-2px); 
-                                            box-shadow:0 4px 12px rgba(0,123,255,0.3);
+                                            transform:translateY(-3px); 
+                                            box-shadow:0 6px 16px rgba(102,126,234,0.4);
                                         }
-                                        #poster-creator-container button:active { transform:translateY(0); }
-                                        .poster-section { margin-bottom:25px; }
-                                        .poster-color-picker { height:40px; width:100%; border:2px solid #ddd; border-radius:8px; cursor:pointer; }
+                                        #poster-creator-container button:active { 
+                                            transform:translateY(-1px); 
+                                            box-shadow:0 3px 10px rgba(102,126,234,0.3);
+                                        }
+                                        .poster-section { 
+                                            margin-bottom:28px; 
+                                            padding:15px;
+                                            background:rgba(248,249,250,0.6);
+                                            border-radius:12px;
+                                        }
+                                        .poster-color-picker { 
+                                            height:50px; 
+                                            width:100%; 
+                                            border:3px solid #e0e0e0; 
+                                            border-radius:10px; 
+                                            cursor:pointer;
+                                            transition:all 0.3s;
+                                        }
+                                        .poster-color-picker:hover {
+                                            border-color:#007bff;
+                                            transform:scale(1.02);
+                                        }
                                         #poster-canvas-wrapper { 
-                                            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                            background:linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%); 
                                             display:flex; 
                                             align-items:center; 
                                             justify-content:center; 
                                             overflow:auto; 
-                                            padding:20px;
+                                            padding:30px;
+                                            position:relative;
                                         }
                                         #poster-canvas { 
-                                            box-shadow:0 20px 60px rgba(0,0,0,0.4); 
+                                            box-shadow:0 25px 80px rgba(0,0,0,0.5); 
                                             background:white; 
-                                            border-radius:10px;
+                                            border-radius:12px;
+                                            max-width:100%;
+                                            max-height:100%;
                                         }
                                         #poster-layers { list-style:none; padding:0; margin:0; }
                                         #poster-layers li { 
-                                            padding:10px; 
-                                            background:#f5f5f5; 
-                                            margin:6px 0; 
-                                            border-radius:6px; 
+                                            padding:12px 14px; 
+                                            background:#f8f9fa; 
+                                            margin:8px 0; 
+                                            border-radius:8px; 
                                             cursor:pointer; 
                                             display:flex; 
                                             justify-content:space-between; 
-                                            transition:all 0.2s;
+                                            align-items:center;
+                                            transition:all 0.25s;
                                             font-size:13px;
+                                            border:1px solid transparent;
                                         }
-                                        #poster-layers li:hover { background:#e0e0e0; transform:translateX(3px); }
-                                        #poster-layers li.active { background:#007bff; color:white; font-weight:600; }
+                                        #poster-layers li:hover { 
+                                            background:#e9ecef; 
+                                            transform:translateX(5px);
+                                            border-color:#007bff;
+                                        }
+                                        #poster-layers li.active { 
+                                            background:linear-gradient(135deg, #007bff, #0056b3); 
+                                            color:white; 
+                                            font-weight:600;
+                                            box-shadow:0 4px 12px rgba(0,123,255,0.3);
+                                        }
                                         .poster-template-thumb { 
-                                            height:120px; 
+                                            height:130px; 
                                             background-size:cover; 
                                             background-position:center; 
-                                            border-radius:10px; 
-                                            margin:10px 0; 
+                                            border-radius:12px; 
+                                            margin:12px 0; 
                                             cursor:pointer; 
-                                            border:3px solid #ddd; 
-                                            transition:all 0.3s;
+                                            border:3px solid #e0e0e0; 
+                                            transition:all 0.3s ease;
                                             position:relative;
                                             overflow:hidden;
                                         }
                                         .poster-template-thumb:hover { 
                                             border-color:#007bff; 
-                                            transform:scale(1.05); 
-                                            box-shadow:0 8px 25px rgba(0,123,255,0.3);
+                                            transform:scale(1.06) translateY(-2px); 
+                                            box-shadow:0 10px 30px rgba(0,123,255,0.35);
                                         }
                                         .poster-template-thumb::after {
-                                            content:'Click to use';
+                                            content:'✨ Click to Use Template';
                                             position:absolute;
                                             bottom:0;
                                             left:0;
                                             right:0;
-                                            background:rgba(0,0,0,0.7);
+                                            background:rgba(0,0,0,0.85);
                                             color:#fff;
-                                            padding:8px;
+                                            padding:10px;
                                             text-align:center;
                                             font-size:12px;
+                                            font-weight:600;
                                             opacity:0;
                                             transition:opacity 0.3s;
                                         }
                                         .poster-template-thumb:hover::after { opacity:1; }
                                         
                                         /* Responsive Design for Mobile */
+                                        @media (max-width: 1200px) {
+                                            #poster-creator-container {
+                                                grid-template-columns:240px 1fr 280px;
+                                            }
+                                        }
                                         @media (max-width: 1024px) {
                                             #poster-creator-container {
                                                 grid-template-columns:1fr;
                                                 grid-template-rows:auto 1fr auto;
                                                 height:auto;
-                                                min-height:90vh;
+                                                min-height:95vh;
                                             }
                                             #poster-left, #poster-right {
                                                 border:none;
-                                                border-bottom:1px solid rgba(255,255,255,0.3);
+                                                border-bottom:2px solid rgba(0,0,0,0.1);
                                             }
                                             #poster-canvas-wrapper {
-                                                min-height:500px;
+                                                min-height:550px;
+                                                padding:20px;
                                             }
-                                            .poster-template-thumb { height:80px; }
+                                            .poster-template-thumb { height:90px; }
+                                            #poster-creator-container h2 { font-size:18px; }
                                         }
                                         @media (max-width: 768px) {
-                                            #poster-creator-container { height:auto; }
-                                            #poster-canvas-wrapper { 
-                                                padding:10px; 
-                                                min-height:400px;
+                                            #poster-creator-container { 
+                                                height:auto;
+                                                border-radius:15px;
                                             }
-                                            #poster-canvas { max-width:100%; height:auto; }
+                                            #poster-canvas-wrapper { 
+                                                padding:15px; 
+                                                min-height:450px;
+                                            }
+                                            #poster-canvas { 
+                                                max-width:calc(100vw - 30px);
+                                                height:auto;
+                                            }
+                                            #poster-left, #poster-right {
+                                                padding:15px;
+                                            }
+                                            .poster-section { padding:12px; margin-bottom:20px; }
+                                            #poster-creator-container button {
+                                                padding:10px 12px;
+                                                font-size:13px;
+                                            }
+                                            .poster-template-thumb { height:70px; }
+                                        }
+                                        @media (max-width: 480px) {
+                                            #poster-creator-container {
+                                                border-radius:10px;
+                                            }
+                                            #poster-canvas-wrapper {
+                                                min-height:350px;
+                                                padding:10px;
+                                            }
+                                            #poster-canvas {
+                                                max-width:100%;
+                                            }
+                                            .poster-template-thumb { height:60px; }
                                         }
                                     </style>
                                     
@@ -6089,6 +6334,11 @@
                     <td>${a.motherSurname || ''}</td>
                     <td>${a.motherEmail || ''}</td>
                     <td>${a.motherCell || ''}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn btn-sm btn-info" onclick="viewAdmission(${a.id})" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-primary" onclick="editAdmission(${a.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAdmission(${a.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
                 </tr>
             `}).join('');
         }
@@ -6178,6 +6428,44 @@
                     triggerDashboardUpdate();
                 };
                 new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
+            }
+        }
+        function viewAdmission(id) {
+            const adm = admissions.find(a => a.id === id);
+            if (adm) {
+                const surname = adm.surname || adm.name?.split(' ')[0] || '';
+                const firstName = adm.firstName || adm.name?.split(' ').slice(1).join(' ') || '';
+                const details = `
+Admission Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEARNER INFORMATION:
+  Number: ${adm.accession || 'N/A'}
+  Name: ${firstName} ${surname}
+  Gender: ${adm.gender || 'N/A'}
+  Grade: ${adm.grade || 'N/A'}
+  Class: ${adm.classValue || 'N/A'}
+  Cell: ${adm.cell || 'N/A'}
+  Email: ${adm.email || 'N/A'}
+  Home Language: ${adm.homeLanguage || 'N/A'}
+  Status: ${adm.status || 'N/A'}
+
+FATHER INFORMATION:
+  Name: ${adm.fatherName || 'N/A'} ${adm.fatherSurname || ''}
+  Email: ${adm.fatherEmail || 'N/A'}
+  Cell: ${adm.fatherCell || 'N/A'}
+
+MOTHER INFORMATION:
+  Name: ${adm.motherName || 'N/A'} ${adm.motherSurname || ''}
+  Email: ${adm.motherEmail || 'N/A'}
+  Cell: ${adm.motherCell || 'N/A'}
+
+ACCOUNT INFORMATION:
+  Username: ${adm.username || 'N/A'}
+  Password: ${adm.password ? '****** (hidden)' : 'N/A'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+                alert(details);
+            } else {
+                addNotification('Admission not found', 'error');
             }
         }
         function deleteAdmission(id) {
@@ -8887,6 +9175,97 @@
                 tableBg: 'rgba(255, 255, 255, 0.1)',
                 tableThBg: 'rgba(255, 255, 255, 0.2)',
                 btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            rose: {
+                name: 'Rose Pink',
+                primaryGradientStart: '#ee9ca7',
+                primaryGradientEnd: '#ffdde1',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            emerald: {
+                name: 'Emerald',
+                primaryGradientStart: '#11998e',
+                primaryGradientEnd: '#38ef7d',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            crimson: {
+                name: 'Crimson Red',
+                primaryGradientStart: '#eb3349',
+                primaryGradientEnd: '#f45c43',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            royal: {
+                name: 'Royal Gold',
+                primaryGradientStart: '#141e30',
+                primaryGradientEnd: '#243b55',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            cosmic: {
+                name: 'Cosmic Purple',
+                primaryGradientStart: '#3a1c71',
+                primaryGradientEnd: '#d76d77',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            aqua: {
+                name: 'Aqua Marine',
+                primaryGradientStart: '#2E3192',
+                primaryGradientEnd: '#1BFFFF',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
+            },
+            autumn: {
+                name: 'Autumn Leaves',
+                primaryGradientStart: '#DAD299',
+                primaryGradientEnd: '#B0DAB9',
+                textColor: '#fff',
+                cardBg: 'rgba(255, 255, 255, 0.25)',
+                cardBgHover: 'rgba(255, 255, 255, 0.35)',
+                sidebarBg: 'rgba(255, 255, 255, 0.15)',
+                sidebarBorder: 'rgba(255, 255, 255, 0.3)',
+                tableBg: 'rgba(255, 255, 255, 0.1)',
+                tableThBg: 'rgba(255, 255, 255, 0.2)',
+                btnToggleBg: 'rgba(255, 255, 255, 0.2)'
             }
         };
         
@@ -9792,6 +10171,96 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         // Read-Only Teachers Info for Admin
         function renderTeachersReadOnly() {
             renderLessonPlansReadOnly();
+        }
+        
+        function renderHODPortalReadOnly() {
+            // Load HOD Dashboard metrics
+            const teachers = staff.filter(s => s.role === 'Teacher');
+            const lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '[]');
+            const grades = JSON.parse(localStorage.getItem('grades') || '[]');
+            const teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
+            
+            document.getElementById('roHodTotalTeachers').textContent = teachers.length;
+            document.getElementById('roHodActiveTeachers').textContent = teachers.filter(t => t.status === 'Active').length;
+            document.getElementById('roHodTotalLessonPlans').textContent = lessonPlans.length;
+            document.getElementById('roHodAvgPerformance').textContent = '85%'; // Mock data
+            
+            // Load monitoring metrics
+            document.getElementById('roMonitorLessonPlansCount').textContent = lessonPlans.length;
+            document.getElementById('roMonitorGradesCount').textContent = grades.length;
+            document.getElementById('roMonitorAttendanceCount').textContent = attendance.length;
+            document.getElementById('roMonitorCommCount').textContent = teacherChats.length;
+            
+            // Load recent activities
+            const activitiesContainer = document.getElementById('roHodRecentActivities');
+            if (activitiesContainer) {
+                const activities = [
+                    { teacher: 'Teacher A', action: 'Submitted lesson plan', time: '10 minutes ago', icon: 'clipboard-list' },
+                    { teacher: 'Teacher B', action: 'Entered grades for Grade 10', time: '25 minutes ago', icon: 'graduation-cap' },
+                    { teacher: 'Teacher C', action: 'Marked attendance', time: '1 hour ago', icon: 'clock' },
+                    { teacher: 'Teacher D', action: 'Uploaded learning resource', time: '2 hours ago', icon: 'upload' },
+                    { teacher: 'Teacher E', action: 'Responded to parent message', time: '3 hours ago', icon: 'comments' }
+                ];
+                
+                activitiesContainer.innerHTML = activities.map(act => `
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-2" style="background:rgba(255,255,255,0.1);border-radius:8px;">
+                        <div>
+                            <i class="fas fa-${act.icon} me-2"></i>
+                            <strong>${act.teacher}</strong> ${act.action}
+                        </div>
+                        <small class="text-muted">${act.time}</small>
+                    </div>
+                `).join('');
+            }
+            
+            // Load activity log
+            const activityLog = document.getElementById('roTeacherActivityLog');
+            if (activityLog) {
+                const activities = [];
+                
+                // Add lesson plan activities
+                lessonPlans.slice(0, 10).forEach(lp => {
+                    activities.push({
+                        teacher: 'Teacher Name',
+                        activity: 'Lesson Plan Submitted',
+                        date: lp.date || new Date().toISOString(),
+                        details: lp.title || 'Lesson Plan',
+                        status: 'Completed'
+                    });
+                });
+                
+                // Add grading activities
+                grades.slice(0, 10).forEach(grade => {
+                    activities.push({
+                        teacher: 'Teacher Name',
+                        activity: 'Grade Entered',
+                        date: new Date().toISOString(),
+                        details: `${grade.studentName || 'Student'} - ${grade.subject || 'Subject'}`,
+                        status: 'Completed'
+                    });
+                });
+                
+                // Sort by date
+                activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                activityLog.innerHTML = activities.slice(0, 20).map(act => {
+                    const statusBadge = act.status === 'Completed' ? 'bg-success' : 
+                                      act.status === 'Pending' ? 'bg-warning' : 'bg-info';
+                    return `
+                        <tr>
+                            <td>${act.teacher}</td>
+                            <td>${act.activity}</td>
+                            <td>${new Date(act.date).toLocaleString()}</td>
+                            <td>${act.details}</td>
+                            <td><span class="badge ${statusBadge}">${act.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                if (activities.length === 0) {
+                    activityLog.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No activities found</td></tr>';
+                }
+            }
         }
         
         function renderLessonPlansReadOnly() {
