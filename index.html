@@ -69,6 +69,12 @@
             font-weight: 600;
             box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
         }
+        .logo-image {
+            width: 50px;
+            height: auto;
+            display: block;
+            margin: 0 auto 0.5rem auto;
+        }
         .content {
             margin-left: 260px;
             padding: 40px;
@@ -380,7 +386,10 @@
         </div>
         <button class="btn btn-sm btn-light btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <div class="sidebar">
-            <h4 class="mb-4 text-center"><img src="https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png" alt="Bophelong Community Independent School Logo" style="width: 30px; height: auto; margin-right: 0.5rem; vertical-align: middle;"><span class="nav-text">BIS(Mamelodi)</span></h4>
+            <div class="mb-4 text-center">
+                <img src="https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png" alt="Bophelong Community Independent School Logo" class="logo-image">
+                <h4 class="mb-0"><span class="nav-text">BIS(Mamelodi)</span></h4>
+            </div>
             <ul class="nav flex-column">
                 <li class="admin-only non-student"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">Dashboard</span></a></li>
                 <li class="hod-only non-student"><a href="#hodDashboard" class="nav-link active" onclick="showSection('hodDashboard')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">HOD Dashboard</span></a></li>
@@ -689,13 +698,27 @@
             <!-- Admission Management -->
             <section id="admission" class="section d-none admin-only">
                 <h2>Admission Management</h2>
-                <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
-                <button class="btn btn-secondary mb-3" onclick="showBulkAdmissionModal()">Bulk Import (CSV/Excel/PDF/Word)</button>
-                <button class="btn btn-danger mb-3" onclick="resetAdmissions()">Reset Admission (Save to Vault)</button>
-                <div class="input-group mb-3 w-50">
-                    <input type="text" class="form-control" placeholder="Search admissions..." id="admissionSearch">
-                    <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
-                </div>
+                
+                <!-- Tabs for Admission Management -->
+                <ul class="nav nav-tabs mb-3" id="admissionTabs" role="tablist" aria-label="Admission Management Tabs">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="admissions-list-tab" data-bs-toggle="tab" href="#admissions-list" role="tab" aria-selected="true" aria-controls="admissions-list">Admissions List</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="online-applications-tab" data-bs-toggle="tab" href="#online-applications" role="tab" aria-selected="false" aria-controls="online-applications">Online Applications</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <!-- Admissions List Tab -->
+                    <div class="tab-pane fade show active" id="admissions-list" role="tabpanel" aria-labelledby="admissions-list-tab">
+                        <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
+                        <button class="btn btn-secondary mb-3" onclick="showBulkAdmissionModal()">Bulk Import (CSV/Excel/PDF/Word)</button>
+                        <button class="btn btn-danger mb-3" onclick="resetAdmissions()">Reset Admission (Save to Vault)</button>
+                        <div class="input-group mb-3 w-50">
+                            <input type="text" class="form-control" placeholder="Search admissions..." id="admissionSearch">
+                            <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
+                        </div>
                 <style>
                     #admission table.sasams-format {
                         width: 100%;
@@ -760,6 +783,60 @@
                     </thead>
                     <tbody id="admissionTable"></tbody>
                 </table>
+                    </div>
+                    
+                    <!-- Online Applications Tab -->
+                    <div class="tab-pane fade" id="online-applications" role="tabpanel" aria-labelledby="online-applications-tab">
+                        <div class="virtual-forms-section">
+                            <h4><i class="fas fa-file-alt me-2"></i>Online Application Forms</h4>
+                            <p class="text-muted">View, fill, print, and download school admission forms</p>
+                            
+                            <!-- Pre-defined Forms Section -->
+                            <div class="card card-metric p-3 mb-4">
+                                <h5><i class="fas fa-file-invoice me-2"></i>Pre-defined School Forms</h5>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-card">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6><i class="fas fa-file-alt me-2"></i>Application for Admission - Bophelong Community Independent School</h6>
+                                                    <p class="mb-0 text-muted"><small>Complete admission application form with learner and parent information</small></p>
+                                                </div>
+                                                <div>
+                                                    <button class="btn btn-sm btn-info form-preview-btn" onclick="viewAdmissionForm()">
+                                                        <i class="fas fa-eye me-1"></i>View
+                                                    </button>
+                                                    <button class="btn btn-sm btn-primary form-preview-btn" onclick="fillAdmissionForm()">
+                                                        <i class="fas fa-edit me-1"></i>Fill
+                                                    </button>
+                                                    <button class="btn btn-sm btn-success form-preview-btn" onclick="printAdmissionForm()">
+                                                        <i class="fas fa-print me-1"></i>Print
+                                                    </button>
+                                                    <button class="btn btn-sm btn-secondary form-preview-btn" onclick="downloadAdmissionForm()">
+                                                        <i class="fas fa-download me-1"></i>Download
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submitted Applications List -->
+                            <div class="card card-metric p-3">
+                                <h5><i class="fas fa-folder-open me-2"></i>Submitted Online Applications</h5>
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    This section displays all online applications submitted through the admission form. 
+                                    Applications are automatically tracked and stored for review.
+                                </div>
+                                <div class="uploaded-files-list" id="submittedApplicationsList" role="status" aria-live="polite">
+                                    <p class="text-center text-muted">No online applications submitted yet. Applications submitted via the online form will appear here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
             <!-- Student Information System -->
             <section id="students" class="section d-none">
