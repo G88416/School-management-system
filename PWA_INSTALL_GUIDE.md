@@ -95,6 +95,11 @@ The BIS (Bophelong Independent School) School Management System can now be insta
 - Some features require internet connection
 - Service worker needs time to cache on first load
 
+### Icon Not Displaying Properly?
+- App currently uses the school's logo from an external URL
+- For optimal quality and offline reliability, consider hosting icon files locally
+- Recommended: Create 192x192px and 512x512px optimized PNG versions
+
 ---
 
 ## 📞 Support

@@ -15,10 +15,24 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // Cache resources individually to handle failures gracefully
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(err => {
+              console.warn(`Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        ).then(results => {
+          const failed = results.filter(r => r.status === 'rejected').length;
+          if (failed > 0) {
+            console.warn(`Failed to cache ${failed} resources during install`);
+          }
+          console.log('Service worker installation complete');
+        });
       })
       .catch(err => {
-        console.log('Cache install error:', err);
+        console.error('Cache install error:', err);
       })
   );
   self.skipWaiting();
@@ -39,8 +53,14 @@ self.addEventListener('fetch', event => {
         
         return fetch(fetchRequest).then(response => {
           // Check if valid response
-          // Allow basic (same-origin), cors (cross-origin with CORS), and opaque (no-cors) responses
-          if (!response || (response.status !== 200 && response.type !== 'opaque')) {
+          // - For normal responses (basic/cors): check status is 200
+          // - For opaque responses (no-cors cross-origin): always cache (status is always 0)
+          const isValidResponse = response && (
+            response.status === 200 || 
+            response.type === 'opaque' // Opaque responses have status 0 but may be valid
+          );
+          
+          if (!isValidResponse) {
             return response;
           }
           
