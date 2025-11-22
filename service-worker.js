@@ -53,11 +53,10 @@ self.addEventListener('fetch', event => {
           // - For normal responses (basic/cors): check status is 200
           // - For opaque responses (no-cors cross-origin): cache despite status 0
           //   Note: Opaque responses always have status 0, we cannot verify if they succeeded.
-          //   Only cache opaque responses from known URLs (in urlsToCache)
-          const isKnownUrl = urlsToCache.some(url => event.request.url.includes(url.split('//')[1]));
+          //   We'll cache opaque responses to support external CDN resources that don't send CORS headers
           const isValidResponse = response && (
             response.status === 200 || 
-            (response.type === 'opaque' && isKnownUrl) // Only cache known external resources
+            response.type === 'opaque' // Cache opaque responses (typically external resources)
           );
           
           if (!isValidResponse) {

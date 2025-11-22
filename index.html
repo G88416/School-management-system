@@ -13126,9 +13126,13 @@ ${submission.feedback || 'No feedback yet'}`);
             e.preventDefault();
             // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show the install prompt after a delay (only if not already installed)
+            // Show the install prompt after a delay (only if not dismissed and not already installed)
             setTimeout(() => {
-                if (!window.matchMedia('(display-mode: standalone)').matches) {
+                const dismissedPermanently = localStorage.getItem('installPromptDismissed');
+                const dismissedInSession = sessionStorage.getItem('installPromptDismissed');
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                
+                if (!isStandalone && !dismissedPermanently && !dismissedInSession) {
                     installPrompt.classList.add('show');
                 }
             }, 3000);
@@ -13153,8 +13157,15 @@ ${submission.feedback || 'No feedback yet'}`);
         // Dismiss button click handler
         dismissButton.addEventListener('click', () => {
             installPrompt.classList.remove('show');
-            // Remember dismissal for this session
-            sessionStorage.setItem('installPromptDismissed', 'true');
+            
+            // Ask user if they want to permanently dismiss or just for this session
+            const dismissPermanently = confirm('Hide this install prompt permanently?\n\nClick OK to never see this again, or Cancel to hide it just for this session.');
+            
+            if (dismissPermanently) {
+                localStorage.setItem('installPromptDismissed', 'true');
+            } else {
+                sessionStorage.setItem('installPromptDismissed', 'true');
+            }
         });
         
         // Check if app is already installed
