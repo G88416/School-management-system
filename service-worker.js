@@ -50,12 +50,12 @@ self.addEventListener('fetch', event => {
         
         return fetch(fetchRequest).then(response => {
           // Check if valid response
-          // - For normal responses (basic/cors): check status is 200
+          // - For normal responses (basic/cors): check status is 2xx (200-299)
           // - For opaque responses (no-cors cross-origin): cache despite status 0
           //   Note: Opaque responses always have status 0, we cannot verify if they succeeded.
           //   We'll cache opaque responses to support external CDN resources that don't send CORS headers
           const isValidResponse = response && (
-            response.status === 200 || 
+            (response.status >= 200 && response.status < 300) || 
             response.type === 'opaque' // Cache opaque responses (typically external resources)
           );
           
