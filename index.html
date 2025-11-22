@@ -7622,11 +7622,25 @@ ACCOUNT INFORMATION:
                 return;
             }
             
-            const newDueDate = prompt(`Edit Due Date (Current: ${fee.dueDate}):`, fee.dueDate);
+            const newDueDate = prompt(`Edit Due Date (YYYY-MM-DD format, Current: ${fee.dueDate}):`, fee.dueDate);
             if (newDueDate === null) return; // User cancelled
+            
+            // Validate date format
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(newDueDate)) {
+                addNotification('Invalid date format. Please use YYYY-MM-DD format.', 'error');
+                return;
+            }
             
             const newStatus = prompt(`Edit Status (Current: ${fee.status})\nOptions: Paid, Pending, Overdue:`, fee.status);
             if (newStatus === null) return; // User cancelled
+            
+            // Validate status
+            const validStatuses = ['Paid', 'Pending', 'Overdue'];
+            if (!validStatuses.includes(newStatus)) {
+                addNotification('Invalid status. Must be Paid, Pending, or Overdue.', 'error');
+                return;
+            }
             
             // Update the fee
             fee.amount = parsedAmount;
@@ -11885,6 +11899,9 @@ ${submission.feedback || 'No feedback yet'}`);
         // VIRTUAL FORMS FUNCTIONS
         // ========================================
         
+        // Constants
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+        
         let virtualForms = [];
         
         function loadVirtualForms() {
@@ -11912,9 +11929,9 @@ ${submission.feedback || 'No feedback yet'}`);
                 return;
             }
             
-            // Validate file size (max 5MB to avoid localStorage limits)
-            if (formFile.size > 5 * 1024 * 1024) {
-                addNotification('File size exceeds 5MB limit. Please choose a smaller file.', 'error');
+            // Validate file size using constant
+            if (formFile.size > MAX_FILE_SIZE) {
+                addNotification(`File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit. Please choose a smaller file.`, 'error');
                 return;
             }
             
@@ -12044,10 +12061,13 @@ ${submission.feedback || 'No feedback yet'}`);
                 return;
             }
             
-            addNotification('Opening form in edit mode...', 'info');
+            // Feature not yet fully implemented - provide clear feedback
+            addNotification('Form editing feature coming soon! For now, please download the form and edit it locally.', 'info');
             
-            // For now, just show an alert. In a real implementation, you'd open a form editor
-            alert(`Edit Form: ${form.name}\n\nThis would open the form in an editable format. You can fill in the fields and save the changes.`);
+            // Optionally open for viewing
+            if (confirm(`The form editor is not yet available.\n\nWould you like to view the form instead?`)) {
+                viewVirtualForm(id);
+            }
         }
         
         function printVirtualForm(id) {
@@ -12125,9 +12145,18 @@ ${submission.feedback || 'No feedback yet'}`);
         // No user input is included in the HTML content to prevent XSS
         function viewAdmissionForm() {
             const newWindow = window.open('about:blank', '_blank');
-            newWindow.document.open();
-            newWindow.document.write(getAdmissionFormHTML());
-            newWindow.document.close();
+            if (!newWindow) {
+                addNotification('Pop-up blocked. Please allow pop-ups for this site to view forms.', 'warning');
+                return;
+            }
+            try {
+                newWindow.document.open();
+                newWindow.document.write(getAdmissionFormHTML());
+                newWindow.document.close();
+            } catch (error) {
+                addNotification('Error opening form. Please check your browser settings.', 'error');
+                console.error('Error opening form:', error);
+            }
         }
         
         function fillAdmissionForm() {
