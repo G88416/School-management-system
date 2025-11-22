@@ -16,18 +16,15 @@ self.addEventListener('install', event => {
       .then(cache => {
         console.log('Opened cache');
         // Cache resources individually to handle failures gracefully
-        return Promise.allSettled(
+        return Promise.all(
           urlsToCache.map(url => 
             cache.add(url).catch(err => {
               console.warn(`Failed to cache ${url}:`, err);
-              return null;
+              // Return a resolved promise so other URLs continue caching
+              return Promise.resolve();
             })
           )
-        ).then(results => {
-          const failed = results.filter(r => r.status === 'rejected').length;
-          if (failed > 0) {
-            console.warn(`Failed to cache ${failed} resources during install`);
-          }
+        ).then(() => {
           console.log('Service worker installation complete');
         });
       })
@@ -54,10 +51,13 @@ self.addEventListener('fetch', event => {
         return fetch(fetchRequest).then(response => {
           // Check if valid response
           // - For normal responses (basic/cors): check status is 200
-          // - For opaque responses (no-cors cross-origin): always cache (status is always 0)
+          // - For opaque responses (no-cors cross-origin): cache despite status 0
+          //   Note: Opaque responses always have status 0, we cannot verify if they succeeded.
+          //   Only cache opaque responses from known URLs (in urlsToCache)
+          const isKnownUrl = urlsToCache.some(url => event.request.url.includes(url.split('//')[1]));
           const isValidResponse = response && (
             response.status === 200 || 
-            response.type === 'opaque' // Opaque responses have status 0 but may be valid
+            (response.type === 'opaque' && isKnownUrl) // Only cache known external resources
           );
           
           if (!isValidResponse) {
