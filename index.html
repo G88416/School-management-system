@@ -191,7 +191,7 @@
         .form-card:hover { background: rgba(255, 255, 255, 0.15); transform: translateX(5px); }
         .form-preview-btn { margin: 5px; }
         .uploaded-files-list { max-height: 500px; overflow-y: auto; }
-        .file-item { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: between; align-items: center; }
+        .file-item { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .file-item:hover { background: rgba(255, 255, 255, 0.2); }
         
         /* Theme Generator Styles */
@@ -11912,6 +11912,20 @@ ${submission.feedback || 'No feedback yet'}`);
                 return;
             }
             
+            // Validate file size (max 5MB to avoid localStorage limits)
+            if (formFile.size > 5 * 1024 * 1024) {
+                addNotification('File size exceeds 5MB limit. Please choose a smaller file.', 'error');
+                return;
+            }
+            
+            // Validate file type
+            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                                  'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+            if (!allowedTypes.includes(formFile.type)) {
+                addNotification('Invalid file type. Please upload PDF, Word, Excel, or Text files only.', 'error');
+                return;
+            }
+            
             // Create form object
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -11995,7 +12009,7 @@ ${submission.feedback || 'No feedback yet'}`);
             
             // Open in new window/tab
             const newWindow = window.open('', '_blank');
-            if (form.fileType.includes('pdf')) {
+            if (form.fileType === 'application/pdf') {
                 newWindow.document.write(`
                     <html>
                         <head><title>${form.name}</title></head>
@@ -12044,7 +12058,7 @@ ${submission.feedback || 'No feedback yet'}`);
             }
             
             const printWindow = window.open('', '_blank');
-            if (form.fileType.includes('pdf')) {
+            if (form.fileType === 'application/pdf') {
                 printWindow.document.write(`
                     <html>
                         <head><title>Print: ${form.name}</title></head>
@@ -12107,8 +12121,13 @@ ${submission.feedback || 'No feedback yet'}`);
         }
         
         // Functions for the pre-defined admission form
+        // Note: getAdmissionFormHTML() returns a static, sanitized HTML string
+        // No user input is included in the HTML content to prevent XSS
         function viewAdmissionForm() {
-            window.open('about:blank', '_blank').document.write(getAdmissionFormHTML());
+            const newWindow = window.open('about:blank', '_blank');
+            newWindow.document.open();
+            newWindow.document.write(getAdmissionFormHTML());
+            newWindow.document.close();
         }
         
         function fillAdmissionForm() {
