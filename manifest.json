@@ -22,6 +22,7 @@
       "purpose": "any maskable"
     }
   ],
+  "_comment": "Note: Using school's existing logo. For optimal quality, create separate 192x192 and 512x512 versions of the icon.",
   "categories": ["education", "productivity"],
   "screenshots": [],
   "prefer_related_applications": false
