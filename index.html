@@ -2601,20 +2601,134 @@
                                     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Oswald:wght@700&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
                                     
                                     <style>
-                                        #poster-creator-container { margin:0; font-family:'Montserrat',sans-serif; background:#f8f9fa; display:grid; grid-template-columns:220px 1fr 280px; height:80vh; overflow:hidden; }
-                                        #poster-left, #poster-right { background:#fff; border-right:1px solid #ddd; padding:15px; overflow-y:auto; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
-                                        #poster-right { border-left:1px solid #ddd; border-right:none; }
-                                        #poster-creator-container h2 { margin:0 0 15px; font-size:18px; color:#333; }
-                                        #poster-creator-container button, #poster-creator-container select, #poster-creator-container input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer; }
-                                        #poster-creator-container button:hover { background:#f0f0f0; }
+                                        #poster-creator-container { 
+                                            margin:0; 
+                                            font-family:'Montserrat',sans-serif; 
+                                            background:#f8f9fa; 
+                                            display:grid; 
+                                            grid-template-columns:220px 1fr 280px; 
+                                            height:80vh; 
+                                            overflow:hidden; 
+                                            border-radius:15px;
+                                        }
+                                        #poster-left, #poster-right { 
+                                            background:rgba(255, 255, 255, 0.95); 
+                                            border-right:1px solid rgba(255,255,255,0.3); 
+                                            padding:15px; 
+                                            overflow-y:auto; 
+                                            box-shadow:0 4px 20px rgba(0,0,0,0.1); 
+                                            backdrop-filter: blur(10px);
+                                        }
+                                        #poster-right { border-left:1px solid rgba(255,255,255,0.3); border-right:none; }
+                                        #poster-creator-container h2 { margin:0 0 15px; font-size:18px; color:#333; font-weight:600; }
+                                        #poster-creator-container h3 { margin:0 0 10px; font-size:14px; color:#555; font-weight:600; }
+                                        #poster-creator-container button, 
+                                        #poster-creator-container select, 
+                                        #poster-creator-container input:not([type="color"]):not([type="range"]) { 
+                                            width:100%; 
+                                            padding:10px; 
+                                            margin:8px 0; 
+                                            border-radius:8px; 
+                                            border:1px solid #ddd; 
+                                            background:#fff; 
+                                            cursor:pointer; 
+                                            transition:all 0.3s;
+                                            font-size:14px;
+                                        }
+                                        #poster-creator-container button:hover { 
+                                            background:#007bff; 
+                                            color:#fff; 
+                                            transform:translateY(-2px); 
+                                            box-shadow:0 4px 12px rgba(0,123,255,0.3);
+                                        }
+                                        #poster-creator-container button:active { transform:translateY(0); }
                                         .poster-section { margin-bottom:25px; }
-                                        .poster-color-picker { height:40px; width:100%; border:none; border-radius:8px; cursor:pointer; }
-                                        #poster-canvas-wrapper { background:#eee; display:flex; align-items:center; justify-content:center; overflow:auto; }
-                                        #poster-canvas { box-shadow:0 10px 30px rgba(0,0,0,0.2); background:white; }
+                                        .poster-color-picker { height:40px; width:100%; border:2px solid #ddd; border-radius:8px; cursor:pointer; }
+                                        #poster-canvas-wrapper { 
+                                            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                            display:flex; 
+                                            align-items:center; 
+                                            justify-content:center; 
+                                            overflow:auto; 
+                                            padding:20px;
+                                        }
+                                        #poster-canvas { 
+                                            box-shadow:0 20px 60px rgba(0,0,0,0.4); 
+                                            background:white; 
+                                            border-radius:10px;
+                                        }
                                         #poster-layers { list-style:none; padding:0; margin:0; }
-                                        #poster-layers li { padding:8px; background:#f5f5f5; margin:4px 0; border-radius:4px; cursor:pointer; display:flex; justify-content:space-between; }
-                                        #poster-layers li.active { background:#007bff; color:white; }
-                                        .poster-template-thumb { height:120px; background-size:cover; background-position:center; border-radius:8px; margin:10px 0; cursor:pointer; border:2px solid #ddd; }
+                                        #poster-layers li { 
+                                            padding:10px; 
+                                            background:#f5f5f5; 
+                                            margin:6px 0; 
+                                            border-radius:6px; 
+                                            cursor:pointer; 
+                                            display:flex; 
+                                            justify-content:space-between; 
+                                            transition:all 0.2s;
+                                            font-size:13px;
+                                        }
+                                        #poster-layers li:hover { background:#e0e0e0; transform:translateX(3px); }
+                                        #poster-layers li.active { background:#007bff; color:white; font-weight:600; }
+                                        .poster-template-thumb { 
+                                            height:120px; 
+                                            background-size:cover; 
+                                            background-position:center; 
+                                            border-radius:10px; 
+                                            margin:10px 0; 
+                                            cursor:pointer; 
+                                            border:3px solid #ddd; 
+                                            transition:all 0.3s;
+                                            position:relative;
+                                            overflow:hidden;
+                                        }
+                                        .poster-template-thumb:hover { 
+                                            border-color:#007bff; 
+                                            transform:scale(1.05); 
+                                            box-shadow:0 8px 25px rgba(0,123,255,0.3);
+                                        }
+                                        .poster-template-thumb::after {
+                                            content:'Click to use';
+                                            position:absolute;
+                                            bottom:0;
+                                            left:0;
+                                            right:0;
+                                            background:rgba(0,0,0,0.7);
+                                            color:#fff;
+                                            padding:8px;
+                                            text-align:center;
+                                            font-size:12px;
+                                            opacity:0;
+                                            transition:opacity 0.3s;
+                                        }
+                                        .poster-template-thumb:hover::after { opacity:1; }
+                                        
+                                        /* Responsive Design for Mobile */
+                                        @media (max-width: 1024px) {
+                                            #poster-creator-container {
+                                                grid-template-columns:1fr;
+                                                grid-template-rows:auto 1fr auto;
+                                                height:auto;
+                                                min-height:90vh;
+                                            }
+                                            #poster-left, #poster-right {
+                                                border:none;
+                                                border-bottom:1px solid rgba(255,255,255,0.3);
+                                            }
+                                            #poster-canvas-wrapper {
+                                                min-height:500px;
+                                            }
+                                            .poster-template-thumb { height:80px; }
+                                        }
+                                        @media (max-width: 768px) {
+                                            #poster-creator-container { height:auto; }
+                                            #poster-canvas-wrapper { 
+                                                padding:10px; 
+                                                min-height:400px;
+                                            }
+                                            #poster-canvas { max-width:100%; height:auto; }
+                                        }
                                     </style>
                                     
                                     <div id="poster-creator-container">
@@ -2675,41 +2789,83 @@
                                     <script>
                                     let posterCanvas;
                                     let posterActiveObject = null;
-                                    if (!posterCanvas) {
-                                        posterCanvas = new fabric.Canvas('poster-canvas', { preserveObjectStacking: true });
+                                    let posterInitialized = false;
+                                    
+                                    // Initialize poster creator when tab is shown
+                                    function initPosterCreator() {
+                                        if (posterInitialized) return;
+                                        posterInitialized = true;
+                                        
+                                        posterCanvas = new fabric.Canvas('poster-canvas', { 
+                                            preserveObjectStacking: true,
+                                            backgroundColor: '#f8f9fa'
+                                        });
                                         
                                         // Update right panel when selection changes
                                         posterCanvas.on('selection:created', updatePosterUI);
                                         posterCanvas.on('selection:updated', updatePosterUI);
-                                        posterCanvas.on('selection:cleared', () => { document.getElementById('poster-props').style.display='none'; updatePosterLayers(); });
+                                        posterCanvas.on('selection:cleared', () => { 
+                                            document.getElementById('poster-props').style.display='none'; 
+                                            updatePosterLayers(); 
+                                        });
+                                        posterCanvas.on('object:modified', updatePosterLayers);
+                                        posterCanvas.on('object:added', updatePosterLayers);
+                                        posterCanvas.on('object:removed', updatePosterLayers);
                                         
-                                        function updatePosterUI(e) {
-                                            posterActiveObject = posterCanvas.getActiveObject();
-                                            if (!posterActiveObject) return;
-                                            document.getElementById('poster-props').style.display = 'block';
-                                            if (posterActiveObject.type.includes('text')) {
-                                                document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
-                                                document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
-                                                document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
-                                            }
-                                            updatePosterLayers();
+                                        // Initial welcome text
+                                        addPosterText('YOUR POSTER\nHERE');
+                                        updatePosterLayers();
+                                    }
+                                    
+                                    // Listen for tab shown event
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const posterTab = document.querySelector('a[href="#create-poster"]');
+                                        if (posterTab) {
+                                            posterTab.addEventListener('shown.bs.tab', function() {
+                                                setTimeout(initPosterCreator, 100);
+                                            });
                                         }
+                                    });
+                                    
+                                    function updatePosterUI(e) {
+                                        posterActiveObject = posterCanvas.getActiveObject();
+                                        if (!posterActiveObject) return;
+                                        document.getElementById('poster-props').style.display = 'block';
+                                        if (posterActiveObject.type.includes('text') || posterActiveObject.type === 'i-text' || posterActiveObject.type === 'textbox') {
+                                            document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
+                                            document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
+                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
+                                        } else {
+                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
+                                        }
+                                        updatePosterLayers();
+                                    }
                                         
                                         function setPosterProp(prop, value) {
                                             if (!posterActiveObject) return;
+                                            if (prop === 'fontSize') value = parseInt(value);
                                             posterActiveObject.set(prop, value);
                                             posterCanvas.renderAll();
+                                            updatePosterLayers();
                                         }
+                                        
                                         function togglePosterProp(prop, value) {
                                             if (!posterActiveObject) return;
                                             const current = posterActiveObject.get(prop);
                                             posterActiveObject.set(prop, current === value ? '' : value);
                                             posterCanvas.renderAll();
+                                            updatePosterLayers();
                                         }
                                         
                                         function addPosterText(text = 'YOUR EVENT\nHERE', size = 100) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
                                             const textbox = new fabric.Textbox(text, {
-                                                left: 100, top: 100, width: 600,
+                                                left: 100, 
+                                                top: 100, 
+                                                width: 600,
                                                 fontSize: size,
                                                 fontFamily: 'Bebas Neue',
                                                 fill: '#212529',
@@ -2720,9 +2876,15 @@
                                             });
                                             posterCanvas.add(textbox);
                                             posterCanvas.setActiveObject(textbox);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
                                         }
                                         
                                         function addPosterShape(type) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
                                             let shape;
                                             if (type==='rect') shape = new fabric.Rect({width:300, height:200, fill:'#ff5722', rx:20});
                                             if (type==='circle') shape = new fabric.Circle({radius:150, fill:'#2196f3'});
@@ -2730,19 +2892,28 @@
                                             shape.set({left:200, top:200, shadow:'rgba(0,0,0,0.3) 10px 10px 20px'});
                                             posterCanvas.add(shape);
                                             posterCanvas.setActiveObject(shape);
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
                                         }
                                         
                                         function uploadPosterImage() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
                                             const input = document.createElement('input');
                                             input.type = 'file';
                                             input.accept = 'image/*';
                                             input.onchange = e => {
                                                 const file = e.target.files[0];
+                                                if (!file) return;
                                                 const reader = new FileReader();
                                                 reader.onload = event => fabric.Image.fromURL(event.target.result, img => {
                                                     img.scale(0.5);
                                                     posterCanvas.centerObject(img);
                                                     posterCanvas.add(img);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
                                                 });
                                                 reader.readAsDataURL(file);
                                             };
@@ -2750,74 +2921,203 @@
                                         }
                                         
                                         function unsplashPosterBg() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
                                             const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
                                             if (!keyword) return;
                                             // Sanitize keyword to prevent URL injection - replace spaces with hyphens
                                             const sanitizedKeyword = encodeURIComponent(keyword.replace(/[^\w-]/g, '').replace(/\s+/g, '-'));
                                             const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                            fabric.Image.fromURL(url, img => posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { scaleX: posterCanvas.width / img.width, scaleY: posterCanvas.height / img.height }));
+                                            addNotification('Loading background image...', 'info');
+                                            fabric.Image.fromURL(url, img => {
+                                                posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                    scaleX: posterCanvas.width / img.width, 
+                                                    scaleY: posterCanvas.height / img.height 
+                                                });
+                                                addNotification('Background loaded successfully!', 'success');
+                                            }, { crossOrigin: 'anonymous' });
                                         }
                                         
-                                        function setPosterBgColor(c) { posterCanvas.backgroundColor = c; posterCanvas.renderAll(); }
+                                        function setPosterBgColor(c) { 
+                                            if (!posterCanvas) return;
+                                            posterCanvas.backgroundColor = c; 
+                                            posterCanvas.renderAll(); 
+                                        }
                                         
                                         function downloadPoster() {
-                                            const link = document.createElement('a');
-                                            link.download = 'my-poster.png';
-                                            link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
-                                            link.click();
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const link = document.createElement('a');
+                                                link.download = 'my-poster-' + Date.now() + '.png';
+                                                link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
+                                                link.click();
+                                                addNotification('Poster downloaded successfully!', 'success');
+                                            } catch (error) {
+                                                addNotification('Error downloading poster: ' + error.message, 'error');
+                                            }
                                         }
                                         
                                         // Simple templates
                                         function loadPosterTemplate(type) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
                                             posterCanvas.clear();
+                                            posterCanvas.backgroundColor = '#ffffff';
+                                            
                                             if (type==='event') {
-                                                unsplashPosterBg('concert'); // random background
-                                                addPosterText('LIVE\nCONCERT',120);
-                                                addPosterText('Friday 25 Dec\nDoors open 19:00',60);
+                                                // Load event template
+                                                const keyword = 'concert';
+                                                const sanitizedKeyword = encodeURIComponent(keyword);
+                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
+                                                fabric.Image.fromURL(url, img => {
+                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                        scaleX: posterCanvas.width / img.width, 
+                                                        scaleY: posterCanvas.height / img.height 
+                                                    });
+                                                    setTimeout(() => {
+                                                        addPosterText('LIVE\nCONCERT',120);
+                                                        setTimeout(() => {
+                                                            const subtext = new fabric.Textbox('Friday 25 Dec\nDoors open 19:00', {
+                                                                left: 100, top: 400, width: 600,
+                                                                fontSize: 60,
+                                                                fontFamily: 'Montserrat',
+                                                                fill: '#ffffff',
+                                                                textAlign: 'center',
+                                                                shadow: 'rgba(0,0,0,0.5) 3px 3px 10px'
+                                                            });
+                                                            posterCanvas.add(subtext);
+                                                            posterCanvas.renderAll();
+                                                            updatePosterLayers();
+                                                        }, 100);
+                                                    }, 200);
+                                                }, { crossOrigin: 'anonymous' });
                                             }
-                                            if (type==='sale') {
+                                            else if (type==='sale') {
                                                 posterCanvas.backgroundColor = '#ff1744';
-                                                addPosterText('SALE\n50% OFF',150);
+                                                posterCanvas.renderAll();
+                                                setTimeout(() => {
+                                                    const mainText = new fabric.Textbox('MEGA\nSALE', {
+                                                        left: 100, top: 300, width: 600,
+                                                        fontSize: 150,
+                                                        fontFamily: 'Bebas Neue',
+                                                        fill: '#ffffff',
+                                                        textAlign: 'center',
+                                                        fontWeight: 'bold',
+                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
+                                                    });
+                                                    posterCanvas.add(mainText);
+                                                    
+                                                    const subText = new fabric.Textbox('50% OFF', {
+                                                        left: 150, top: 650, width: 500,
+                                                        fontSize: 100,
+                                                        fontFamily: 'Bebas Neue',
+                                                        fill: '#ffeb3b',
+                                                        textAlign: 'center',
+                                                        fontWeight: 'bold',
+                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
+                                                    });
+                                                    posterCanvas.add(subText);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
+                                                }, 100);
                                             }
-                                            if (type==='motivation') {
-                                                unsplashPosterBg('mountain');
-                                                addPosterText('DREAM BIG\nWORK HARD',120);
+                                            else if (type==='motivation') {
+                                                const keyword = 'mountain';
+                                                const sanitizedKeyword = encodeURIComponent(keyword);
+                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
+                                                fabric.Image.fromURL(url, img => {
+                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
+                                                        scaleX: posterCanvas.width / img.width, 
+                                                        scaleY: posterCanvas.height / img.height 
+                                                    });
+                                                    setTimeout(() => {
+                                                        const mainText = new fabric.Textbox('DREAM BIG\nWORK HARD', {
+                                                            left: 100, top: 400, width: 600,
+                                                            fontSize: 120,
+                                                            fontFamily: 'Bebas Neue',
+                                                            fill: '#ffffff',
+                                                            textAlign: 'center',
+                                                            fontWeight: 'bold',
+                                                            shadow: 'rgba(0,0,0,0.8) 5px 5px 20px'
+                                                        });
+                                                        posterCanvas.add(mainText);
+                                                        posterCanvas.renderAll();
+                                                        updatePosterLayers();
+                                                    }, 200);
+                                                }, { crossOrigin: 'anonymous' });
                                             }
+                                            addNotification('Template loaded successfully!', 'success');
                                         }
                                         
                                         // Layers list
                                         function updatePosterLayers() {
+                                            if (!posterCanvas) return;
                                             const list = document.getElementById('poster-layers');
+                                            if (!list) return;
                                             list.innerHTML = '';
-                                            posterCanvas.getObjects().reverse().forEach(obj => {
+                                            const objects = posterCanvas.getObjects();
+                                            if (objects.length === 0) {
+                                                list.innerHTML = '<li style="text-align:center;color:#999;">No layers yet</li>';
+                                                return;
+                                            }
+                                            objects.slice().reverse().forEach((obj, index) => {
                                                 const li = document.createElement('li');
-                                                li.textContent = obj.type === 'textbox' ? obj.text.slice(0,15)+'...' : obj.type;
-                                                li.onclick = () => posterCanvas.setActiveObject(obj);
+                                                let layerName = '';
+                                                if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+                                                    layerName = obj.text ? obj.text.slice(0,20) + (obj.text.length > 20 ? '...' : '') : 'Text';
+                                                } else if (obj.type === 'image') {
+                                                    layerName = 'Image';
+                                                } else {
+                                                    layerName = obj.type.charAt(0).toUpperCase() + obj.type.slice(1);
+                                                }
+                                                
+                                                const icon = obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text' ? '📝' : 
+                                                           obj.type === 'image' ? '🖼️' : 
+                                                           obj.type === 'rect' ? '⬜' : 
+                                                           obj.type === 'circle' ? '⭕' : 
+                                                           obj.type === 'triangle' ? '🔺' : '📦';
+                                                
+                                                li.innerHTML = `<span>${icon} ${layerName}</span><span style="font-size:11px;opacity:0.7;">Layer ${objects.length - index}</span>`;
+                                                li.onclick = () => {
+                                                    posterCanvas.setActiveObject(obj);
+                                                    posterCanvas.renderAll();
+                                                };
                                                 if (posterCanvas.getActiveObject() === obj) li.classList.add('active');
                                                 list.appendChild(li);
                                             });
                                         }
                                         
                                         function deletePosterActive() {
-                                            if (posterActiveObject) {
-                                                posterCanvas.remove(posterActiveObject);
+                                            if (!posterCanvas) return;
+                                            const activeObj = posterCanvas.getActiveObject();
+                                            if (activeObj) {
+                                                posterCanvas.remove(activeObj);
                                                 posterActiveObject = null;
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Object deleted', 'info');
                                             }
                                         }
                                         
                                         // Helper to convert rgb to hex for color picker
                                         function rgbToPosterHex(color) {
+                                            if (!color) return '#000000';
                                             if (typeof color === 'string' && color.startsWith('rgb')) {
-                                                const [r,g,b] = color.match(/\d+/g);
-                                                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                                                const matches = color.match(/\d+/g);
+                                                if (matches && matches.length >= 3) {
+                                                    const [r,g,b] = matches;
+                                                    return "#" + ((1 << 24) + (parseInt(r) << 16) + (parseInt(g) << 8) + parseInt(b)).toString(16).slice(1);
+                                                }
                                             }
                                             return color || '#000000';
                                         }
-                                        
-                                        // Initial nice look
-                                        posterCanvas.backgroundColor = '#f8f9fa';
-                                        addPosterText('YOUR POSTER');
-                                    }
                                     </script>
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
