@@ -360,12 +360,32 @@
                 <button type="button" class="btn btn-secondary w-100 mb-3" onclick="biometricLogin()">
                     <i class="fas fa-fingerprint me-2"></i>Biometric Login
                 </button>
-                <div class="login-demo">
-                    <p class="mb-1"><strong>Admin:</strong> admin / admin123</p>
-                    <p class="mb-1"><strong>HOD:</strong> hod / hod123</p>
-                    <p class="mb-1"><strong>Teacher:</strong> teacher / teacher123</p>
-                    <p class="mb-1"><strong>Parent:</strong> parent / parent123</p>
-                    <p class="mb-0"><strong>Student:</strong> student / student123</p>
+                <div class="text-center mb-2">
+                    <hr>
+                    <p class="mb-2"><strong>Quick Access - Login to Portal:</strong></p>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-danger" onclick="document.getElementById('username').value='admin'; document.getElementById('password').value='admin123'; login();">
+                        <i class="fas fa-user-shield me-2"></i>Admin Portal
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('username').value='hod'; document.getElementById('password').value='hod123'; login();">
+                        <i class="fas fa-user-tie me-2"></i>HOD Portal
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="document.getElementById('username').value='teacher'; document.getElementById('password').value='teacher123'; login();">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>Teacher Portal
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="document.getElementById('username').value='parent'; document.getElementById('password').value='parent123'; login();">
+                        <i class="fas fa-users me-2"></i>Parent Portal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('username').value='student'; document.getElementById('password').value='student123'; login();">
+                        <i class="fas fa-graduation-cap me-2"></i>Student Portal
+                    </button>
+                </div>
+                <div class="login-demo mt-3">
+                    <small class="text-muted d-block text-center">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Use quick access buttons above or enter credentials manually
+                    </small>
                 </div>
             </form>
         </div>
