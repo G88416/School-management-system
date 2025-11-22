@@ -69,6 +69,12 @@
             font-weight: 600;
             box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
         }
+        .logo-image {
+            width: 50px;
+            height: auto;
+            display: block;
+            margin: 0 auto 0.5rem auto;
+        }
         .content {
             margin-left: 260px;
             padding: 40px;
@@ -381,7 +387,7 @@
         <button class="btn btn-sm btn-light btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <div class="sidebar">
             <div class="mb-4 text-center">
-                <img src="https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png" alt="Bophelong Community Independent School Logo" style="width: 50px; height: auto; display: block; margin: 0 auto 0.5rem auto;">
+                <img src="https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png" alt="Bophelong Community Independent School Logo" class="logo-image">
                 <h4 class="mb-0"><span class="nav-text">BIS(Mamelodi)</span></h4>
             </div>
             <ul class="nav flex-column">
@@ -694,7 +700,7 @@
                 <h2>Admission Management</h2>
                 
                 <!-- Tabs for Admission Management -->
-                <ul class="nav nav-tabs mb-3" id="admissionTabs" role="tablist">
+                <ul class="nav nav-tabs mb-3" id="admissionTabs" role="tablist" aria-label="Admission Management Tabs">
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="admissions-list-tab" data-bs-toggle="tab" href="#admissions-list" role="tab" aria-selected="true" aria-controls="admissions-list">Admissions List</a>
                     </li>
@@ -824,7 +830,7 @@
                                     This section displays all online applications submitted through the admission form. 
                                     Applications are automatically tracked and stored for review.
                                 </div>
-                                <div class="uploaded-files-list" id="submittedApplicationsList">
+                                <div class="uploaded-files-list" id="submittedApplicationsList" role="status" aria-live="polite">
                                     <p class="text-center text-muted">No online applications submitted yet. Applications submitted via the online form will appear here.</p>
                                 </div>
                             </div>
