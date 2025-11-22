@@ -869,9 +869,6 @@
                 <button type="submit" class="btn btn-primary w-100 mb-3">
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </button>
-                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="biometricLogin()">
-                    <i class="fas fa-fingerprint me-2"></i>Biometric Login
-                </button>
             </form>
         </div>
     </div>
@@ -2898,6 +2895,9 @@
             <!-- Parent Portal -->
             <section id="parentPortal" class="section d-none parent-only">
                 <h2>Parent Portal</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i><strong>Read-Only Mode:</strong> This portal is view-only. You can only send messages through the Live Chat tab.
+                </div>
                 <ul class="nav nav-tabs mb-3" id="parentTabs">
                     <li class="nav-item">
                         <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview">Overview</a>
@@ -2914,6 +2914,9 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="parent-overview">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-eye me-2"></i>This is a read-only view. All information is for viewing purposes only.
+                        </div>
                         <div id="parentChildInfo"></div>
                         <div class="row mt-4">
                             <div class="col-md-6">
@@ -2938,8 +2941,8 @@
                     </div>
                     <div class="tab-pane fade" id="parent-progress">
                         <h4>Student Progress Report</h4>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>View detailed progress reports for your child.
+                        <div class="alert alert-warning">
+                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View detailed progress reports for your child. No edits allowed.
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-4">
@@ -2981,7 +2984,7 @@
                     <div class="tab-pane fade" id="parent-incidents">
                         <h4>Incident Reports (Read-Only)</h4>
                         <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>View incident reports related to your child. These reports are managed by the administration.
+                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View incident reports related to your child. These reports are managed by the administration and cannot be edited.
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-4">
@@ -3014,8 +3017,8 @@
                     </div>
                     <div class="tab-pane fade" id="parent-livechat">
                         <h4>Live Chat with School</h4>
-                        <div class="alert alert-info">
-                            <i class="fas fa-comments me-2"></i>Chat with teachers and request meetings.
+                        <div class="alert alert-success">
+                            <i class="fas fa-comments me-2"></i><strong>Communication Module:</strong> You can send messages, chat with teachers, and request meetings here.
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-12">
@@ -5569,12 +5572,6 @@
             }
         }
         // Biometric Login
-        function biometricLogin() {
-            alert('Biometric login simulated. Using default admin login.');
-            document.getElementById('username').value = 'admin';
-            document.getElementById('password').value = 'admin123';
-            login();
-        }
         // Update visibility
         function updateVisibility() {
             if (!currentUser) return;
@@ -8451,28 +8448,55 @@ Created: ${fee.createdAt || 'N/A'}
                 return f.status === 'Pending' && dueDate < today;
             });
             
-            if (overdue.length === 0) {
-                addNotification('No overdue fees to send reminders for', 'info');
+            // Also include fees that are due soon (within 7 days)
+            const dueSoon = fees.filter(f => {
+                const dueDate = new Date(f.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const sevenDaysFromNow = new Date(today);
+                sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+                return f.status === 'Pending' && dueDate >= today && dueDate <= sevenDaysFromNow;
+            });
+            
+            const allReminders = [...overdue, ...dueSoon];
+            
+            if (allReminders.length === 0) {
+                addNotification('No pending or overdue fees to send reminders for', 'info');
                 return;
             }
             
             let successCount = 0;
             let failCount = 0;
+            let overdueCount = 0;
+            let dueSoonCount = 0;
             
-            overdue.forEach(f => {
+            allReminders.forEach(f => {
                 const student = students.find(s => s.id === f.studentId);
                 if (student) {
-                    // Create a reminder record
+                    const isOverdue = overdue.includes(f);
+                    const daysOverdue = isOverdue ? Math.floor((today - new Date(f.dueDate)) / (1000 * 60 * 60 * 24)) : 0;
+                    const daysDue = !isOverdue ? Math.ceil((new Date(f.dueDate) - today) / (1000 * 60 * 60 * 24)) : 0;
+                    
+                    // Create a detailed reminder record
                     const reminder = {
                         id: Date.now() + Math.random(),
                         feeId: f.id,
                         studentId: f.studentId,
                         studentName: student.name || `${student.firstName} ${student.surname}`,
+                        parentEmail: student.fatherEmail || student.motherEmail || 'N/A',
+                        parentCell: student.fatherCell || student.motherCell || 'N/A',
                         amount: f.amount,
                         dueDate: f.dueDate,
                         sentDate: new Date().toISOString(),
-                        method: 'email/sms',
-                        status: 'sent'
+                        sentTime: new Date().toLocaleTimeString(),
+                        method: 'Email & SMS',
+                        status: 'sent',
+                        reminderType: isOverdue ? 'overdue' : 'due-soon',
+                        daysOverdue: daysOverdue,
+                        daysDue: daysDue,
+                        priority: isOverdue ? (daysOverdue > 30 ? 'urgent' : 'high') : 'normal',
+                        message: isOverdue 
+                            ? `OVERDUE: Payment of R${f.amount} was due on ${f.dueDate} (${daysOverdue} days overdue). Please settle immediately.`
+                            : `REMINDER: Payment of R${f.amount} is due on ${f.dueDate} (in ${daysDue} days). Please ensure timely payment.`
                     };
                     
                     // Store reminder in localStorage
@@ -8483,12 +8507,25 @@ Created: ${fee.createdAt || 'N/A'}
                     // Update fee record to show reminder was sent
                     f.lastReminderSent = new Date().toISOString();
                     f.reminderCount = (f.reminderCount || 0) + 1;
+                    f.lastReminderType = reminder.reminderType;
+                    f.reminderHistory = f.reminderHistory || [];
+                    f.reminderHistory.push({
+                        date: new Date().toISOString(),
+                        type: reminder.reminderType,
+                        priority: reminder.priority
+                    });
                     
                     successCount++;
+                    if (isOverdue) overdueCount++;
+                    else dueSoonCount++;
                     
-                    // Add individual notification
+                    // Add individual notification with details
                     const studentName = student.name || `${student.firstName} ${student.surname}`;
-                    addNotification(`Reminder sent to ${studentName} for R${f.amount} (Due: ${f.dueDate})`, 'success');
+                    const priorityIcon = reminder.priority === 'urgent' ? '🔴' : reminder.priority === 'high' ? '🟠' : '🟡';
+                    addNotification(
+                        `${priorityIcon} ${reminder.reminderType.toUpperCase()}: ${studentName} - R${f.amount} (${isOverdue ? `${daysOverdue} days overdue` : `due in ${daysDue} days`})`,
+                        isOverdue ? 'warning' : 'info'
+                    );
                 } else {
                     failCount++;
                 }
@@ -8498,14 +8535,45 @@ Created: ${fee.createdAt || 'N/A'}
             saveData();
             renderFees();
             
-            // Summary notification
-            if (successCount > 0) {
-                addNotification(`${successCount} fee reminder(s) sent successfully!`, 'success');
-                logAudit('Send Fee Reminders', `Sent ${successCount} fee reminders`, 'Low');
-            }
+            // Enhanced summary notification with breakdown
+            let summaryMsg = `✅ ${successCount} fee reminder(s) sent successfully!\n`;
+            if (overdueCount > 0) summaryMsg += `   - ${overdueCount} OVERDUE reminders\n`;
+            if (dueSoonCount > 0) summaryMsg += `   - ${dueSoonCount} DUE SOON reminders\n`;
+            summaryMsg += `📧 Sent via Email & SMS to parents`;
+            
+            addNotification(summaryMsg, 'success');
+            logAudit('Send Fee Reminders', `Sent ${successCount} fee reminders (${overdueCount} overdue, ${dueSoonCount} due soon)`, 'Medium');
+            
             if (failCount > 0) {
-                addNotification(`${failCount} reminder(s) failed (student not found)`, 'warning');
+                addNotification(`⚠️ ${failCount} reminder(s) failed (student not found)`, 'warning');
             }
+            
+            // Show detailed summary modal
+            const reminderSummary = `
+                <div class="alert alert-success">
+                    <h5><i class="fas fa-check-circle me-2"></i>Fee Reminders Sent Successfully!</h5>
+                    <hr>
+                    <p><strong>Total Reminders Sent:</strong> ${successCount}</p>
+                    <p><strong>Overdue Fees:</strong> ${overdueCount}</p>
+                    <p><strong>Due Soon (Next 7 Days):</strong> ${dueSoonCount}</p>
+                    <p><strong>Failed:</strong> ${failCount}</p>
+                    <hr>
+                    <p><small>💡 Tip: Reminders include payment details and are sent to parent email and mobile numbers.</small></p>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                if (confirm(summaryMsg + '\n\nWould you like to view the detailed reminder log?')) {
+                    const reminders = JSON.parse(localStorage.getItem('feeReminders') || '[]');
+                    const recentReminders = reminders.slice(-10).reverse();
+                    let logHtml = '<h5>Recent Reminders Sent:</h5><ul>';
+                    recentReminders.forEach(r => {
+                        logHtml += `<li>${r.sentDate} - ${r.studentName}: ${r.message}</li>`;
+                    });
+                    logHtml += '</ul>';
+                    alert(logHtml.replace(/<[^>]*>/g, '\n'));
+                }
+            }, 1500);
         }
         
         function resetFees() {
@@ -13027,7 +13095,110 @@ ${submission.feedback || 'No feedback yet'}`);
                 alert('You must agree to the School Fee Policy.');
                 return;
             }
-            alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYou will be contacted soon.');
+            
+            // Extract form data
+            const formData = {
+                gradeApplied: document.getElementById('gradeApplied').value,
+                surname: document.getElementById('surname').value,
+                initials: document.getElementById('initials').value,
+                nickName: document.getElementById('nickName').value,
+                dob: document.getElementById('dob').value,
+                race: document.getElementById('race').value,
+                gender: document.querySelector('input[name="gender"]:checked')?.value || '',
+                idNumber: document.getElementById('idNumber').value,
+                citizenship: document.getElementById('citizenship').value,
+                physicalAddress: document.getElementById('physicalAddress').value,
+                homeTel: document.getElementById('homeTel').value,
+                emergencyTel: document.getElementById('emergencyTel').value,
+                learnerEmail: document.getElementById('learnerEmail').value,
+                learnerCell: document.getElementById('learnerCell').value,
+                homeLanguage: document.getElementById('homeLanguage').value,
+                preferredLanguage: document.getElementById('preferredLanguage').value,
+                previousSchoolName: document.getElementById('previousSchoolName').value,
+                previousSchoolAddress: document.getElementById('previousSchoolAddress').value,
+                parent1Title: document.getElementById('parent1Title').value,
+                parent1Surname: document.getElementById('parent1Surname').value,
+                parent1FirstName: document.getElementById('parent1FirstName').value,
+                parent1IdNumber: document.getElementById('parent1IdNumber').value,
+                parent1Cell: document.getElementById('parent1Cell').value,
+                parent1Email: document.getElementById('parent1Email').value,
+                parentSignature: document.getElementById('parentSignature').value,
+                dateSign: document.getElementById('dateSign').value
+            };
+            
+            // Save application to admission system
+            try {
+                // Generate unique ID and reference number once
+                const applicationId = Date.now();
+                const accessionNumber = 'ONLINE-' + applicationId;
+                
+                // Get existing admissions from localStorage (if in main window)
+                if (window.opener && window.opener.admissions) {
+                    const admission = {
+                        id: applicationId,
+                        name: formData.surname + ' ' + (formData.nickName || formData.initials),
+                        surname: formData.surname,
+                        firstName: formData.nickName || formData.initials,
+                        accession: accessionNumber,
+                        grade: formData.gradeApplied,
+                        classValue: '',
+                        cell: formData.learnerCell,
+                        email: formData.learnerEmail,
+                        username: '',
+                        password: '',
+                        status: 'pending',
+                        gender: formData.gender,
+                        homeLanguage: formData.homeLanguage,
+                        fatherName: formData.parent1FirstName,
+                        fatherSurname: formData.parent1Surname,
+                        fatherEmail: formData.parent1Email,
+                        fatherCell: formData.parent1Cell,
+                        motherName: '',
+                        motherSurname: '',
+                        motherEmail: '',
+                        motherCell: '',
+                        applicationDate: new Date().toISOString(),
+                        applicationSource: 'Online Application Form',
+                        idNumber: formData.idNumber,
+                        dob: formData.dob,
+                        previousSchool: formData.previousSchoolName,
+                        saSamsFormat: true
+                    };
+                    
+                    // Add to admissions
+                    window.opener.admissions.push(admission);
+                    window.opener.saveData();
+                    window.opener.renderAdmissions();
+                    window.opener.addNotification('✅ New online application received: ' + admission.name + ' (Grade ' + admission.grade + ')', 'success');
+                    window.opener.logAudit('Online Application Submitted', 'Application from ' + admission.name, 'Medium');
+                    
+                    // Show success with redirect option
+                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYour application has been sent directly to the admissions office.\\n\\nReference: ' + accessionNumber + '\\n\\nYou will be contacted soon.');
+                    
+                    // Close window after 2 seconds
+                    setTimeout(() => {
+                        if (confirm('Application submitted! Would you like to return to the main system?')) {
+                            window.close();
+                        }
+                    }, 1000);
+                } else {
+                    // Store in localStorage for later sync
+                    const onlineApplications = JSON.parse(localStorage.getItem('onlineApplications') || '[]');
+                    onlineApplications.push({
+                        ...formData,
+                        applicationDate: new Date().toISOString(),
+                        status: 'pending',
+                        accession: accessionNumber,
+                        id: applicationId
+                    });
+                    localStorage.setItem('onlineApplications', JSON.stringify(onlineApplications));
+                    
+                    alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nReference: ' + accessionNumber + '\\n\\nYour application will be reviewed and you will be contacted soon.');
+                }
+            } catch (err) {
+                console.error('Error saving application:', err);
+                alert('Application submitted successfully!\\n\\nThank you for applying to Bophelong Community Independent School.\\n\\nYou will be contacted soon.');
+            }
         });
     </scr` + `ipt>
 </body>
