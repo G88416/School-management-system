@@ -3195,7 +3195,79 @@
                             </table>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="parent-incidents">
+                    <div class="tab-pane fade" id="parent-attendance">
+                        <h4>Student Attendance (Read-Only)</h4>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View your child's attendance records. No edits allowed.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Total Days</h5>
+                                    <h3 id="parentTotalDays">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Present</h5>
+                                    <h3 id="parentPresentDays">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Absent</h5>
+                                    <h3 id="parentAbsentDays">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parentAttendanceTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="parent-communication">
+                        <h4>Communication Module</h4>
+                        <div class="alert alert-success">
+                            <i class="fas fa-comments me-2"></i><strong>Active Module:</strong> You can send messages, chat with teachers, and request meetings here.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <button class="btn btn-primary" onclick="showRequestMeetingModal()">
+                                    <i class="fas fa-calendar-plus me-2"></i>Request Meeting with Teacher
+                                </button>
+                                <button class="btn btn-secondary ms-2" onclick="showSendMessageToTeacher()">
+                                    <i class="fas fa-envelope me-2"></i>Send Message to Teacher
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
+                            <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
+                                <h5><i class="fas fa-comments me-2"></i>Parent-Teacher Chat</h5>
+                            </div>
+                            <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="parentChatMessages">
+                                <p class="text-center text-muted">No messages yet. Start a conversation!</p>
+                            </div>
+                            <div class="card-footer" style="background: rgba(255, 255, 255, 0.15);">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="parentChatInput" placeholder="Type your message...">
+                                    <button class="btn btn-primary" onclick="sendParentMessage()">
+                                        <i class="fas fa-paper-plane"></i> Send
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+            <!-- AI Research Assistant (Student Portal) -->
+            <section id="aiResearch" class="section d-none student-only">
                         <h4>Incident Reports (Read-Only)</h4>
                         <div class="alert alert-warning">
                             <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View incident reports related to your child. These reports are managed by the administration and cannot be edited.
@@ -10589,28 +10661,245 @@ Created: ${fee.createdAt || 'N/A'}
         }
 
         // Parent Portal
+        // ========================================
+        // PARENT PORTAL FUNCTIONS
+        // ========================================
+        
         function loadParentPortal() {
-            // Mock child
-            const child = students.find(s => s.parent === currentUser.name) || students[0];
-            document.getElementById('parentChildInfo').innerHTML = `<h4>Child: ${child ? child.name : 'No child'}</h4>`;
-            // Attendance
-            const recentAttendance = Object.entries(attendanceRecords).slice(-5).map(([date, records]) => {
-                const status = records[child.id]?.status || 'Absent';
-                return `<p>${date}: ${status}</p>`;
+            // Check if parent has verified child
+            const parentVerification = JSON.parse(localStorage.getItem('parentVerifications') || '{}');
+            const parentUsername = currentUser.username || currentUser.name;
+            const verifiedChild = parentVerification[parentUsername];
+            
+            if (verifiedChild && verifiedChild.adminApproved) {
+                // Show main portal
+                document.getElementById('parentVerificationSection').style.display = 'none';
+                document.getElementById('parentPortalMain').style.display = 'block';
+                loadParentChildInfo(verifiedChild.studentId);
+            } else if (verifiedChild && verifiedChild.parentConfirmed && !verifiedChild.adminApproved) {
+                // Awaiting admin approval
+                document.getElementById('parentVerificationSection').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock me-2"></i><strong>Awaiting Approval:</strong> Your child verification request has been submitted to the administration for approval. You will be notified once approved.
+                    </div>
+                `;
+                document.getElementById('parentPortalMain').style.display = 'none';
+            } else {
+                // Show search section
+                document.getElementById('parentVerificationSection').style.display = 'block';
+                document.getElementById('parentPortalMain').style.display = 'none';
+            }
+        }
+        
+        function searchForChild() {
+            const surname = document.getElementById('parentSearchSurname').value.trim().toLowerCase();
+            const firstName = document.getElementById('parentSearchFirstName').value.trim().toLowerCase();
+            const searchId = document.getElementById('parentSearchId').value.trim();
+            const grade = document.getElementById('parentSearchGrade').value;
+            
+            if (!surname && !firstName && !searchId) {
+                addNotification('Please enter at least surname, first name, or ID to search', 'warning');
+                return;
+            }
+            
+            // Search for matching students
+            const results = students.filter(student => {
+                const studentSurname = (student.surname || student.name?.split(' ')[0] || '').toLowerCase();
+                const studentFirstName = (student.firstName || student.name?.split(' ').slice(1).join(' ') || '').toLowerCase();
+                const studentId = (student.accession || student.id || '').toString();
+                const studentGrade = student.grade || '';
+                
+                const surnameMatch = !surname || studentSurname.includes(surname);
+                const firstNameMatch = !firstName || studentFirstName.includes(firstName);
+                const idMatch = !searchId || studentId.includes(searchId);
+                const gradeMatch = !grade || studentGrade === grade;
+                
+                return surnameMatch && firstNameMatch && idMatch && gradeMatch;
+            });
+            
+            const resultsContainer = document.getElementById('parentSearchResults');
+            const resultsList = document.getElementById('parentSearchResultsList');
+            
+            if (results.length === 0) {
+                resultsList.innerHTML = '<p class="text-center text-muted">No students found matching your search criteria.</p>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+            
+            resultsList.innerHTML = results.map(student => {
+                const displayName = student.name || `${student.surname} ${student.firstName}`;
+                const displayGrade = student.grade || 'N/A';
+                const displayId = student.accession || student.id;
+                
+                return `
+                    <div class="file-item">
+                        <div style="flex: 1;">
+                            <h6><i class="fas fa-user-graduate me-2"></i>${displayName}</h6>
+                            <p class="mb-0"><small><strong>Grade:</strong> ${displayGrade} | <strong>ID:</strong> ${displayId}</small></p>
+                        </div>
+                        <div style="white-space: nowrap;">
+                            <button class="btn btn-sm btn-primary" onclick="verifyChild(${student.id})">
+                                <i class="fas fa-check-circle"></i> This is My Child
+                            </button>
+                        </div>
+                    </div>
+                `;
             }).join('');
-            document.getElementById('parentAttendance').innerHTML = recentAttendance;
-            // Fees
-            const parentFees = fees.filter(f => students.find(s => s.id === f.studentId)?.parent === currentUser.name);
-            document.getElementById('parentFees').innerHTML = parentFees.map(f => `
-                <p>${f.description}: R${f.amount} - ${f.status}</p>
-            `).join('');
-            // Grades
-            const parentGrades = grades.filter(g => students.find(s => s.id === g.studentId)?.parent === currentUser.name);
-            document.getElementById('parentGrades').innerHTML = parentGrades.map(g => `
-                <p>${g.subject}: ${g.score}%</p>
-            `).join('');
-            // Announcements
-            document.getElementById('parentAnnouncements').innerHTML = announcements.map(a => `<p><strong>${a.title}</strong>: ${a.content}</p>`).join('');
+            
+            resultsContainer.style.display = 'block';
+        }
+        
+        function verifyChild(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) {
+                addNotification('Student not found', 'error');
+                return;
+            }
+            
+            const displayName = student.name || `${student.surname} ${student.firstName}`;
+            
+            if (!confirm(`Please confirm that ${displayName} is your child.\n\nOnce confirmed, your request will be sent to the administration for approval.`)) {
+                return;
+            }
+            
+            // Store verification request
+            const parentVerification = JSON.parse(localStorage.getItem('parentVerifications') || '{}');
+            const parentUsername = currentUser.username || currentUser.name;
+            
+            parentVerification[parentUsername] = {
+                studentId: studentId,
+                studentName: displayName,
+                parentName: currentUser.name,
+                parentUsername: parentUsername,
+                requestDate: new Date().toISOString(),
+                parentConfirmed: true,
+                adminApproved: false
+            };
+            
+            localStorage.setItem('parentVerifications', JSON.stringify(parentVerification));
+            
+            // Notify admin
+            addNotification('Verification request submitted to administration', 'success');
+            logUserActivity(parentUsername, 'Parent', 'Child Verification', `Requested verification for ${displayName}`);
+            
+            // Reload parent portal
+            loadParentPortal();
+        }
+        
+        function loadParentChildInfo(studentId) {
+            const child = students.find(s => s.id === studentId);
+            if (!child) {
+                document.getElementById('parentChildInfo').innerHTML = '<p class="text-muted">Child information not found</p>';
+                return;
+            }
+            
+            const displayName = child.name || `${child.surname} ${child.firstName}`;
+            const displayGrade = child.grade || 'N/A';
+            const displayClass = child.class || 'N/A';
+            
+            document.getElementById('parentChildInfo').innerHTML = `
+                <div class="card card-metric p-3">
+                    <h4><i class="fas fa-user-graduate me-2"></i>${displayName}</h4>
+                    <p><strong>Grade:</strong> ${displayGrade} | <strong>Class:</strong> ${displayClass}</p>
+                </div>
+            `;
+            
+            // Load attendance
+            loadParentAttendanceInfo(studentId);
+            
+            // Load fees
+            const childFees = fees.filter(f => f.studentId === studentId);
+            document.getElementById('parentFees').innerHTML = childFees.length > 0 ? 
+                childFees.map(f => `<p>${f.description}: R${f.amount} - ${f.status}</p>`).join('') :
+                '<p class="text-muted">No fees recorded</p>';
+            
+            // Load grades
+            const childGrades = grades.filter(g => g.studentId === studentId);
+            document.getElementById('parentGrades').innerHTML = childGrades.length > 0 ?
+                childGrades.map(g => `<p>${g.subject}: ${g.score}%</p>`).join('') :
+                '<p class="text-muted">No grades recorded</p>';
+            
+            // Load announcements
+            document.getElementById('parentAnnouncements').innerHTML = announcements.length > 0 ?
+                announcements.slice(0, 5).map(a => `<p><strong>${a.title}</strong>: ${a.content}</p>`).join('') :
+                '<p class="text-muted">No announcements</p>';
+        }
+        
+        function loadParentAttendanceInfo(studentId) {
+            const studentAttendance = attendance.filter(a => a.studentId === studentId);
+            const totalDays = studentAttendance.length;
+            const presentDays = studentAttendance.filter(a => a.status === 'Present').length;
+            const absentDays = totalDays - presentDays;
+            
+            document.getElementById('parentTotalDays').textContent = totalDays;
+            document.getElementById('parentPresentDays').textContent = presentDays;
+            document.getElementById('parentAbsentDays').textContent = absentDays;
+            
+            const attendanceHtml = studentAttendance.slice(-20).reverse().map(a => {
+                const statusBadge = a.status === 'Present' ? 'bg-success' : 'bg-danger';
+                return `
+                    <tr>
+                        <td>${a.date || 'N/A'}</td>
+                        <td><span class="badge ${statusBadge}">${a.status}</span></td>
+                        <td>${a.remarks || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('parentAttendanceTable').innerHTML = attendanceHtml || 
+                '<tr><td colspan="3" class="text-center text-muted">No attendance records</td></tr>';
+        }
+        
+        function sendParentMessage() {
+            const message = document.getElementById('parentChatInput').value.trim();
+            if (!message) return;
+            
+            // Add message to chat
+            const chatContainer = document.getElementById('parentChatMessages');
+            const messageHtml = `
+                <div class="p-2 mb-2" style="background: rgba(102, 126, 234, 0.3); border-radius: 8px;">
+                    <strong>${currentUser.name}:</strong> ${message}
+                    <br><small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                </div>
+            `;
+            
+            if (chatContainer.innerHTML.includes('No messages yet')) {
+                chatContainer.innerHTML = messageHtml;
+            } else {
+                chatContainer.innerHTML += messageHtml;
+            }
+            
+            // Clear input
+            document.getElementById('parentChatInput').value = '';
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            addNotification('Message sent', 'success');
+            logUserActivity(currentUser.username || currentUser.name, 'Parent', 'Send Message', 'Sent message to teacher');
+        }
+        
+        function showSendMessageToTeacher() {
+            const message = prompt('Enter your message to the teacher:');
+            if (!message) return;
+            
+            sendParentMessage();
+            addNotification('Message sent to teacher', 'success');
+        }
+        
+        function showRequestMeetingModal() {
+            const teacher = prompt('Enter teacher name:');
+            if (!teacher) return;
+            
+            const date = prompt('Preferred date (YYYY-MM-DD):');
+            if (!date) return;
+            
+            const time = prompt('Preferred time (HH:MM):');
+            if (!time) return;
+            
+            addNotification('Meeting request sent to teacher', 'success');
+            logUserActivity(currentUser.username || currentUser.name, 'Parent', 'Meeting Request', 
+                `Requested meeting with ${teacher} on ${date} at ${time}`);
         }
 
         // Student Module Functions
