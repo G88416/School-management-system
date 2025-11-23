@@ -2015,16 +2015,29 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="hr-staff">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <button class="btn btn-primary" onclick="showAddStaffModal()">Add Staff</button>
-                                <button class="btn btn-success ms-2" onclick="showBulkStaffModal()">Bulk Import Staff</button>
-                                <button class="btn btn-secondary ms-2" onclick="syncStaffBiometric()">Sync Biometric</button>
-                                <button class="btn btn-info ms-2" onclick="generateStaffReport()">Generate Report</button>
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-primary" onclick="showAddStaffModal()">
+                                        <i class="fas fa-user-plus me-1"></i> Add Staff
+                                    </button>
+                                    <button class="btn btn-success" onclick="showBulkStaffModal()">
+                                        <i class="fas fa-file-import me-1"></i> Bulk Import
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="syncStaffBiometric()">
+                                        <i class="fas fa-fingerprint me-1"></i> Sync Biometric
+                                    </button>
+                                    <button class="btn btn-info" onclick="generateStaffReport()">
+                                        <i class="fas fa-file-pdf me-1"></i> Generate Report
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-2">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search staff..." id="staffSearch" oninput="debounce(renderStaff, 300)()">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" placeholder="Search staff by name..." id="staffSearch" oninput="debounce(renderStaff, 300)()">
                                     <select id="staffFilterRole" class="form-select" style="max-width: 150px;" onchange="renderStaff()">
                                         <option value="">All Roles</option>
                                         <option value="Teacher">Teacher</option>
@@ -2034,16 +2047,55 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Staff</h5><h3 id="totalStaff">0</h3></div></div>
-                            <div class="col-md-3"><div class="card card-metric p-3"><h5>Active</h5><h3 id="activeStaff">0</h3></div></div>
-                            <div class="col-md-3"><div class="card card-metric p-3"><h5>Avg Salary</h5><h3 id="avgSalary">R0</h3></div></div>
-                            <div class="col-md-3"><div class="card card-metric p-3"><h5>Expiring Certs</h5><h3 id="expiringCerts">0</h3></div></div>
+                        <div class="row mb-4 g-3">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-users fa-2x text-primary"></i></div>
+                                    <h5 class="mb-2">Total Staff</h5>
+                                    <h3 class="mb-0" id="totalStaff">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-user-check fa-2x text-success"></i></div>
+                                    <h5 class="mb-2">Active Staff</h5>
+                                    <h3 class="mb-0" id="activeStaff">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-money-bill-wave fa-2x text-info"></i></div>
+                                    <h5 class="mb-2">Avg Salary</h5>
+                                    <h3 class="mb-0" id="avgSalary">R0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-certificate fa-2x text-warning"></i></div>
+                                    <h5 class="mb-2">Expiring Certs</h5>
+                                    <h3 class="mb-0" id="expiringCerts">0</h3>
+                                </div>
+                            </div>
                         </div>
-                        <table class="table table-striped">
-                            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Tax #</th><th>UIF #</th><th>Cert Expiry</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody id="staffTable"></tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center">ID</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Department</th>
+                                        <th class="text-end">Salary</th>
+                                        <th>Tax #</th>
+                                        <th>UIF #</th>
+                                        <th>Cert Expiry</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTable"></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="hr-payroll">
                         <div class="row mb-3">
@@ -2736,15 +2788,9 @@
                     </div>
                 </div>
                 
-                <!-- Portal Usage Tracking -->
+                <!-- System Storage Only -->
                 <div class="row mt-4">
-                    <div class="col-md-6">
-                        <div class="card card-metric p-3">
-                            <h5><i class="fas fa-chart-pie me-2"></i>Active Portal Usage</h5>
-                            <canvas id="portalUsageChart" style="height:250px;"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="card card-metric p-3">
                             <h5><i class="fas fa-hdd me-2"></i>System Storage</h5>
                             <div class="mt-3">
@@ -9251,18 +9297,36 @@ Created: ${fee.createdAt || 'N/A'}
             document.getElementById('staffTable').innerHTML = filtered.map(s => {
                 const expiryDate = new Date(s.certExpiry);
                 const isExpired = expiryDate < new Date();
+                const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                const expiryWarning = isExpired ? 'EXPIRED' : daysUntilExpiry < 90 ? `${daysUntilExpiry}d left` : '';
                 return `
                     <tr>
-                        <td>${s.id}</td>
-                        <td>${s.name}</td>
-                        <td>${s.role}</td>
+                        <td class="text-center"><strong>#${s.id}</strong></td>
+                        <td><i class="fas fa-user-circle me-2"></i>${s.name}</td>
+                        <td><span class="badge bg-primary">${s.role}</span></td>
                         <td>${s.department}</td>
-                        <td>R${s.salary.toLocaleString()}</td>
+                        <td class="text-end"><strong>R${s.salary.toLocaleString()}</strong></td>
                         <td>${s.taxNumber}</td>
                         <td>${s.uifNumber}</td>
-                        <td><span class="${isExpired ? 'cert-expired' : 'cert-expiry'}">${s.certExpiry}</span></td>
-                        <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">${s.status}</span></td>
-                        <td><button class="btn btn-sm btn-primary" onclick="showAddStaffModal(${s.id})">Edit</button></td>
+                        <td>
+                            <span class="${isExpired ? 'cert-expired' : 'cert-expiry'}">
+                                ${s.certExpiry}
+                                ${expiryWarning ? `<br><small class="badge bg-${isExpired ? 'danger' : 'warning'}">${expiryWarning}</small>` : ''}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">
+                                <i class="fas fa-${s.status === 'Active' ? 'check-circle' : 'clock'}"></i> ${s.status}
+                            </span>
+                        </td>
+                        <td class="text-center" style="white-space: nowrap;">
+                            <button class="btn btn-sm btn-info me-1" onclick="viewStaffDetails(${s.id})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="showAddStaffModal(${s.id})" title="Edit Staff">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');
@@ -9304,6 +9368,122 @@ Created: ${fee.createdAt || 'N/A'}
             }
             new bootstrap.Modal(document.getElementById('addStaffModal')).show();
         }
+        
+        function viewStaffDetails(staffId) {
+            const staffMember = staff.find(s => s.id === staffId);
+            if (!staffMember) {
+                addNotification('Staff member not found', 'error');
+                return;
+            }
+            
+            const expiryDate = new Date(staffMember.certExpiry);
+            const isExpired = expiryDate < new Date();
+            const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+            
+            // Build detailed staff information display
+            const detailsHTML = `
+                <div style="background: rgba(255,255,255,0.95); color: #333; padding: 25px; border-radius: 15px; max-width: 600px;">
+                    <h4 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px;">
+                        <i class="fas fa-user-tie me-2"></i>${staffMember.name}
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-id-badge me-2"></i>Staff ID:</strong><br>
+                                <span style="color: #333;">${staffMember.id}</span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-briefcase me-2"></i>Role:</strong><br>
+                                <span class="badge bg-primary" style="font-size: 0.9em;">${staffMember.role}</span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-building me-2"></i>Department:</strong><br>
+                                <span style="color: #333;">${staffMember.department}</span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-money-bill-wave me-2"></i>Salary:</strong><br>
+                                <span style="color: #28a745; font-size: 1.1em; font-weight: 600;">R${staffMember.salary.toLocaleString()}</span>
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-file-invoice me-2"></i>Tax Number:</strong><br>
+                                <span style="color: #333;">${staffMember.taxNumber}</span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-shield-alt me-2"></i>UIF Number:</strong><br>
+                                <span style="color: #333;">${staffMember.uifNumber}</span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-certificate me-2"></i>Certificate Expiry:</strong><br>
+                                <span style="color: ${isExpired ? '#dc3545' : daysUntilExpiry < 90 ? '#ffc107' : '#28a745'}; font-weight: 600;">
+                                    ${staffMember.certExpiry}
+                                    ${isExpired ? ' <i class="fas fa-exclamation-triangle"></i> EXPIRED' : 
+                                      daysUntilExpiry < 90 ? ` (${daysUntilExpiry} days left)` : ''}
+                                </span>
+                            </p>
+                            <p style="margin-bottom: 8px;">
+                                <strong style="color: #555;"><i class="fas fa-toggle-on me-2"></i>Status:</strong><br>
+                                <span class="badge bg-${staffMember.status === 'Active' ? 'success' : 'warning'}" style="font-size: 0.9em;">
+                                    ${staffMember.status}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    ${staffMember.username ? `
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <p style="margin-bottom: 0;">
+                            <strong style="color: #555;"><i class="fas fa-user me-2"></i>Username:</strong>
+                            <span style="color: #333;">${staffMember.username}</span>
+                        </p>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; text-align: right;">
+                        <button class="btn btn-primary" onclick="this.closest('.swal2-popup').querySelector('.swal2-confirm').click(); showAddStaffModal(${staffMember.id})">
+                            <i class="fas fa-edit me-2"></i>Edit Staff
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Use SweetAlert if available, otherwise use alert
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    html: detailsHTML,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Close',
+                    width: '650px',
+                    customClass: {
+                        container: 'staff-view-modal'
+                    }
+                });
+            } else {
+                // Fallback to a custom modal or alert
+                const modalContent = `
+Staff Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: ${staffMember.name}
+ID: ${staffMember.id}
+Role: ${staffMember.role}
+Department: ${staffMember.department}
+Salary: R${staffMember.salary.toLocaleString()}
+Tax Number: ${staffMember.taxNumber}
+UIF Number: ${staffMember.uifNumber}
+Certificate Expiry: ${staffMember.certExpiry} ${isExpired ? '(EXPIRED)' : daysUntilExpiry < 90 ? `(${daysUntilExpiry} days left)` : ''}
+Status: ${staffMember.status}
+${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                `;
+                alert(modalContent);
+            }
+            
+            logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'View Staff', `Viewed details for ${staffMember.name}`);
+        }
+        
         function saveStaff() {
             const name = document.getElementById('staffName').value;
             const role = document.getElementById('staffRole').value;
@@ -14682,9 +14862,6 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             document.getElementById('sysTeacherCount').textContent = teacherCount;
             document.getElementById('sysAdminCount').textContent = adminCount;
             
-            // Load portal usage chart
-            loadPortalUsageChart();
-            
             // Load storage info
             loadStorageInfo();
             
@@ -14693,53 +14870,6 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             
             // Load system activities
             loadSystemActivities();
-        }
-        
-        function loadPortalUsageChart() {
-            const canvas = document.getElementById('portalUsageChart');
-            if (!canvas || typeof Chart === 'undefined') return;
-            
-            const activities = JSON.parse(localStorage.getItem('userActivities') || '[]');
-            const portalCounts = {};
-            
-            activities.forEach(act => {
-                if (act.action === 'Portal Access') {
-                    const portal = act.details.replace('Accessed ', '').replace(' portal', '');
-                    portalCounts[portal] = (portalCounts[portal] || 0) + 1;
-                }
-            });
-            
-            const labels = Object.keys(portalCounts);
-            const data = Object.values(portalCounts);
-            
-            new Chart(canvas.getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: labels.length > 0 ? labels : ['No Data'],
-                    datasets: [{
-                        data: data.length > 0 ? data : [1],
-                        backgroundColor: [
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(118, 75, 162, 0.8)',
-                            'rgba(255, 159, 64, 0.8)',
-                            'rgba(75, 192, 192, 0.8)',
-                            'rgba(153, 102, 255, 0.8)',
-                            'rgba(255, 99, 132, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff'
-                            }
-                        }
-                    }
-                }
-            });
         }
         
         function loadStorageInfo() {
