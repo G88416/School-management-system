@@ -7534,6 +7534,13 @@
                         // Find existing user by old username or current username
                         let existingUser = users.find(u => u.username === oldUsername || u.username === newUsername);
                         
+                        // Check for username conflicts (different user with same new username)
+                        const conflictUser = users.find(u => u.username === newUsername && u.username !== oldUsername);
+                        if (conflictUser) {
+                            addNotification('Username "' + newUsername + '" is already taken. Please choose a different username.', 'error');
+                            return;
+                        }
+                        
                         if (existingUser) {
                             // Update existing user credentials
                             existingUser.username = newUsername;
@@ -7562,7 +7569,8 @@
                                         password: 'parent' + Math.floor(Math.random() * 10000),
                                         name: adm.fatherName + ' ' + adm.fatherSurname,
                                         role: 'Parent',
-                                        linkedStudent: adm.id
+                                        linkedStudent: adm.id,
+                                        linkedStudentName: adm.name
                                     });
                                     addNotification('Parent account created for father: ' + fatherUsername, 'success');
                                 }
@@ -7578,7 +7586,8 @@
                                         password: 'parent' + Math.floor(Math.random() * 10000),
                                         name: adm.motherName + ' ' + adm.motherSurname,
                                         role: 'Parent',
-                                        linkedStudent: adm.id
+                                        linkedStudent: adm.id,
+                                        linkedStudentName: adm.name
                                     });
                                     addNotification('Parent account created for mother: ' + motherUsername, 'success');
                                 }
@@ -10820,15 +10829,15 @@ Created: ${fee.createdAt || 'N/A'}
                 return;
             }
             
-            // Search for matching students (exact match required for better accuracy)
+            // Search for matching students (one-way contains match for accuracy)
             const results = students.filter(student => {
                 const studentSurname = (student.surname || student.name?.split(' ')[0] || '').toLowerCase();
                 const studentFirstName = (student.firstName || student.name?.split(' ').slice(1).join(' ') || '').toLowerCase();
                 const studentGrade = student.grade || '';
                 
-                // Use exact match for grade and contains match for names (for flexibility)
-                const surnameMatch = studentSurname.includes(surname) || surname.includes(studentSurname);
-                const firstNameMatch = studentFirstName.includes(firstName) || firstName.includes(studentFirstName);
+                // Use exact match for grade and one-way contains for names (student contains search term)
+                const surnameMatch = studentSurname.includes(surname);
+                const firstNameMatch = studentFirstName.includes(firstName);
                 const gradeMatch = studentGrade === grade;
                 
                 return surnameMatch && firstNameMatch && gradeMatch;
