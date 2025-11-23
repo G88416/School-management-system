@@ -1570,11 +1570,118 @@
                         <div id="resourcesList"></div>
                     </div>
                     <div class="tab-pane fade" id="student-progress">
-                        <select id="progressStudent" class="form-control mb-3" onchange="loadStudentProgress()">
-                            <option value="">Select Student</option>
-                        </select>
-                        <canvas id="progressChart" class="mt-4"></canvas>
-                        <div id="progressDetails"></div>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card card-metric p-3">
+                                    <h5><i class="fas fa-filter me-2"></i>Progress Monitoring Filters</h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label"><strong>Select Student</strong></label>
+                                            <select id="progressStudent" class="form-control" onchange="loadStudentProgress()">
+                                                <option value="">Select Student</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label"><strong>Subject Filter</strong></label>
+                                            <select id="progressSubjectFilter" class="form-control" onchange="loadStudentProgress()">
+                                                <option value="">All Subjects</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label"><strong>Time Period</strong></label>
+                                            <select id="progressTimePeriod" class="form-control" onchange="loadStudentProgress()">
+                                                <option value="all">All Time</option>
+                                                <option value="30">Last 30 Days</option>
+                                                <option value="60">Last 60 Days</option>
+                                                <option value="90">Last 90 Days</option>
+                                                <option value="365">Last Year</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label"><strong>Actions</strong></label>
+                                            <button class="btn btn-success w-100" onclick="exportStudentProgress()" title="Export Progress Report">
+                                                <i class="fas fa-file-export me-1"></i> Export
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Indicators -->
+                        <div class="row mb-4 g-3" id="progressIndicators" style="display:none;">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-star fa-2x text-warning"></i></div>
+                                    <h6 class="mb-2">Overall Average</h6>
+                                    <h4 class="mb-0" id="overallAverage">0%</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-trophy fa-2x text-success"></i></div>
+                                    <h6 class="mb-2">Highest Score</h6>
+                                    <h4 class="mb-0" id="highestScore">0%</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-chart-line fa-2x text-info"></i></div>
+                                    <h6 class="mb-2">Subjects Tracked</h6>
+                                    <h4 class="mb-0" id="subjectsTracked">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <div class="mb-2"><i class="fas fa-trending-up fa-2x text-primary"></i></div>
+                                    <h6 class="mb-2">Performance Trend</h6>
+                                    <h4 class="mb-0" id="performanceTrend">-</h4>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts Section -->
+                        <div class="row mb-4" id="progressChartsSection" style="display:none;">
+                            <div class="col-md-6">
+                                <div class="card card-metric p-3">
+                                    <h5><i class="fas fa-chart-bar me-2"></i>Subject Performance</h5>
+                                    <canvas id="progressChart" style="height:300px;"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card card-metric p-3">
+                                    <h5><i class="fas fa-chart-line me-2"></i>Progress Trend</h5>
+                                    <canvas id="progressTrendChart" style="height:300px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed Progress Table -->
+                        <div class="card card-metric p-3" id="progressDetailsSection" style="display:none;">
+                            <h5><i class="fas fa-table me-2"></i>Detailed Progress Report</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th class="text-center">Score</th>
+                                            <th class="text-center">Grade</th>
+                                            <th class="text-center">Performance</th>
+                                            <th>Comments</th>
+                                            <th class="text-center">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="progressDetails"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="progressEmptyState" class="text-center py-5">
+                            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Student Selected</h4>
+                            <p class="text-muted">Select a student from the dropdown above to view their progress</p>
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="upload-work">
                         <h4>Upload Work Files</h4>
@@ -6354,29 +6461,288 @@
         }
         function renderStudentProgress() {
             const studentId = parseInt(document.getElementById('progressStudent').value);
-            if (studentId) {
-                const studentGrades = grades.filter(g => g.studentId === studentId);
-                const ctx = document.getElementById('progressChart').getContext('2d');
-                if (progressChart) progressChart.destroy();
-                progressChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: studentGrades.map(g => g.subject),
-                        datasets: [{
-                            label: 'Scores',
-                            data: studentGrades.map(g => g.score),
-                            backgroundColor: '#36A2EB'
-                        }]
-                    },
-                    options: { responsive: true }
-                });
-                document.getElementById('progressDetails').innerHTML = studentGrades.map(g => `
-                    <p><strong>${g.subject}:</strong> ${g.score} - ${g.comments}</p>
-                `).join('');
+            const subjectFilter = document.getElementById('progressSubjectFilter').value;
+            const timePeriod = document.getElementById('progressTimePeriod').value;
+            
+            if (!studentId) {
+                // Show empty state
+                document.getElementById('progressEmptyState').style.display = 'block';
+                document.getElementById('progressIndicators').style.display = 'none';
+                document.getElementById('progressChartsSection').style.display = 'none';
+                document.getElementById('progressDetailsSection').style.display = 'none';
+                return;
             }
+            
+            // Hide empty state and show content
+            document.getElementById('progressEmptyState').style.display = 'none';
+            document.getElementById('progressIndicators').style.display = 'flex';
+            document.getElementById('progressChartsSection').style.display = 'flex';
+            document.getElementById('progressDetailsSection').style.display = 'block';
+            
+            // Filter grades
+            let studentGrades = grades.filter(g => g.studentId === studentId);
+            
+            // Apply subject filter
+            if (subjectFilter) {
+                studentGrades = studentGrades.filter(g => g.subject === subjectFilter);
+            }
+            
+            // Apply time period filter
+            if (timePeriod !== 'all') {
+                const daysAgo = parseInt(timePeriod);
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+                studentGrades = studentGrades.filter(g => {
+                    const gradeDate = g.date ? new Date(g.date) : new Date();
+                    return gradeDate >= cutoffDate;
+                });
+            }
+            
+            // Populate subject filter if needed
+            const subjectSelect = document.getElementById('progressSubjectFilter');
+            if (subjectSelect.options.length === 1) {
+                const subjects = [...new Set(grades.filter(g => g.studentId === studentId).map(g => g.subject))];
+                subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject;
+                    option.textContent = subject;
+                    subjectSelect.appendChild(option);
+                });
+            }
+            
+            if (studentGrades.length === 0) {
+                document.getElementById('progressDetails').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-info-circle me-2"></i>No progress data available for the selected filters</td></tr>';
+                return;
+            }
+            
+            // Calculate metrics
+            const scores = studentGrades.map(g => g.score);
+            const overallAvg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            const highestScore = Math.max(...scores);
+            const subjectsCount = new Set(studentGrades.map(g => g.subject)).size;
+            
+            // Calculate trend (comparing first half to second half)
+            const midPoint = Math.floor(studentGrades.length / 2);
+            const firstHalf = studentGrades.slice(0, midPoint);
+            const secondHalf = studentGrades.slice(midPoint);
+            const firstHalfAvg = firstHalf.length > 0 ? firstHalf.reduce((a, b) => a + b.score, 0) / firstHalf.length : 0;
+            const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((a, b) => a + b.score, 0) / secondHalf.length : 0;
+            const trend = secondHalfAvg > firstHalfAvg ? '↑ Improving' : secondHalfAvg < firstHalfAvg ? '↓ Declining' : '→ Stable';
+            const trendColor = secondHalfAvg > firstHalfAvg ? 'text-success' : secondHalfAvg < firstHalfAvg ? 'text-danger' : 'text-warning';
+            
+            // Update indicators
+            document.getElementById('overallAverage').textContent = overallAvg + '%';
+            document.getElementById('highestScore').textContent = highestScore + '%';
+            document.getElementById('subjectsTracked').textContent = subjectsCount;
+            document.getElementById('performanceTrend').innerHTML = `<span class="${trendColor}">${trend}</span>`;
+            
+            // Group grades by subject for chart
+            const subjectGroups = {};
+            studentGrades.forEach(g => {
+                if (!subjectGroups[g.subject]) {
+                    subjectGroups[g.subject] = [];
+                }
+                subjectGroups[g.subject].push(g.score);
+            });
+            
+            const subjectLabels = Object.keys(subjectGroups);
+            const subjectAverages = subjectLabels.map(subject => {
+                const scores = subjectGroups[subject];
+                return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            });
+            
+            // Subject Performance Chart
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            if (progressChart) progressChart.destroy();
+            progressChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjectLabels,
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: subjectAverages,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#fff' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Progress Trend Chart (chronological)
+            const trendCtx = document.getElementById('progressTrendChart').getContext('2d');
+            if (window.progressTrendChart) window.progressTrendChart.destroy();
+            
+            // Sort grades by date if available
+            const sortedGrades = [...studentGrades].sort((a, b) => {
+                const dateA = a.date ? new Date(a.date) : new Date();
+                const dateB = b.date ? new Date(b.date) : new Date();
+                return dateA - dateB;
+            });
+            
+            window.progressTrendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedGrades.map((g, i) => g.date ? new Date(g.date).toLocaleDateString() : `Entry ${i + 1}`),
+                    datasets: [{
+                        label: 'Score Trend',
+                        data: sortedGrades.map(g => g.score),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#fff' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Score: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Helper function to get grade letter
+            function getGrade(score) {
+                if (score >= 90) return 'A+';
+                if (score >= 80) return 'A';
+                if (score >= 70) return 'B';
+                if (score >= 60) return 'C';
+                if (score >= 50) return 'D';
+                return 'F';
+            }
+            
+            // Helper function to get performance badge
+            function getPerformanceBadge(score) {
+                if (score >= 80) return '<span class="badge bg-success"><i class="fas fa-star"></i> Excellent</span>';
+                if (score >= 70) return '<span class="badge bg-info"><i class="fas fa-thumbs-up"></i> Good</span>';
+                if (score >= 60) return '<span class="badge bg-primary"><i class="fas fa-check"></i> Average</span>';
+                if (score >= 50) return '<span class="badge bg-warning"><i class="fas fa-exclamation"></i> Below Average</span>';
+                return '<span class="badge bg-danger"><i class="fas fa-times"></i> Needs Improvement</span>';
+            }
+            
+            // Update details table
+            document.getElementById('progressDetails').innerHTML = sortedGrades.map(g => `
+                <tr>
+                    <td><strong>${g.subject}</strong></td>
+                    <td class="text-center"><h5 class="mb-0">${g.score}%</h5></td>
+                    <td class="text-center"><span class="badge bg-secondary">${getGrade(g.score)}</span></td>
+                    <td class="text-center">${getPerformanceBadge(g.score)}</td>
+                    <td>${g.comments || 'No comments'}</td>
+                    <td class="text-center">${g.date ? new Date(g.date).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
         }
+        
         function loadStudentProgress() {
             renderStudentProgress();
+        }
+        
+        function exportStudentProgress() {
+            const studentId = parseInt(document.getElementById('progressStudent').value);
+            if (!studentId) {
+                addNotification('Please select a student first', 'warning');
+                return;
+            }
+            
+            const student = students.find(s => s.id === studentId);
+            const studentGrades = grades.filter(g => g.studentId === studentId);
+            
+            if (studentGrades.length === 0) {
+                addNotification('No progress data to export', 'warning');
+                return;
+            }
+            
+            // Calculate metrics
+            const scores = studentGrades.map(g => g.score);
+            const overallAvg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+            const highestScore = Math.max(...scores);
+            const lowestScore = Math.min(...scores);
+            
+            // Create CSV content
+            const headers = ['Subject', 'Score', 'Grade', 'Comments', 'Date'];
+            const rows = studentGrades.map(g => {
+                const grade = g.score >= 90 ? 'A+' : g.score >= 80 ? 'A' : g.score >= 70 ? 'B' : g.score >= 60 ? 'C' : g.score >= 50 ? 'D' : 'F';
+                return [
+                    g.subject,
+                    g.score + '%',
+                    grade,
+                    g.comments || 'No comments',
+                    g.date ? new Date(g.date).toLocaleDateString() : 'N/A'
+                ].map(cell => `"${cell}"`).join(',');
+            });
+            
+            const csvContent = [
+                `Student Progress Report - ${student ? student.name : 'Unknown Student'}`,
+                `Generated: ${new Date().toLocaleString()}`,
+                `Overall Average: ${overallAvg}%`,
+                `Highest Score: ${highestScore}%`,
+                `Lowest Score: ${lowestScore}%`,
+                `Total Entries: ${studentGrades.length}`,
+                '',
+                headers.join(','),
+                ...rows
+            ].join('\n');
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${student ? student.name.replace(/\s+/g, '_') : 'student'}_progress_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            addNotification('Progress report exported successfully!', 'success');
+            logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Export', `Exported progress report for ${student ? student.name : 'student'}`);
         }
 
         // Upload Work Functions
