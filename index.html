@@ -2773,16 +2773,26 @@
                     <div class="col-md-12">
                         <div class="card card-metric p-3">
                             <h5><i class="fas fa-ad me-2"></i>Advertisement Management</h5>
-                            <p class="text-muted">Control advertisement display based on client payment status</p>
+                            <p class="text-muted">Control advertisement display based on client payment status. Active ads are displayed to users; deactivated ads are hidden.</p>
                             
-                            <table class="table table-striped mt-3">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>How it works:</strong> 
+                                <ul class="mb-0 mt-2">
+                                    <li><strong>Payment Status:</strong> Track whether clients have paid for their advertising space</li>
+                                    <li><strong>Active/Deactivated:</strong> Control ad visibility immediately - Active ads appear to users, Deactivated ads are hidden</li>
+                                    <li><strong>Auto-activation:</strong> When marking a client as paid, ads are automatically activated</li>
+                                </ul>
+                            </div>
+                            
+                            <table class="table table-striped table-hover mt-3">
                                 <thead>
                                     <tr>
-                                        <th>Client Name</th>
-                                        <th>Ad Title</th>
-                                        <th>Payment Status</th>
-                                        <th>Ads Status</th>
-                                        <th>Actions</th>
+                                        <th><i class="fas fa-user me-1"></i>Client Name</th>
+                                        <th><i class="fas fa-bullhorn me-1"></i>Ad Title</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Payment Status</th>
+                                        <th><i class="fas fa-toggle-on me-1"></i>Ads Status</th>
+                                        <th><i class="fas fa-cog me-1"></i>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adsManagementTable">
@@ -2792,6 +2802,12 @@
                             
                             <button class="btn btn-primary mt-3" onclick="showAddClientAdModal()">
                                 <i class="fas fa-plus me-2"></i>Add New Client Ad
+                            </button>
+                            <button class="btn btn-success mt-3 ms-2" onclick="activateAllPaidAds()">
+                                <i class="fas fa-check-double me-2"></i>Activate All Paid Ads
+                            </button>
+                            <button class="btn btn-warning mt-3 ms-2" onclick="deactivateAllUnpaidAds()">
+                                <i class="fas fa-ban me-2"></i>Deactivate All Unpaid Ads
                             </button>
                         </div>
                     </div>
@@ -3059,23 +3075,17 @@
                         <p class="text-muted">Enter your child's information to link their account to your parent portal</p>
                         
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Student Surname</label>
-                                <input type="text" id="parentSearchSurname" class="form-control" placeholder="Enter student surname">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Student Surname *</strong></label>
+                                <input type="text" id="parentSearchSurname" class="form-control" placeholder="Enter student surname" required>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Student First Name</label>
-                                <input type="text" id="parentSearchFirstName" class="form-control" placeholder="Enter student first name">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Student Name *</strong></label>
+                                <input type="text" id="parentSearchFirstName" class="form-control" placeholder="Enter student name" required>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Student ID / Accession Number</label>
-                                <input type="text" id="parentSearchId" class="form-control" placeholder="Enter student ID or accession number">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Grade</label>
-                                <select id="parentSearchGrade" class="form-control">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Grade *</strong></label>
+                                <select id="parentSearchGrade" class="form-control" required>
                                     <option value="">Select Grade</option>
                                     <option value="R">Grade R</option>
                                     <option value="1">Grade 1</option>
@@ -3097,6 +3107,7 @@
                         <button class="btn btn-primary" onclick="searchForChild()">
                             <i class="fas fa-search me-2"></i>Search for Child
                         </button>
+                        <small class="text-muted d-block mt-2">* Only Surname, Name, and Grade are required</small>
                     </div>
                     
                     <!-- Search Results -->
@@ -7409,8 +7420,8 @@
             const motherSurname = document.getElementById('admissionMotherSurname').value;
             const motherEmail = document.getElementById('admissionMotherEmail').value;
             const motherCell = document.getElementById('admissionMotherCell').value;
-            const username = document.getElementById('admissionUsername').value;
-            const password = document.getElementById('admissionPassword').value;
+            const username = document.getElementById('admissionUsername').value.trim();
+            const password = document.getElementById('admissionPassword').value.trim();
             const status = document.getElementById('admissionStatus').value;
             if (surname && firstName && grade) {
                 const id = Date.now();
@@ -7422,8 +7433,59 @@
                     motherName, motherSurname, motherEmail, motherCell,
                     saSamsFormat: true
                 });
+                
+                // Create student user account if username and password are provided
                 if (username && password) {
-                    users.push({ username, password, name, role: 'Student' });
+                    const existingUser = users.find(u => u.username === username);
+                    if (existingUser) {
+                        addNotification('Username already exists. Please use a different username.', 'warning');
+                    } else {
+                        users.push({ 
+                            username, 
+                            password, 
+                            name, 
+                            role: 'Student' 
+                        });
+                        addNotification('Student login account created: ' + username, 'success');
+                        logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Account Creation', `Created student account for ${name}`);
+                    }
+                }
+                
+                // Create parent accounts if parent information is available
+                if (fatherEmail && fatherName && fatherSurname) {
+                    const fatherUsername = 'parent_' + fatherSurname.toLowerCase() + '_' + fatherName.toLowerCase().charAt(0);
+                    const fatherExists = users.find(u => u.username === fatherUsername);
+                    if (!fatherExists) {
+                        const fatherPassword = 'parent' + Math.floor(Math.random() * 10000);
+                        users.push({
+                            username: fatherUsername,
+                            password: fatherPassword,
+                            name: fatherName + ' ' + fatherSurname,
+                            role: 'Parent',
+                            linkedStudent: id,
+                            linkedStudentName: name
+                        });
+                        addNotification('Parent account created for father: ' + fatherUsername + ' (Password: ' + fatherPassword + ')', 'success');
+                        logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Account Creation', `Created parent account for ${fatherName} ${fatherSurname}`);
+                    }
+                }
+                
+                if (motherEmail && motherName && motherSurname) {
+                    const motherUsername = 'parent_' + motherSurname.toLowerCase() + '_' + motherName.toLowerCase().charAt(0);
+                    const motherExists = users.find(u => u.username === motherUsername);
+                    if (!motherExists) {
+                        const motherPassword = 'parent' + Math.floor(Math.random() * 10000);
+                        users.push({
+                            username: motherUsername,
+                            password: motherPassword,
+                            name: motherName + ' ' + motherSurname,
+                            role: 'Parent',
+                            linkedStudent: id,
+                            linkedStudentName: name
+                        });
+                        addNotification('Parent account created for mother: ' + motherUsername + ' (Password: ' + motherPassword + ')', 'success');
+                        logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Account Creation', `Created parent account for ${motherName} ${motherSurname}`);
+                    }
                 }
                 
                 // Auto-sync to Student Info
@@ -7445,23 +7507,87 @@
                 document.getElementById('admissionSurname').value = adm.surname || adm.name?.split(' ')[0] || '';
                 document.getElementById('admissionFirstName').value = adm.firstName || adm.name?.split(' ').slice(1).join(' ') || '';
                 document.getElementById('admissionGrade').value = adm.grade;
-                document.getElementById('admissionUsername').value = adm.username;
-                document.getElementById('admissionPassword').value = adm.password;
+                document.getElementById('admissionUsername').value = adm.username || '';
+                document.getElementById('admissionPassword').value = adm.password || '';
                 document.getElementById('admissionStatus').value = adm.status;
                 // Override save to update
                 const saveBtn = document.querySelector('#addAdmissionModal .btn-primary');
                 saveBtn.textContent = 'Update';
                 saveBtn.onclick = () => {
+                    const oldUsername = adm.username;
+                    const newUsername = document.getElementById('admissionUsername').value.trim();
+                    const newPassword = document.getElementById('admissionPassword').value.trim();
+                    
                     adm.accession = document.getElementById('admissionAccession').value;
                     adm.surname = document.getElementById('admissionSurname').value;
                     adm.firstName = document.getElementById('admissionFirstName').value;
                     adm.name = adm.surname + ' ' + adm.firstName;
                     adm.grade = document.getElementById('admissionGrade').value;
-                    adm.username = document.getElementById('admissionUsername').value;
-                    adm.password = document.getElementById('admissionPassword').value;
+                    adm.username = newUsername;
+                    adm.password = newPassword;
                     const newStatus = document.getElementById('admissionStatus').value;
                     const statusChanged = adm.status !== newStatus;
                     adm.status = newStatus;
+                    
+                    // Update or create user account for student
+                    if (newUsername && newPassword) {
+                        // Find existing user by old username or current username
+                        let existingUser = users.find(u => u.username === oldUsername || u.username === newUsername);
+                        
+                        if (existingUser) {
+                            // Update existing user credentials
+                            existingUser.username = newUsername;
+                            existingUser.password = newPassword;
+                            existingUser.name = adm.name;
+                            existingUser.role = 'Student';
+                        } else {
+                            // Create new user account
+                            users.push({ 
+                                username: newUsername, 
+                                password: newPassword, 
+                                name: adm.name, 
+                                role: 'Student' 
+                            });
+                        }
+                        
+                        // Create parent accounts if parent information is available
+                        if (adm.fatherEmail || adm.motherEmail) {
+                            // Create father account if email exists and username doesn't exist yet
+                            if (adm.fatherEmail && adm.fatherName && adm.fatherSurname) {
+                                const fatherUsername = 'parent_' + adm.fatherSurname.toLowerCase() + '_' + adm.fatherName.toLowerCase().charAt(0);
+                                const fatherExists = users.find(u => u.username === fatherUsername);
+                                if (!fatherExists) {
+                                    users.push({
+                                        username: fatherUsername,
+                                        password: 'parent' + Math.floor(Math.random() * 10000),
+                                        name: adm.fatherName + ' ' + adm.fatherSurname,
+                                        role: 'Parent',
+                                        linkedStudent: adm.id
+                                    });
+                                    addNotification('Parent account created for father: ' + fatherUsername, 'success');
+                                }
+                            }
+                            
+                            // Create mother account if email exists and username doesn't exist yet
+                            if (adm.motherEmail && adm.motherName && adm.motherSurname) {
+                                const motherUsername = 'parent_' + adm.motherSurname.toLowerCase() + '_' + adm.motherName.toLowerCase().charAt(0);
+                                const motherExists = users.find(u => u.username === motherUsername);
+                                if (!motherExists) {
+                                    users.push({
+                                        username: motherUsername,
+                                        password: 'parent' + Math.floor(Math.random() * 10000),
+                                        name: adm.motherName + ' ' + adm.motherSurname,
+                                        role: 'Parent',
+                                        linkedStudent: adm.id
+                                    });
+                                    addNotification('Parent account created for mother: ' + motherUsername, 'success');
+                                }
+                            }
+                        }
+                        
+                        addNotification('Student login credentials updated: ' + newUsername, 'success');
+                        logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Credentials Update', `Updated login credentials for ${adm.name}`);
+                    }
                     
                     // Auto-sync to Student Info if status changed to approved
                     if (statusChanged && (newStatus === 'approved' || newStatus === 'Approved' || newStatus === 'enrolled')) {
@@ -10686,27 +10812,26 @@ Created: ${fee.createdAt || 'N/A'}
         function searchForChild() {
             const surname = document.getElementById('parentSearchSurname').value.trim().toLowerCase();
             const firstName = document.getElementById('parentSearchFirstName').value.trim().toLowerCase();
-            const searchId = document.getElementById('parentSearchId').value.trim();
             const grade = document.getElementById('parentSearchGrade').value;
             
-            if (!surname && !firstName && !searchId) {
-                addNotification('Please enter at least surname, first name, or ID to search', 'warning');
+            // Require all three fields: Surname, Name, and Grade
+            if (!surname || !firstName || !grade) {
+                addNotification('Please enter Surname, Name, and Grade to search for your child', 'warning');
                 return;
             }
             
-            // Search for matching students
+            // Search for matching students (exact match required for better accuracy)
             const results = students.filter(student => {
                 const studentSurname = (student.surname || student.name?.split(' ')[0] || '').toLowerCase();
                 const studentFirstName = (student.firstName || student.name?.split(' ').slice(1).join(' ') || '').toLowerCase();
-                const studentId = (student.accession || student.id || '').toString();
                 const studentGrade = student.grade || '';
                 
-                const surnameMatch = !surname || studentSurname.includes(surname);
-                const firstNameMatch = !firstName || studentFirstName.includes(firstName);
-                const idMatch = !searchId || studentId.includes(searchId);
-                const gradeMatch = !grade || studentGrade === grade;
+                // Use exact match for grade and contains match for names (for flexibility)
+                const surnameMatch = studentSurname.includes(surname) || surname.includes(studentSurname);
+                const firstNameMatch = studentFirstName.includes(firstName) || firstName.includes(studentFirstName);
+                const gradeMatch = studentGrade === grade;
                 
-                return surnameMatch && firstNameMatch && idMatch && gradeMatch;
+                return surnameMatch && firstNameMatch && gradeMatch;
             });
             
             const resultsContainer = document.getElementById('parentSearchResults');
@@ -14665,35 +14790,42 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             if (!table) return;
             
             if (clientAds.length === 0) {
-                table.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No client ads configured</td></tr>';
+                table.innerHTML = '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-info-circle me-2"></i>No client ads configured. Click "Add New Client Ad" to get started.</td></tr>';
                 return;
             }
             
             table.innerHTML = clientAds.map(ad => {
                 const paymentBadge = ad.paymentStatus === 'Paid' ? 
-                    '<span class="badge bg-success">Paid</span>' : 
-                    '<span class="badge bg-danger">Unpaid</span>';
+                    '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Paid</span>' : 
+                    '<span class="badge bg-danger"><i class="fas fa-exclamation-circle me-1"></i>Unpaid</span>';
                     
                 const adsBadge = ad.adsActive ? 
-                    '<span class="badge bg-success">Active</span>' : 
-                    '<span class="badge bg-secondary">Deactivated</span>';
+                    '<span class="badge bg-success"><i class="fas fa-eye me-1"></i>Active</span>' : 
+                    '<span class="badge bg-secondary"><i class="fas fa-eye-slash me-1"></i>Deactivated</span>';
+                
+                // Add row styling based on status
+                const rowClass = ad.adsActive && ad.paymentStatus === 'Paid' ? 'table-success' : 
+                                ad.adsActive && ad.paymentStatus !== 'Paid' ? 'table-warning' : '';
                     
                 return `
-                    <tr>
-                        <td>${ad.clientName}</td>
+                    <tr class="${rowClass}">
+                        <td><strong>${ad.clientName}</strong></td>
                         <td>${ad.adTitle}</td>
                         <td>${paymentBadge}</td>
                         <td>${adsBadge}</td>
                         <td>
                             <button class="btn btn-sm ${ad.adsActive ? 'btn-warning' : 'btn-success'}" 
-                                    onclick="toggleAdStatus(${ad.id})">
-                                <i class="fas fa-${ad.adsActive ? 'ban' : 'check'}"></i>
+                                    onclick="toggleAdStatus(${ad.id})"
+                                    title="${ad.adsActive ? 'Click to hide ads from users' : 'Click to show ads to users'}">
+                                <i class="fas fa-${ad.adsActive ? 'eye-slash' : 'eye'}"></i>
                                 ${ad.adsActive ? 'Deactivate' : 'Activate'}
                             </button>
-                            <button class="btn btn-sm btn-info" onclick="markAsPaid(${ad.id})">
+                            <button class="btn btn-sm btn-info" onclick="markAsPaid(${ad.id})"
+                                    title="Mark this client as paid and activate ads">
                                 <i class="fas fa-dollar-sign"></i> Mark Paid
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteClientAd(${ad.id})">
+                            <button class="btn btn-sm btn-danger" onclick="deleteClientAd(${ad.id})"
+                                    title="Delete this ad permanently">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -14733,18 +14865,25 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             
             if (!ad) return;
             
-            if (ad.paymentStatus === 'Unpaid') {
-                if (!confirm('This client has not paid. Are you sure you want to activate their ads?')) {
+            const newStatus = !ad.adsActive;
+            
+            if (newStatus && ad.paymentStatus === 'Unpaid') {
+                if (!confirm('⚠️ WARNING: This client has not paid yet.\n\nAre you sure you want to activate their ads?')) {
                     return;
                 }
             }
             
-            ad.adsActive = !ad.adsActive;
+            ad.adsActive = newStatus;
             localStorage.setItem('clientAds', JSON.stringify(clientAds));
             loadAdsManagement();
-            addNotification(`Ads ${ad.adsActive ? 'activated' : 'deactivated'} for ${ad.clientName}`, 'success');
+            
+            const statusMsg = newStatus ? 
+                `✅ Ads ACTIVATED for ${ad.clientName}! Users can now see these ads.` : 
+                `🚫 Ads DEACTIVATED for ${ad.clientName}. Users will no longer see these ads.`;
+            
+            addNotification(statusMsg, newStatus ? 'success' : 'info');
             logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Ad Management', 
-                `${ad.adsActive ? 'Activated' : 'Deactivated'} ads for ${ad.clientName}`);
+                `${newStatus ? 'Activated' : 'Deactivated'} ads for ${ad.clientName}`);
         }
         
         function markAsPaid(adId) {
@@ -14766,10 +14905,69 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             if (!confirm('Are you sure you want to delete this client ad?')) return;
             
             let clientAds = JSON.parse(localStorage.getItem('clientAds') || '[]');
+            const deletedAd = clientAds.find(a => a.id === adId);
             clientAds = clientAds.filter(a => a.id !== adId);
             localStorage.setItem('clientAds', JSON.stringify(clientAds));
             loadAdsManagement();
-            addNotification('Client ad deleted successfully!', 'success');
+            addNotification(`Client ad deleted: ${deletedAd?.clientName}`, 'success');
+            logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Ad Management', 
+                `Deleted ad for ${deletedAd?.clientName}`);
+        }
+        
+        function activateAllPaidAds() {
+            let clientAds = JSON.parse(localStorage.getItem('clientAds') || '[]');
+            const paidAds = clientAds.filter(ad => ad.paymentStatus === 'Paid');
+            
+            if (paidAds.length === 0) {
+                addNotification('No paid ads found to activate', 'info');
+                return;
+            }
+            
+            if (!confirm(`Activate all ${paidAds.length} paid client ads?`)) {
+                return;
+            }
+            
+            let activatedCount = 0;
+            clientAds.forEach(ad => {
+                if (ad.paymentStatus === 'Paid' && !ad.adsActive) {
+                    ad.adsActive = true;
+                    activatedCount++;
+                }
+            });
+            
+            localStorage.setItem('clientAds', JSON.stringify(clientAds));
+            loadAdsManagement();
+            addNotification(`✅ Activated ${activatedCount} paid ads successfully!`, 'success');
+            logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Ad Management', 
+                `Bulk activated ${activatedCount} paid ads`);
+        }
+        
+        function deactivateAllUnpaidAds() {
+            let clientAds = JSON.parse(localStorage.getItem('clientAds') || '[]');
+            const unpaidAds = clientAds.filter(ad => ad.paymentStatus === 'Unpaid');
+            
+            if (unpaidAds.length === 0) {
+                addNotification('No unpaid ads found to deactivate', 'info');
+                return;
+            }
+            
+            if (!confirm(`Deactivate all ${unpaidAds.length} unpaid client ads?`)) {
+                return;
+            }
+            
+            let deactivatedCount = 0;
+            clientAds.forEach(ad => {
+                if (ad.paymentStatus === 'Unpaid' && ad.adsActive) {
+                    ad.adsActive = false;
+                    deactivatedCount++;
+                }
+            });
+            
+            localStorage.setItem('clientAds', JSON.stringify(clientAds));
+            loadAdsManagement();
+            addNotification(`🚫 Deactivated ${deactivatedCount} unpaid ads successfully!`, 'info');
+            logUserActivity(currentUser.username || currentUser.name, currentUser.role, 'Ad Management', 
+                `Bulk deactivated ${deactivatedCount} unpaid ads`);
         }
         
         function loadSystemActivities() {
