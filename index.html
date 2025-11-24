@@ -3698,85 +3698,38 @@
             </section>
             <!-- AI Research Assistant (Student Portal) -->
             <section id="aiResearch" class="section d-none student-only">
-                        <h4>Incident Reports (Read-Only)</h4>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View incident reports related to your child. These reports are managed by the administration and cannot be edited.
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <select class="form-control" id="parentIncidentTypeFilter" onchange="loadParentIncidents()">
-                                    <option value="">All Types</option>
-                                    <option value="behavioral">Behavioral</option>
-                                    <option value="academic">Academic</option>
-                                    <option value="medical">Medical</option>
-                                    <option value="disciplinary">Disciplinary</option>
-                                    <option value="positive">Positive Recognition</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="date" class="form-control" id="parentIncidentDateFilter" onchange="loadParentIncidents()">
-                            </div>
-                        </div>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Severity</th>
-                                    <th>Description</th>
-                                    <th>Action Taken</th>
-                                    <th>Reported By</th>
-                                </tr>
-                            </thead>
-                            <tbody id="parentIncidentsTable"></tbody>
-                        </table>
+                <h2>AI Research Assistant</h2>
+                <div class="alert alert-success mb-3">
+                    <i class="fas fa-lightbulb me-2"></i>Use our advanced AI to help with your research, homework, and learning!
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <textarea id="researchQuery" class="form-control" rows="3" placeholder="Ask a detailed research question or describe what you'd like to learn..."></textarea>
                     </div>
-                    <div class="tab-pane fade" id="parent-livechat">
-                        <h4>Live Chat with School</h4>
-                        <div class="alert alert-success">
-                            <i class="fas fa-comments me-2"></i><strong>Communication Module:</strong> You can send messages, chat with teachers, and request meetings here.
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <button class="btn btn-primary" onclick="showRequestMeetingModal()">
-                                    <i class="fas fa-calendar-plus me-2"></i>Request Meeting with Teacher
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
-                            <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
-                                <h5><i class="fas fa-comments me-2"></i>Parent-Teacher Chat</h5>
-                            </div>
-                            <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="parentChatMessages">
-                                <p class="text-center text-muted">No messages yet. Start a conversation!</p>
-                            </div>
-                            <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
-                                <div class="input-group">
-                                    <input type="text" id="parentChatInput" class="form-control" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendParentChat()">
-                                    <button class="btn btn-primary" onclick="sendParentChat()">
-                                        <i class="fas fa-paper-plane me-2"></i>Send
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <h5>Meeting Requests</h5>
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Teacher</th>
-                                        <th>Type</th>
-                                        <th>Requested Date</th>
-                                        <th>Time</th>
-                                        <th>Status</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="parentMeetingRequestsTable"></tbody>
-                            </table>
-                        </div>
+                    <div class="col-md-4">
+                        <select id="aiProvider" class="form-control mb-2">
+                            <option value="chatgpt">ChatGPT</option>
+                            <option value="grok">Grok</option>
+                        </select>
+                        <select id="researchCategory" class="form-control mb-2">
+                            <option value="general">General Research</option>
+                            <option value="science">Science</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="history">History</option>
+                            <option value="literature">Literature</option>
+                            <option value="geography">Geography</option>
+                            <option value="technology">Technology</option>
+                        </select>
+                        <button class="btn btn-primary w-100" onclick="researchWithAI()">
+                            <i class="fas fa-search me-2"></i>Research
+                        </button>
+                        <button class="btn btn-secondary w-100 mt-2" onclick="clearResearch()">
+                            <i class="fas fa-eraser me-2"></i>Clear
+                        </button>
                     </div>
                 </div>
+                <div id="researchResults"></div>
+                <div id="researchHistory" class="mt-4"></div>
             </section>
             <!-- Student Time Table (Read-Only) -->
             <section id="studentTimetable" class="section d-none student-only">
@@ -3970,41 +3923,6 @@
                     </thead>
                     <tbody id="studentWorkTable"></tbody>
                 </table>
-            </section>
-            <!-- AI Research for Students -->
-            <section id="aiResearch" class="section d-none student-only">
-                <h2>AI Research Assistant</h2>
-                <div class="alert alert-success mb-3">
-                    <i class="fas fa-lightbulb me-2"></i>Use our advanced AI to help with your research, homework, and learning!
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <textarea id="researchQuery" class="form-control" rows="3" placeholder="Ask a detailed research question or describe what you'd like to learn..."></textarea>
-                    </div>
-                    <div class="col-md-4">
-                        <select id="aiProvider" class="form-control mb-2">
-                            <option value="chatgpt">ChatGPT</option>
-                            <option value="grok">Grok</option>
-                        </select>
-                        <select id="researchCategory" class="form-control mb-2">
-                            <option value="general">General Research</option>
-                            <option value="science">Science</option>
-                            <option value="mathematics">Mathematics</option>
-                            <option value="history">History</option>
-                            <option value="literature">Literature</option>
-                            <option value="geography">Geography</option>
-                            <option value="technology">Technology</option>
-                        </select>
-                        <button class="btn btn-primary w-100" onclick="researchWithAI()">
-                            <i class="fas fa-search me-2"></i>Research
-                        </button>
-                        <button class="btn btn-secondary w-100 mt-2" onclick="clearResearch()">
-                            <i class="fas fa-eraser me-2"></i>Clear
-                        </button>
-                    </div>
-                </div>
-                <div id="researchResults"></div>
-                <div id="researchHistory" class="mt-4"></div>
             </section>
             <!-- Modals -->
             <!-- New Admission Modal -->
