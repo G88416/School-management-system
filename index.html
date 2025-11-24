@@ -846,6 +846,271 @@
         #installPrompt .btn-dismiss:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+        
+        /* ============================================
+           ENHANCED STUDENT PORTAL STYLES
+           Modern, Clear, and Mobile-Friendly UI
+           ============================================ */
+        
+        /* Student Portal Sections - Enhanced Layout */
+        .student-only.section {
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Enhanced Student Portal Headers */
+        .student-only h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .student-only h4 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+            padding-left: 12px;
+        }
+        
+        /* Enhanced Alert Boxes */
+        .student-only .alert {
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .student-only .alert i {
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        
+        /* Enhanced Metric Cards for Student Portal */
+        .student-only .card-metric {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .student-only .card-metric:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+        }
+        
+        .student-only .card-metric h5 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .student-only .card-metric h3 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Enhanced Tables for Student Portal */
+        .student-only .table {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .student-only .table thead {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .student-only .table th {
+            color: #fff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 15px 12px;
+            border: none;
+        }
+        
+        .student-only .table td {
+            color: #fff;
+            padding: 12px;
+            border-color: rgba(255, 255, 255, 0.1);
+            vertical-align: middle;
+        }
+        
+        .student-only .table-striped tbody tr:nth-of-type(odd) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .student-only .table-striped tbody tr:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Enhanced Form Controls in Student Portal */
+        .student-only .form-control,
+        .student-only .form-select {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        
+        .student-only .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .student-only .form-control:focus,
+        .student-only .form-select:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+        
+        .student-only .form-label {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        /* Enhanced Buttons in Student Portal */
+        .student-only .btn {
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .student-only .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .student-only .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .student-only .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+        }
+        
+        /* Enhanced Upload Work Section */
+        .student-only .card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .student-only .card-header {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px 15px 0 0;
+            padding: 15px 20px;
+        }
+        
+        .student-only .card-header h5 {
+            margin: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .student-only .card-body {
+            padding: 20px;
+        }
+        
+        /* Mobile Responsiveness for Student Portal */
+        @media (max-width: 767px) {
+            .student-only h2 {
+                font-size: 1.5rem;
+            }
+            
+            .student-only h4 {
+                font-size: 1.1rem;
+            }
+            
+            .student-only .card-metric {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .student-only .card-metric h5 {
+                font-size: 0.8rem;
+            }
+            
+            .student-only .card-metric h3 {
+                font-size: 1.8rem;
+            }
+            
+            .student-only .table {
+                font-size: 0.8rem;
+            }
+            
+            .student-only .table th,
+            .student-only .table td {
+                padding: 8px 6px;
+            }
+            
+            .student-only .btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            
+            .student-only .form-control,
+            .student-only .form-select {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* HRM Staff Username Column Enhancement */
+        #hr-staff .table {
+            font-size: 0.9rem;
+        }
+        
+        #hr-staff .table th,
+        #hr-staff .table td {
+            white-space: nowrap;
+        }
+        
+        #hr-staff .username-cell {
+            font-family: monospace;
+            color: #4CAF50;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -2196,6 +2461,7 @@
                                         <th>Tax #</th>
                                         <th>UIF #</th>
                                         <th>Cert Expiry</th>
+                                        <th>Username</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
@@ -5202,6 +5468,18 @@
         var announcements = [];
         var users = [];
         var hrSettings = { annualLeaveDays: 21, uifRate: 0.01 };
+        
+        // Utility function to escape HTML to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
         var chatGPTSettings = { apiKey: '', model: 'gpt-4', enabled: false };
         var grokSettings = { apiKey: '', model: 'grok-beta', enabled: false };
@@ -9665,6 +9943,8 @@ Created: ${fee.createdAt || 'N/A'}
                 const isExpired = expiryDate < new Date();
                 const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                 const expiryWarning = isExpired ? 'EXPIRED' : daysUntilExpiry < 90 ? `${daysUntilExpiry}d left` : '';
+                const username = s.username ? escapeHtml(s.username) : '<span class="text-muted">Not set</span>';
+                const isTeacher = s.role === 'Teacher';
                 return `
                     <tr>
                         <td class="text-center"><strong>#${s.id}</strong></td>
@@ -9679,6 +9959,9 @@ Created: ${fee.createdAt || 'N/A'}
                                 ${s.certExpiry}
                                 ${expiryWarning ? `<br><small class="badge bg-${isExpired ? 'danger' : 'warning'}">${expiryWarning}</small>` : ''}
                             </span>
+                        </td>
+                        <td class="username-cell">
+                            ${isTeacher ? `<i class="fas fa-chalkboard-teacher me-1"></i>` : ''}${username}
                         </td>
                         <td class="text-center">
                             <span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">
