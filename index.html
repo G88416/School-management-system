@@ -688,6 +688,107 @@
                 padding: 6px 15px;
                 font-size: 0.85rem;
             }
+            
+            /* ============================================
+               MOBILE-SPECIFIC SIZE REDUCTIONS
+               ============================================ */
+            
+            /* Dashboard: Reduce blocks by 1pt and graph by 1pt */
+            #dashboard .card-metric {
+                font-size: calc(1rem - 1pt);
+            }
+            
+            #dashboard .card-metric h5 {
+                font-size: calc(0.85rem - 1pt);
+            }
+            
+            #dashboard .card-metric h3 {
+                font-size: calc(1.5rem - 1pt);
+            }
+            
+            #dashboardChart {
+                height: calc(300px - 1pt) !important;
+            }
+            
+            /* Admission: Reduce tabs by 3pt */
+            #admission .nav-tabs .nav-link {
+                font-size: calc(0.85rem - 3pt) !important;
+                padding: calc(8px - 1pt) calc(12px - 1pt) !important;
+            }
+            
+            /* Student Information System: Reduce tabs by 3pt */
+            #students .btn {
+                font-size: calc(0.9rem - 3pt) !important;
+                padding: calc(10px - 1pt) calc(15px - 1pt) !important;
+            }
+            
+            #students .input-group input,
+            #students .input-group button {
+                font-size: calc(0.9rem - 3pt) !important;
+            }
+            
+            /* Attendance Management: Reduce date and classes by 3pt */
+            #attendance .form-control,
+            #attendance .btn {
+                font-size: calc(0.9rem - 3pt) !important;
+                padding: calc(10px - 1pt) calc(12px - 1pt) !important;
+            }
+            
+            /* Finance Management: Reduce blocks by 3pt */
+            #fees .card-metric {
+                font-size: calc(1rem - 3pt) !important;
+            }
+            
+            #fees .card-metric h5 {
+                font-size: calc(0.85rem - 3pt) !important;
+            }
+            
+            #fees .card-metric h3 {
+                font-size: calc(1.5rem - 3pt) !important;
+            }
+            
+            /* HR Management: Reduce tabs by 3pt */
+            #hr .nav-tabs .nav-link {
+                font-size: calc(0.8rem - 3pt) !important;
+                padding: calc(8px - 1pt) calc(10px - 1pt) !important;
+            }
+            
+            /* Events Management: Reduce blocks by 3pt */
+            #eventsManagement .card-metric {
+                font-size: calc(1rem - 3pt) !important;
+            }
+            
+            #eventsManagement .card-metric h5 {
+                font-size: calc(0.85rem - 3pt) !important;
+            }
+            
+            #eventsManagement .card-metric h3 {
+                font-size: calc(1.5rem - 3pt) !important;
+            }
+            
+            /* System Management: Reduce blocks by 3pt */
+            #systemManagement .card-metric {
+                font-size: calc(1rem - 3pt) !important;
+            }
+            
+            #systemManagement .card-metric h5 {
+                font-size: calc(0.85rem - 3pt) !important;
+            }
+            
+            #systemManagement .card-metric h3 {
+                font-size: calc(1.5rem - 3pt) !important;
+            }
+            
+            /* Settings: Reduce elements by 3pt */
+            #settings h5 {
+                font-size: calc(1.1rem - 3pt) !important;
+            }
+            
+            #settings .form-control,
+            #settings .btn {
+                font-size: calc(0.9rem - 3pt) !important;
+                padding: calc(10px - 1pt) calc(12px - 1pt) !important;
+            }
         }
         
         /* Small Mobile (up to 576px) */
@@ -1113,106 +1214,7 @@
             font-weight: 600;
         }
         
-        /* ============================================
-           SIZE REDUCTIONS AS PER REQUIREMENTS
-           ============================================ */
-        
-        /* Dashboard: Reduce blocks by 4pt and graph by 6pt */
-        #dashboard .card-metric {
-            font-size: calc(1rem - 4pt);
-        }
-        
-        #dashboard .card-metric h5 {
-            font-size: calc(0.875rem - 4pt);
-        }
-        
-        #dashboard .card-metric h3 {
-            font-size: calc(1.75rem - 4pt);
-        }
-        
-        #dashboardChart {
-            height: calc(400px - 6pt) !important;
-        }
-        
-        /* Admission: Reduce tabs by 3pt */
-        #admission .nav-tabs .nav-link {
-            font-size: calc(1rem - 3pt);
-            padding: calc(10px - 1pt) calc(15px - 1pt);
-        }
-        
-        /* Student Information System: Reduce tabs by 3pt */
-        #students .btn {
-            font-size: calc(1rem - 3pt);
-            padding: calc(10px - 1pt) calc(15px - 1pt);
-        }
-        
-        #students .input-group input,
-        #students .input-group button {
-            font-size: calc(1rem - 3pt);
-        }
-        
-        /* Attendance Management: Reduce date and classes by 3pt */
-        #attendance .form-control,
-        #attendance .btn {
-            font-size: calc(1rem - 3pt);
-            padding: calc(10px - 1pt) calc(15px - 1pt);
-        }
-        
-        /* Finance Management: Reduce blocks by 3pt */
-        #fees .card-metric {
-            font-size: calc(1rem - 3pt);
-        }
-        
-        #fees .card-metric h5 {
-            font-size: calc(0.875rem - 3pt);
-        }
-        
-        #fees .card-metric h3 {
-            font-size: calc(1.75rem - 3pt);
-        }
-        
-        /* HR Management: Reduce tabs by 3pt */
-        #hr .nav-tabs .nav-link {
-            font-size: calc(1rem - 3pt);
-            padding: calc(10px - 1pt) calc(15px - 1pt);
-        }
-        
-        /* Events Management: Reduce blocks by 3pt */
-        #eventsManagement .card-metric {
-            font-size: calc(1rem - 3pt);
-        }
-        
-        #eventsManagement .card-metric h5 {
-            font-size: calc(0.875rem - 3pt);
-        }
-        
-        #eventsManagement .card-metric h3 {
-            font-size: calc(1.75rem - 3pt);
-        }
-        
-        /* System Management: Reduce blocks by 3pt */
-        #systemManagement .card-metric {
-            font-size: calc(1rem - 3pt);
-        }
-        
-        #systemManagement .card-metric h5 {
-            font-size: calc(0.875rem - 3pt);
-        }
-        
-        #systemManagement .card-metric h3 {
-            font-size: calc(1.75rem - 3pt);
-        }
-        
-        /* Settings: Reduce elements by 3pt */
-        #settings h5 {
-            font-size: calc(1.25rem - 3pt);
-        }
-        
-        #settings .form-control,
-        #settings .btn {
-            font-size: calc(1rem - 3pt);
-            padding: calc(10px - 1pt) calc(15px - 1pt);
-        }
+
     </style>
 </head>
 <body>
