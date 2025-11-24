@@ -1214,6 +1214,10 @@
             font-weight: 600;
         }
         
+        /* G19 Systems Portal Mode - Content fills full width */
+        .content.g19-portal-mode {
+            margin-left: 0 !important;
+        }
 
     </style>
 </head>
@@ -3267,7 +3271,7 @@
             </section>
             <!-- Settings -->
             <!-- G19 Systems Portal (Separate from Admin) -->
-            <section id="g19SystemsPortal" class="section d-none g19-only" style="display: none;">
+            <section id="g19SystemsPortal" class="section d-none g19-only">
                 <h2><i class="fas fa-cogs me-2"></i>G19 Systems Management Portal</h2>
                 <p class="text-muted">System Management and Rental Services for Bophelong Independent School</p>
                 
@@ -3335,7 +3339,7 @@
                                         <h6><i class="fas fa-ad me-2"></i>Current Ads Status</h6>
                                         <div id="adsStatusDisplay" class="mt-3">
                                             <span id="globalAdsStatusBadge" class="badge bg-secondary fs-5">Deactivated</span>
-                                            <p class="mt-2 mb-0"><small>Ads are currently hidden from users</small></p>
+                                            <p class="mt-2 mb-0"><small id="adsStatusText">Ads are currently hidden from users</small></p>
                                         </div>
                                     </div>
                                 </div>
@@ -6595,7 +6599,7 @@
             const username = document.getElementById('g19Username').value;
             const password = document.getElementById('g19Password').value;
             
-            // Check G19 Systems credentials
+            // Check G19 Systems credentials (Demo credentials as specified in requirements)
             if (username === 'g19systems' && password === 'systemsg19') {
                 isG19User = true;
                 currentUser = { name: 'G19 Systems Administrator', role: 'G19Admin' };
@@ -6603,19 +6607,20 @@
                 document.getElementById('g19LoginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 
-                // Hide all sections and show G19 Systems Portal
+                // Hide all sections and show G19 Systems Portal using d-none class only
                 document.querySelectorAll('.section').forEach(s => s.classList.add('d-none'));
-                document.getElementById('g19SystemsPortal').classList.remove('d-none');
-                document.getElementById('g19SystemsPortal').style.display = 'block';
+                const g19Portal = document.getElementById('g19SystemsPortal');
+                g19Portal.classList.remove('d-none');
                 
-                // Hide sidebar for G19 user (they only see the portal)
-                document.querySelector('.sidebar').style.display = 'none';
-                document.querySelector('.content').style.marginLeft = '0';
-                document.querySelector('.btn-toggle-sidebar').style.display = 'none';
+                // Hide sidebar for G19 user (they only see the portal) using classes
+                document.querySelector('.sidebar').classList.add('d-none');
+                document.querySelector('.content').classList.add('g19-portal-mode');
+                const toggleBtn = document.querySelector('.btn-toggle-sidebar');
+                if (toggleBtn) toggleBtn.classList.add('d-none');
                 
                 // Hide mobile navigation
                 const mobileNav = document.querySelector('.mobile-nav-bar');
-                if (mobileNav) mobileNav.style.display = 'none';
+                if (mobileNav) mobileNav.classList.add('d-none');
                 
                 // Load G19 Portal data
                 loadG19SystemsPortal();
@@ -6640,13 +6645,14 @@
             document.getElementById('g19Password').value = '';
             
             // Restore sidebar visibility for regular users
-            document.querySelector('.sidebar').style.display = '';
-            document.querySelector('.content').style.marginLeft = '';
-            document.querySelector('.btn-toggle-sidebar').style.display = '';
+            document.querySelector('.sidebar').classList.remove('d-none');
+            document.querySelector('.content').classList.remove('g19-portal-mode');
+            const toggleBtn = document.querySelector('.btn-toggle-sidebar');
+            if (toggleBtn) toggleBtn.classList.remove('d-none');
             
             // Restore mobile navigation
             const mobileNav = document.querySelector('.mobile-nav-bar');
-            if (mobileNav) mobileNav.style.display = '';
+            if (mobileNav) mobileNav.classList.remove('d-none');
         }
         
         function loadG19SystemsPortal() {
@@ -6680,25 +6686,30 @@
             const statusBadge = document.getElementById('rentalStatusBadge');
             const statusDate = document.getElementById('rentalStatusDate');
             const adsBadge = document.getElementById('globalAdsStatusBadge');
+            const adsStatusText = document.getElementById('adsStatusText');
+            
+            if (!statusBadge || !adsBadge) return;
             
             if (rentalData.paid) {
                 statusBadge.textContent = 'Paid';
                 statusBadge.className = 'badge bg-success fs-5';
                 adsBadge.textContent = 'Deactivated';
                 adsBadge.className = 'badge bg-secondary fs-5';
-                adsBadge.nextElementSibling.querySelector('small').textContent = 'Ads are currently hidden from users';
+                if (adsStatusText) adsStatusText.textContent = 'Ads are currently hidden from users';
             } else {
                 statusBadge.textContent = 'Unpaid';
                 statusBadge.className = 'badge bg-danger fs-5';
                 adsBadge.textContent = 'Active';
                 adsBadge.className = 'badge bg-success fs-5';
-                adsBadge.nextElementSibling.querySelector('small').textContent = 'Ads are currently displayed to users';
+                if (adsStatusText) adsStatusText.textContent = 'Ads are currently displayed to users';
             }
             
-            if (rentalData.lastPayment) {
-                statusDate.textContent = 'Last payment: ' + new Date(rentalData.lastPayment).toLocaleDateString();
-            } else {
-                statusDate.textContent = 'Last payment: Not recorded';
+            if (statusDate) {
+                if (rentalData.lastPayment) {
+                    statusDate.textContent = 'Last payment: ' + new Date(rentalData.lastPayment).toLocaleDateString();
+                } else {
+                    statusDate.textContent = 'Last payment: Not recorded';
+                }
             }
         }
         
@@ -16077,11 +16088,15 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // ========================================
         
         // Note: System Management is now handled through G19 Systems Portal
-        // The loadSystemManagement function is kept for backwards compatibility but redirects to G19 portal
+        // This function is deprecated and provides a notification to users
         function loadSystemManagement() {
-            // This function is no longer used for admin access
             // System Management is now exclusively in G19 Systems Portal
-            console.log('System Management is now available only through G19 Systems Portal');
+            // Show notification if user tries to access this functionality
+            if (typeof addNotification === 'function') {
+                addNotification('System Management has been moved to the G19 Systems Portal. Please contact your system provider for access.', 'info');
+            }
+            // Redirect to dashboard
+            showSection('dashboard');
         }
         
         function loadStorageInfo() {
