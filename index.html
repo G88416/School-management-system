@@ -44,7 +44,7 @@
         
         body {
             font-family: 'Poppins', sans-serif;
-            font-size: 6.67px; /* 5pt - Decreased by 5pt from previous 13.33px (10pt) */
+            font-size: 13.33px; /* Decreased by 2pt from default 16px (12pt) to 10pt */
             background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
             color: var(--text-color);
             min-height: 100vh;
@@ -534,11 +534,6 @@
         
         /* Mobile (up to 767px) */
         @media (max-width: 767px) {
-            /* Decrease font size by 5pt on mobile: 6.67px (5pt) - 5pt less than original 13.33px (10pt) */
-            body {
-                font-size: 6.67px;
-            }
-            
             /* Hide desktop sidebar */
             .sidebar {
                 display: none;
