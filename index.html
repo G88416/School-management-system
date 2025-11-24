@@ -7563,6 +7563,9 @@
             
             // Load system activities
             loadSystemActivities();
+            
+            // Load enhanced G19 portal features
+            loadG19PortalEnhancements();
         }
         
         function loadRentalStatus() {
@@ -8041,12 +8044,20 @@
         function lightenColor(color, percent) {
             const num = parseInt(color.replace('#', ''), 16);
             const amt = Math.round(2.55 * percent);
+            
+            // Extract RGB components
             const R = (num >> 16) + amt;
             const G = (num >> 8 & 0x00FF) + amt;
             const B = (num & 0x0000FF) + amt;
-            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + 
-                         (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + 
-                         (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+            
+            // Clamp values between 0 and 255
+            const clamp = (val) => Math.min(255, Math.max(0, val));
+            const clampedR = clamp(R);
+            const clampedG = clamp(G);
+            const clampedB = clamp(B);
+            
+            // Convert back to hex
+            return '#' + (0x1000000 + clampedR * 0x10000 + clampedG * 0x100 + clampedB).toString(16).slice(1);
         }
         
         function resetG19Theme() {
@@ -8455,7 +8466,15 @@
             dataCategories.forEach(cat => {
                 const data = localStorage.getItem(cat.key);
                 const size = data ? (data.length / 1024).toFixed(2) : '0.00';
-                const count = data ? (JSON.parse(data) || []).length : 0;
+                let count = 0;
+                if (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        count = Array.isArray(parsed) ? parsed.length : 0;
+                    } catch (e) {
+                        count = 0;
+                    }
+                }
                 
                 html += `
                     <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
@@ -8539,11 +8558,8 @@
             }
         }
         
-        // Update loadG19SystemsPortal to include new features
-        const originalLoadG19SystemsPortal = loadG19SystemsPortal;
-        loadG19SystemsPortal = function() {
-            originalLoadG19SystemsPortal();
-            
+        // Enhanced G19 Portal Features Loader
+        function loadG19PortalEnhancements() {
             // Load theme settings
             loadG19ThemeSettings();
             
@@ -8551,11 +8567,13 @@
             loadSavedStorageFacility();
             loadStorageDataBreakdown();
             
-            // Load storage chart after a small delay to ensure DOM is ready
-            setTimeout(() => {
+            // Load storage chart when DOM is ready
+            if (document.readyState === 'complete') {
                 loadStorageUsageChart();
-            }, 100);
-        };
+            } else {
+                window.addEventListener('load', loadStorageUsageChart);
+            }
+        }
         
         // Populate selects
         function populateSelects() {
