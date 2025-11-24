@@ -5468,6 +5468,18 @@
         var announcements = [];
         var users = [];
         var hrSettings = { annualLeaveDays: 21, uifRate: 0.01 };
+        
+        // Utility function to escape HTML to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
         var chatGPTSettings = { apiKey: '', model: 'gpt-4', enabled: false };
         var grokSettings = { apiKey: '', model: 'grok-beta', enabled: false };
@@ -9931,7 +9943,7 @@ Created: ${fee.createdAt || 'N/A'}
                 const isExpired = expiryDate < new Date();
                 const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
                 const expiryWarning = isExpired ? 'EXPIRED' : daysUntilExpiry < 90 ? `${daysUntilExpiry}d left` : '';
-                const username = s.username || '<span class="text-muted">Not set</span>';
+                const username = s.username ? escapeHtml(s.username) : '<span class="text-muted">Not set</span>';
                 const isTeacher = s.role === 'Teacher';
                 return `
                     <tr>
