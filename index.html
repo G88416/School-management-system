@@ -2327,7 +2327,7 @@
         }
         
         #g19SystemsPortal .table tbody td {
-            color: var(--g19-text-secondary);
+            color: #ffffff;
             border-color: var(--g19-glass-border);
             padding: 12px 15px;
             vertical-align: middle;
@@ -2627,7 +2627,7 @@
                 <li class="admin-only non-student"><a href="#fees" class="nav-link" onclick="showSection('fees')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">Finance Management</span></a></li>
                 <li class="teacher-only non-student"><a href="#timetable" class="nav-link" onclick="showSection('timetable')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Timetable</span></a></li>
                 <li class="teacher-only non-student"><a href="#teachers" class="nav-link" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher me-2"></i><span class="nav-text">Advanced Teachers</span></a></li>
-                <li class="teacher-only non-student"><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Examinations</span></a></li>
+                <li class="teacher-only non-student"><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Assessment</span></a></li>
                 <li class="admin-only non-student"><a href="#hr" class="nav-link" onclick="showSection('hr')"><i class="fas fa-user-tie me-2"></i><span class="nav-text">HR Management</span></a></li>
                 <li class="non-student"><a href="#communication" class="nav-link" onclick="showSection('communication')"><i class="fas fa-comments me-2"></i><span class="nav-text">Communication</span></a></li>
                 <li class="admin-only non-student"><a href="#eventsManagement" class="nav-link" onclick="showSection('eventsManagement')"><i class="fas fa-calendar-check me-2"></i><span class="nav-text">Events Management</span></a></li>
@@ -3761,9 +3761,9 @@
                     </div>
                 </div>
             </section>
-            <!-- Examination Management -->
+            <!-- Assessment Management -->
             <section id="exams" class="section d-none">
-                <h2>Examination Management</h2>
+                <h2>Assessment Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddExamModal()">Schedule Exam</button>
                 <button class="btn btn-info mb-3" onclick="showEnterMarksModal()">Enter Marks</button>
                 <button class="btn btn-success mb-3" onclick="generateAllReportCards()">Generate All Report Cards</button>
@@ -6680,27 +6680,33 @@
                                     <div id="poster-creator-container">
                                         <!-- LEFT SIDEBAR -->
                                         <div id="poster-left">
-                                            <h2>Poster Creator</h2>
+                                            <h2>🎨 Poster Creator</h2>
                                             <div class="poster-section">
-                                                <button onclick="addPosterText()">Add Heading</button>
-                                                <button onclick="addPosterText('Body text here...',40)">Add Paragraph</button>
-                                                <button onclick="uploadPosterImage()">Upload Image</button>
-                                                <button onclick="addPosterShape('rect')">Rectangle</button>
-                                                <button onclick="addPosterShape('circle')">Circle</button>
-                                                <button onclick="addPosterShape('triangle')">Triangle</button>
+                                                <h3>Add Elements</h3>
+                                                <button onclick="addPosterText()">📝 Add Heading</button>
+                                                <button onclick="addPosterText('Body text here...',40)">📄 Add Paragraph</button>
+                                                <button onclick="uploadPosterImage()">🖼️ Upload Image</button>
+                                                <button onclick="addPosterShape('rect')">⬜ Rectangle</button>
+                                                <button onclick="addPosterShape('circle')">⭕ Circle</button>
+                                                <button onclick="addPosterShape('triangle')">🔺 Triangle</button>
                                             </div>
                                             <div class="poster-section">
                                                 <h3>Background</h3>
                                                 <input type="color" class="poster-color-picker" onchange="setPosterBgColor(this.value)" value="#ffffff">
-                                                <button onclick="unsplashPosterBg()">Random Unsplash Background</button>
+                                                <button onclick="unsplashPosterBg()">🌄 Random Unsplash Background</button>
                                             </div>
                                             <div class="poster-section">
-                                                <h3>Templates</h3>
+                                                <h3>Quick Templates</h3>
                                                 <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?event')" onclick="loadPosterTemplate('event')"></div>
                                                 <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?sale')" onclick="loadPosterTemplate('sale')"></div>
                                                 <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?motivation')" onclick="loadPosterTemplate('motivation')"></div>
                                             </div>
-                                            <button onclick="downloadPoster()">Download PNG</button>
+                                            <div class="poster-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                                <h3 style="color: #10b981;">💾 Save & Export</h3>
+                                                <button onclick="downloadPoster()" style="background: linear-gradient(135deg, #10b981, #22c55e);">📥 Download PNG</button>
+                                                <button onclick="savePosterToGallery()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">💾 Save to Gallery</button>
+                                                <button onclick="clearPosterCanvas()" style="background: linear-gradient(135deg, #ef4444, #f87171);">🗑️ Clear Canvas</button>
+                                            </div>
                                         </div>
                                         
                                         <!-- CENTER CANVAS -->
@@ -7950,6 +7956,54 @@
                                                 updatePosterLayers();
                                                 addNotification('Object deleted', 'info');
                                             }
+                                        }
+                                        
+                                        // Save poster to gallery (localStorage)
+                                        function savePosterToGallery() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const posterData = posterCanvas.toDataURL({multiplier: 1});
+                                                let gallery = [];
+                                                try {
+                                                    gallery = JSON.parse(localStorage.getItem('posterGallery') || '[]');
+                                                    if (!Array.isArray(gallery)) gallery = [];
+                                                } catch (parseError) {
+                                                    // Handle corrupted localStorage data
+                                                    gallery = [];
+                                                }
+                                                const newPoster = {
+                                                    id: Date.now(),
+                                                    name: prompt('Enter poster name:', 'My Poster ' + (gallery.length + 1)) || 'Untitled Poster',
+                                                    image: posterData,
+                                                    createdAt: new Date().toISOString()
+                                                };
+                                                gallery.unshift(newPoster);
+                                                // Keep only last 20 posters to avoid localStorage limits
+                                                if (gallery.length > 20) gallery.pop();
+                                                localStorage.setItem('posterGallery', JSON.stringify(gallery));
+                                                addNotification('✅ Poster saved to gallery successfully!', 'success');
+                                            } catch (error) {
+                                                addNotification('Error saving poster: ' + error.message, 'error');
+                                            }
+                                        }
+                                        
+                                        // Clear poster canvas
+                                        function clearPosterCanvas() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            if (!confirm('Are you sure you want to clear the canvas? All unsaved changes will be lost.')) {
+                                                return;
+                                            }
+                                            posterCanvas.clear();
+                                            posterCanvas.backgroundColor = '#ffffff';
+                                            posterCanvas.renderAll();
+                                            updatePosterLayers();
+                                            addNotification('Canvas cleared', 'info');
                                         }
                                         
                                         // Helper to convert rgb to hex for color picker
