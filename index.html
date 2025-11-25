@@ -7429,6 +7429,109 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
+        
+        // Modal helper functions with fallback for when Bootstrap JS is not loaded
+        function showModal(modalId) {
+            const modalElement = document.getElementById(modalId);
+            if (!modalElement) {
+                console.error('Modal not found: ' + modalId);
+                return;
+            }
+            
+            // Try Bootstrap Modal first
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                try {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                    return;
+                } catch (e) {
+                    console.warn('Bootstrap Modal failed, using fallback:', e);
+                }
+            }
+            
+            // Fallback: Show modal using CSS classes
+            modalElement.classList.add('show');
+            modalElement.style.display = 'block';
+            modalElement.setAttribute('aria-modal', 'true');
+            modalElement.setAttribute('role', 'dialog');
+            modalElement.removeAttribute('aria-hidden');
+            
+            // Add backdrop with unique identifier
+            let backdrop = document.querySelector('.modal-backdrop[data-modal-id="' + modalId + '"]');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.setAttribute('data-modal-id', modalId);
+                document.body.appendChild(backdrop);
+            }
+            
+            // Add modal-open class to body
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '0px';
+            
+            // Setup close handlers using addEventListener to preserve existing handlers
+            const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+            closeButtons.forEach(function(btn) {
+                // Remove any previously added fallback listener to avoid duplicates
+                if (btn._fallbackCloseHandler) {
+                    btn.removeEventListener('click', btn._fallbackCloseHandler);
+                }
+                btn._fallbackCloseHandler = function() { hideModal(modalId); };
+                btn.addEventListener('click', btn._fallbackCloseHandler);
+            });
+            
+            // Close on backdrop click using addEventListener
+            if (modalElement._fallbackBackdropHandler) {
+                modalElement.removeEventListener('click', modalElement._fallbackBackdropHandler);
+            }
+            modalElement._fallbackBackdropHandler = function(e) {
+                if (e.target === modalElement) {
+                    hideModal(modalId);
+                }
+            };
+            modalElement.addEventListener('click', modalElement._fallbackBackdropHandler);
+        }
+        
+        function hideModal(modalId) {
+            const modalElement = document.getElementById(modalId);
+            if (!modalElement) return;
+            
+            // Try Bootstrap Modal first
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                try {
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Bootstrap Modal hide failed, using fallback:', e);
+                }
+            }
+            
+            // Fallback: Hide modal using CSS classes
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.removeAttribute('aria-modal');
+            modalElement.removeAttribute('role');
+            
+            // Remove backdrop for this specific modal
+            const backdrop = document.querySelector('.modal-backdrop[data-modal-id="' + modalId + '"]');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            
+            // Only remove modal-open class if no other modals are open
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        }
+        
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
         var chatGPTSettings = { apiKey: '', model: 'gpt-4', enabled: false };
         var grokSettings = { apiKey: '', model: 'grok-beta', enabled: false };
@@ -11406,7 +11509,7 @@ ACCOUNT INFORMATION:
             renderAdmissions();
         }
         function showBulkAdmissionModal() {
-            new bootstrap.Modal(document.getElementById('bulkAdmissionModal')).show();
+            showModal('bulkAdmissionModal');
         }
         
         // New Bophelong Bulk Import Algorithm - Using SheetJS with SA-SAMS Format
@@ -11618,7 +11721,7 @@ ACCOUNT INFORMATION:
             // Auto-sync approved admissions to Student Info
             syncAllApprovedAdmissions();
             
-            bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
+            hideModal('bulkAdmissionModal');
             addNotification(`✅ Successfully imported ${records.length} admissions using SA-SAMS format`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} admissions using SA-SAMS format`, 'Low');
             triggerDashboardUpdate();
@@ -12004,7 +12107,7 @@ ACCOUNT INFORMATION:
             renderStudents();
         }
         function showBulkStudentModal() {
-            new bootstrap.Modal(document.getElementById('bulkStudentModal')).show();
+            showModal('bulkStudentModal');
         }
         function uploadBulkStudents() {
             const file = document.getElementById('studentFile').files[0];
@@ -12126,7 +12229,7 @@ ACCOUNT INFORMATION:
             saveData();
             renderStudents();
             integrateEducatorsAsStaff();
-            bootstrap.Modal.getInstance(document.getElementById('bulkStudentModal')).hide();
+            hideModal('bulkStudentModal');
             addNotification(`✅ Successfully imported ${records.length} students using SA-SAMS format`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} students using SA-SAMS format`, 'Low');
         }
@@ -12272,7 +12375,7 @@ ACCOUNT INFORMATION:
         }
         
         function showImportAttendanceModal() {
-            new bootstrap.Modal(document.getElementById('importAttendanceModal')).show();
+            showModal('importAttendanceModal');
         }
         
         function uploadBulkAttendance() {
@@ -12364,7 +12467,7 @@ ACCOUNT INFORMATION:
             });
             saveData();
             loadAttendance();
-            bootstrap.Modal.getInstance(document.getElementById('importAttendanceModal')).hide();
+            hideModal('importAttendanceModal');
             addNotification(`✅ Successfully imported ${importedCount} attendance records using SA-SAMS format`, 'success');
             logAudit('Bulk Import', `Imported ${importedCount} attendance records using SA-SAMS format`, 'Low');
         }
@@ -12592,7 +12695,7 @@ Created: ${fee.createdAt || 'N/A'}
             renderFees();
         }
         function showBulkUploadFeesModal() {
-            new bootstrap.Modal(document.getElementById('bulkUploadFeesModal')).show();
+            showModal('bulkUploadFeesModal');
         }
         function uploadBulkFees() {
             const file = document.getElementById('feesFile').files[0];
@@ -12688,7 +12791,7 @@ Created: ${fee.createdAt || 'N/A'}
             });
             saveData();
             renderFees();
-            bootstrap.Modal.getInstance(document.getElementById('bulkUploadFeesModal')).hide();
+            hideModal('bulkUploadFeesModal');
             addNotification(`✅ Successfully imported ${records.length} fee records using SA-SAMS format`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} fee records using SA-SAMS format`, 'Low');
         }
@@ -13313,7 +13416,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function showBulkStaffModal() {
-            new bootstrap.Modal(document.getElementById('bulkStaffModal')).show();
+            showModal('bulkStaffModal');
         }
         
         function uploadBulkStaff() {
@@ -13432,7 +13535,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             });
             saveData();
             renderStaff();
-            bootstrap.Modal.getInstance(document.getElementById('bulkStaffModal')).hide();
+            hideModal('bulkStaffModal');
             addNotification(`✅ Successfully imported ${records.length} staff members using SheetJS`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} staff members using SheetJS`, 'Low');
         }
