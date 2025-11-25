@@ -7456,11 +7456,12 @@
             modalElement.setAttribute('role', 'dialog');
             modalElement.removeAttribute('aria-hidden');
             
-            // Add backdrop
-            let backdrop = document.querySelector('.modal-backdrop');
+            // Add backdrop with unique identifier
+            let backdrop = document.querySelector('.modal-backdrop[data-modal-id="' + modalId + '"]');
             if (!backdrop) {
                 backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
+                backdrop.setAttribute('data-modal-id', modalId);
                 document.body.appendChild(backdrop);
             }
             
@@ -7469,18 +7470,27 @@
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = '0px';
             
-            // Setup close handlers
+            // Setup close handlers using addEventListener to preserve existing handlers
             const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
-            closeButtons.forEach(btn => {
-                btn.onclick = function() { hideModal(modalId); };
+            closeButtons.forEach(function(btn) {
+                // Remove any previously added fallback listener to avoid duplicates
+                if (btn._fallbackCloseHandler) {
+                    btn.removeEventListener('click', btn._fallbackCloseHandler);
+                }
+                btn._fallbackCloseHandler = function() { hideModal(modalId); };
+                btn.addEventListener('click', btn._fallbackCloseHandler);
             });
             
-            // Close on backdrop click
-            modalElement.onclick = function(e) {
+            // Close on backdrop click using addEventListener
+            if (modalElement._fallbackBackdropHandler) {
+                modalElement.removeEventListener('click', modalElement._fallbackBackdropHandler);
+            }
+            modalElement._fallbackBackdropHandler = function(e) {
                 if (e.target === modalElement) {
                     hideModal(modalId);
                 }
             };
+            modalElement.addEventListener('click', modalElement._fallbackBackdropHandler);
         }
         
         function hideModal(modalId) {
@@ -7507,16 +7517,19 @@
             modalElement.removeAttribute('aria-modal');
             modalElement.removeAttribute('role');
             
-            // Remove backdrop
-            const backdrop = document.querySelector('.modal-backdrop');
+            // Remove backdrop for this specific modal
+            const backdrop = document.querySelector('.modal-backdrop[data-modal-id="' + modalId + '"]');
             if (backdrop) {
                 backdrop.remove();
             }
             
-            // Remove modal-open class from body
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
+            // Only remove modal-open class if no other modals are open
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
         }
         
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
@@ -12454,7 +12467,7 @@ ACCOUNT INFORMATION:
             });
             saveData();
             loadAttendance();
-            bootstrap.Modal.getInstance(document.getElementById('importAttendanceModal')).hide();
+            hideModal('importAttendanceModal');
             addNotification(`✅ Successfully imported ${importedCount} attendance records using SA-SAMS format`, 'success');
             logAudit('Bulk Import', `Imported ${importedCount} attendance records using SA-SAMS format`, 'Low');
         }
