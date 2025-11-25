@@ -15376,6 +15376,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // MATH GAME FUNCTIONS
         // ========================================
         
+        // Tolerance for floating-point answer comparisons
+        const MATH_ANSWER_TOLERANCE = 0.01;
+        
         let mathGameState = {
             score: 0,
             highScore: parseInt(localStorage.getItem('mathGameHighScore') || '0'),
@@ -15637,7 +15640,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
             
             // Allow for small floating point differences
-            const isCorrect = Math.abs(userAnswer - correctAnswer) < 0.01;
+            const isCorrect = Math.abs(userAnswer - correctAnswer) < MATH_ANSWER_TOLERANCE;
             
             if (isCorrect) {
                 mathGameState.correctCount++;
