@@ -7523,13 +7523,39 @@
                 backdrop.remove();
             }
             
+            // Also remove any orphaned backdrops without data-modal-id (Bootstrap backdrops)
+            const orphanedBackdrops = document.querySelectorAll('.modal-backdrop:not([data-modal-id])');
+            orphanedBackdrops.forEach(function(bd) {
+                bd.remove();
+            });
+            
             // Only remove modal-open class if no other modals are open
             const openModals = document.querySelectorAll('.modal.show');
             if (openModals.length === 0) {
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
+                // Clean up any remaining backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(function(bd) {
+                    bd.remove();
+                });
             }
+        }
+        
+        // Safe modal hide helper function
+        function safeHideModal(modalId) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                try {
+                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById(modalId));
+                    if (modalInstance) {
+                        modalInstance.hide();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Bootstrap Modal hide failed:', e);
+                }
+            }
+            hideModal(modalId);
         }
         
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
@@ -11189,11 +11215,16 @@
         // Render notifications
         document.getElementById('notificationsModal').addEventListener('show.bs.modal', () => {
             const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-            document.getElementById('notificationContent').innerHTML = notifications.map(n => `
-                <div class="alert alert-${n.type === 'success' ? 'success' : n.type === 'danger' ? 'danger' : n.type === 'warning' ? 'warning' : 'info'}">
-                    ${n.message} <small>${new Date(n.timestamp).toLocaleString()}</small>
-                </div>
-            `).join('');
+            document.getElementById('notificationContent').innerHTML = notifications.length === 0 
+                ? '<div class="alert alert-info">No notifications yet.</div>'
+                : notifications.map(n => {
+                    // Escape notification message to prevent XSS
+                    const safeMessage = typeof escapeHtml === 'function' ? escapeHtml(n.message || '') : (n.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const alertType = n.type === 'success' ? 'success' : n.type === 'danger' ? 'danger' : n.type === 'warning' ? 'warning' : 'info';
+                    return `<div class="alert alert-${alertType}">
+                        ${safeMessage} <small>${new Date(n.timestamp).toLocaleString()}</small>
+                    </div>`;
+                }).join('');
             
             // Clear both badges
             document.getElementById('notificationBadge').style.display = 'none';
@@ -11447,13 +11478,14 @@
                     
                     saveData();
                     renderAdmissions();
-                    bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
+                    safeHideModal('addAdmissionModal');
                     saveBtn.textContent = 'Save';
                     saveBtn.onclick = saveAdmission;
                     addNotification('Admission updated and synced', 'success');
                     triggerDashboardUpdate();
                 };
-                new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
+                // Safely show the modal using showModal function
+                showModal('addAdmissionModal');
             }
         }
         function viewAdmission(id) {
@@ -11947,7 +11979,7 @@ ACCOUNT INFORMATION:
                 saveData();
                 renderStudents();
                 integrateEducatorsAsStaff();
-                bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+                safeHideModal('addStudentModal');
                 addNotification('Student added with SA-Sams format', 'success');
             }
         }
@@ -11979,12 +12011,12 @@ ACCOUNT INFORMATION:
                     stu.password = document.getElementById('studentPassword').value;
                     saveData();
                     renderStudents();
-                    bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+                    safeHideModal('addStudentModal');
                     saveBtn.textContent = 'Save';
                     saveBtn.onclick = saveStudent;
                     addNotification('Student updated', 'success');
                 };
-                new bootstrap.Modal(document.getElementById('addStudentModal')).show();
+                showModal('addStudentModal');
             }
         }
         function deleteStudent(id) {
@@ -12075,7 +12107,7 @@ ACCOUNT INFORMATION:
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" onclick="editStudent(${parseInt(id, 10)}); bootstrap.Modal.getInstance(document.getElementById('studentDetailsModal')).hide();">
+                                <button type="button" class="btn btn-primary" onclick="editStudent(${parseInt(id, 10)}); safeHideModal('studentDetailsModal');">
                                     <i class="fas fa-edit me-1"></i>Edit Learner
                                 </button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -13977,7 +14009,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 options += '</optgroup>';
                 recipientSelect.innerHTML = options;
             }
-            new bootstrap.Modal(document.getElementById('sendMessageModal')).show();
+            showModal('sendMessageModal');
         }
         function sendMessage() {
             const recipient = document.getElementById('messageRecipient')?.value || '';
@@ -14014,7 +14046,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             // Clear form
             document.getElementById('messageText').value = '';
             
-            bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
+            safeHideModal('sendMessageModal');
             addNotification(`Message sent${recipient ? ` to ${recipient}` : ' to All'}`, 'success');
         }
         function viewAnnouncements() {
