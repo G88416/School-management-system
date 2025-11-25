@@ -7523,22 +7523,22 @@
                 backdrop.remove();
             }
             
-            // Also remove any orphaned backdrops without data-modal-id (Bootstrap backdrops)
-            const orphanedBackdrops = document.querySelectorAll('.modal-backdrop:not([data-modal-id])');
-            orphanedBackdrops.forEach(function(bd) {
-                bd.remove();
-            });
-            
-            // Only remove modal-open class if no other modals are open
+            // Only remove modal-open class and clean up backdrops if no other modals are open
             const openModals = document.querySelectorAll('.modal.show');
             if (openModals.length === 0) {
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
-                // Clean up any remaining backdrops
-                document.querySelectorAll('.modal-backdrop').forEach(function(bd) {
-                    bd.remove();
-                });
+                // Clean up any remaining backdrops only when no modals are open
+                // This handles orphaned Bootstrap backdrops that weren't properly cleaned up
+                setTimeout(function() {
+                    const remainingOpenModals = document.querySelectorAll('.modal.show');
+                    if (remainingOpenModals.length === 0) {
+                        document.querySelectorAll('.modal-backdrop').forEach(function(bd) {
+                            bd.remove();
+                        });
+                    }
+                }, 150); // Small delay to allow Bootstrap transition to complete
             }
         }
         
@@ -11219,7 +11219,7 @@
                 ? '<div class="alert alert-info">No notifications yet.</div>'
                 : notifications.map(n => {
                     // Escape notification message to prevent XSS
-                    const safeMessage = typeof escapeHtml === 'function' ? escapeHtml(n.message || '') : (n.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeMessage = escapeHtml(n.message || '');
                     const alertType = n.type === 'success' ? 'success' : n.type === 'danger' ? 'danger' : n.type === 'warning' ? 'warning' : 'info';
                     return `<div class="alert alert-${alertType}">
                         ${safeMessage} <small>${new Date(n.timestamp).toLocaleString()}</small>
@@ -12029,12 +12029,6 @@ ACCOUNT INFORMATION:
         }
         function viewStudentDocuments(id) {
             alert('Documents for student ' + id + ' (mock)');
-        }
-        function escapeHtml(text) {
-            if (text == null) return '';
-            const div = document.createElement('div');
-            div.textContent = String(text);
-            return div.innerHTML;
         }
         
         function viewStudentDetails(id) {
