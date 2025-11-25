@@ -508,6 +508,15 @@
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
         }
         
+        /* Fallback CSS for Bootstrap tab-pane visibility */
+        .tab-pane:not(.active):not(.show) {
+            display: none !important;
+        }
+        .tab-pane.active,
+        .tab-pane.show.active {
+            display: block !important;
+        }
+        
         /* Enhanced Nav Tabs */
         .nav-tabs {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -19871,6 +19880,41 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         if (('standalone' in window.navigator) && window.navigator.standalone) {
             console.log('App is running as iOS standalone');
         }
+        
+        // Fallback tab handler for Admission tabs (works even without Bootstrap JS)
+        document.querySelectorAll('#admissionTabs .nav-link').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Get the tab content container (sibling of the tabs)
+                var tabContainer = document.getElementById('admissionTabs');
+                var tabContent = tabContainer ? tabContainer.nextElementSibling : null;
+                
+                // Remove active class from all tabs and tab panes
+                document.querySelectorAll('#admissionTabs .nav-link').forEach(function(t) {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                if (tabContent && tabContent.classList.contains('tab-content')) {
+                    tabContent.querySelectorAll('.tab-pane').forEach(function(p) {
+                        p.classList.remove('show', 'active');
+                    });
+                }
+                
+                // Add active class to clicked tab and corresponding pane
+                this.classList.add('active');
+                this.setAttribute('aria-selected', 'true');
+                
+                // Validate href attribute before using as selector
+                var href = this.getAttribute('href');
+                if (href && /^#[a-zA-Z][\w-]*$/.test(href)) {
+                    var target = document.querySelector(href);
+                    if (target) {
+                        target.classList.add('show', 'active');
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>
