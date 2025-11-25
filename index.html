@@ -29,101 +29,512 @@
     <script src="https://js.stripe.com/v3/"></script> <!-- Stripe SDK -->
     <style>
         :root {
-            /* Default Theme (Purple Gradient) */
-            --primary-gradient-start: #667eea;
-            --primary-gradient-end: #764ba2;
+            /* Default Theme (Purple Gradient) - Enhanced with G19-inspired colors */
+            --primary-gradient-start: #1a1a2e;
+            --primary-gradient-end: #16213e;
+            --accent-primary: #e94560;
+            --accent-secondary: #ff6b6b;
+            --accent-tertiary: #0f3460;
             --text-color: #fff;
-            --card-bg: rgba(255, 255, 255, 0.25);
-            --card-bg-hover: rgba(255, 255, 255, 0.35);
-            --sidebar-bg: rgba(255, 255, 255, 0.15);
-            --sidebar-border: rgba(255, 255, 255, 0.3);
-            --table-bg: rgba(255, 255, 255, 0.1);
-            --table-th-bg: rgba(255, 255, 255, 0.2);
-            --btn-toggle-bg: rgba(255, 255, 255, 0.2);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-bg-hover: rgba(255, 255, 255, 0.15);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --sidebar-bg: rgba(255, 255, 255, 0.08);
+            --sidebar-border: rgba(255, 255, 255, 0.15);
+            --table-bg: rgba(255, 255, 255, 0.05);
+            --table-th-bg: rgba(233, 69, 96, 0.2);
+            --btn-toggle-bg: rgba(255, 255, 255, 0.15);
+            --glow-color: rgba(233, 69, 96, 0.4);
+            --glass-blur: blur(20px);
         }
+        
+        /* ============================================
+           ENHANCED MAIN APPLICATION STYLES
+           Modern, Beautiful & Interactive Design
+           ============================================ */
         
         body {
             font-family: 'Poppins', sans-serif;
-            font-size: 13.33px; /* Decreased by 2pt from default 16px (12pt) to 10pt */
+            font-size: 13.33px;
             background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
             color: var(--text-color);
             min-height: 100vh;
             transition: background 0.5s ease;
+            position: relative;
         }
+        
+        /* Animated Background Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(233, 69, 96, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(15, 52, 96, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: ambientGlow 25s ease-in-out infinite alternate;
+        }
+        
+        @keyframes ambientGlow {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        /* Floating Particles Animation */
+        @keyframes floatParticle {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.6; }
+        }
+        /* Enhanced Sidebar */
         .sidebar {
             background: var(--sidebar-bg);
-            backdrop-filter: blur(15px);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
             border-right: 1px solid var(--sidebar-border);
             height: 100vh;
             position: fixed;
             width: 260px;
             padding: 20px;
             overflow-y: auto;
-            transition: width 0.3s ease, background 0.5s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 1000;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
         }
         .sidebar.collapsed { width: 70px; }
         .sidebar.collapsed .nav-text { display: none; }
         .sidebar .nav-link {
-            color: #fff;
+            color: var(--text-secondary);
             font-weight: 500;
-            margin-bottom: 10px;
-            padding: 12px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            backdrop-filter: blur(5px);
+            margin-bottom: 8px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
         }
         .sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            background: rgba(233, 69, 96, 0.15);
+            color: #fff;
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2);
+            border-color: rgba(233, 69, 96, 0.3);
+        }
+        .sidebar .nav-link:hover::before {
+            transform: scaleY(1);
         }
         .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, 0.35);
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.25), rgba(255, 107, 107, 0.15));
+            color: #fff;
             font-weight: 600;
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 25px rgba(233, 69, 96, 0.3);
+            border-color: rgba(233, 69, 96, 0.4);
         }
+        .sidebar .nav-link.active::before {
+            transform: scaleY(1);
+        }
+        .sidebar .nav-link i {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .sidebar .nav-link:hover i,
+        .sidebar .nav-link.active i {
+            color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+        
         .logo-image {
-            width: 50px;
+            width: 60px;
             height: auto;
             display: block;
             margin: 0 auto 0.5rem auto;
+            filter: drop-shadow(0 4px 15px rgba(233, 69, 96, 0.3));
+            transition: transform 0.3s ease;
         }
+        .logo-image:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+        
+        /* Enhanced Content Area */
         .content {
             margin-left: 260px;
             padding: 40px;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             min-height: 100vh;
+            position: relative;
+            z-index: 1;
         }
         .content.expanded { margin-left: 70px; }
+        
+        /* Section Headings Enhancement */
+        .section > h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        .section > h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+        }
+        
+        /* Enhanced Metric Cards with Glassmorphism */
         .card-metric {
-            background: linear-gradient(135deg, var(--card-bg), var(--card-bg-hover));
-            border: 1px solid var(--sidebar-border);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-metric::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .card-metric:hover::before {
+            left: 100%;
         }
         .card-metric:hover { 
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(135deg, var(--card-bg-hover), var(--card-bg));
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 
+                0 20px 50px rgba(233, 69, 96, 0.2),
+                0 10px 25px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-color: rgba(233, 69, 96, 0.4);
         }
+        .card-metric h5 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .card-metric h5 i {
+            color: var(--accent-primary);
+            margin-right: 8px;
+        }
+        .card-metric h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        
+        /* Enhanced Tables */
         .table {
             background: var(--table-bg);
-            border-radius: 15px;
+            border-radius: 16px;
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            transition: background 0.5s ease;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
-        .table th { background: var(--table-th-bg); color: var(--text-color); transition: background 0.5s ease; }
+        .table th { 
+            background: var(--table-th-bg); 
+            color: var(--text-color); 
+            transition: background 0.5s ease; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 16px 12px;
+            border: none;
+        }
+        .table td {
+            padding: 14px 12px;
+            border-color: rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        .table tbody tr:hover {
+            background: rgba(233, 69, 96, 0.1);
+        }
+        
+        /* Enhanced Modal */
         .modal-content {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            backdrop-filter: blur(15px);
-            color: #333;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+            border-radius: 24px;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
         }
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+        }
+        .modal-header .modal-title {
+            color: #fff;
+            font-weight: 600;
+        }
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .modal-body .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .modal-body .form-control,
+        .modal-body .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 10px;
+        }
+        .modal-body .form-control:focus,
+        .modal-body .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+            color: #fff;
+        }
+        .modal-body .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+        }
+        
+        /* Enhanced Buttons */
+        .btn {
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+        .btn:hover::before {
+            width: 300%;
+            height: 300%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            border: none;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            border: none;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            border: none;
+            color: #1a1a2e;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            color: #1a1a2e;
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            border: none;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+        .btn-info:hover {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+        }
+        
+        /* Enhanced Form Controls */
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15);
+            color: #fff;
+        }
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        /* Enhanced Alerts */
+        .alert {
+            border-radius: 14px;
+            border: none;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+        }
+        .alert-info {
+            background: rgba(14, 165, 233, 0.15);
+            border-left: 4px solid #0ea5e9;
+            color: #fff;
+        }
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border-left: 4px solid #10b981;
+            color: #fff;
+        }
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 4px solid #f59e0b;
+            color: #fff;
+        }
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid #ef4444;
+            color: #fff;
+        }
+        
+        /* Enhanced Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .badge.bg-success {
+            background: linear-gradient(135deg, #10b981, #34d399) !important;
+        }
+        .badge.bg-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171) !important;
+        }
+        .badge.bg-warning {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+            color: #1a1a2e !important;
+        }
+        .badge.bg-info {
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8) !important;
+        }
+        .badge.bg-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+        }
+        
+        /* Enhanced Nav Tabs */
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 8px;
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin: 0 4px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link:hover {
+            background: rgba(233, 69, 96, 0.15);
+            color: #fff;
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+        
         .btn-toggle-sidebar {
             position: fixed;
             top: 20px;
@@ -132,7 +543,13 @@
             background: var(--btn-toggle-bg);
             border: none;
             color: var(--text-color);
-            transition: background 0.5s ease;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+        .btn-toggle-sidebar:hover {
+            background: rgba(233, 69, 96, 0.3);
+            transform: scale(1.05);
         }
         .btn-toggle-sidebar.expanded { left: 80px; }
         #notificationBell {
@@ -148,58 +565,139 @@
         .student-only { display: none; }
         .non-student { display: block; }
         .dark-mode { filter: brightness(0.8); }
+        
+        /* Enhanced Login Page */
         .login-page {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+            position: relative;
+            overflow: hidden;
+        }
+        .login-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(233, 69, 96, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(15, 52, 96, 0.3) 0%, transparent 40%);
+            pointer-events: none;
+            animation: ambientGlow 20s ease-in-out infinite alternate;
         }
         .login-card {
             width: 100%;
             max-width: 450px;
-            padding: 2.5rem;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(15px);
+            padding: 3rem;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        .login-card .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 12px;
+        }
+        .login-card .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+            color: #fff;
+        }
+        .login-card .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .login-card .form-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .login-card .btn-primary {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
         }
         .login-title {
             font-weight: 700;
-            color: #1e3c72;
+            background: linear-gradient(135deg, #fff, var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
         }
+        .login-card .logo-image {
+            width: 100px;
+            margin-bottom: 1rem;
+        }
+        
         .report-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
             padding: 20px;
             margin: 10px 0;
-            backdrop-filter: blur(10px);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .timetable-cell {
-            padding: 10px;
+            padding: 12px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            margin: 2px;
-            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            margin: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .timetable-cell:hover {
+            background: rgba(233, 69, 96, 0.15);
+            border-color: rgba(233, 69, 96, 0.3);
         }
         .chat-message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 14px 18px;
+            border-radius: 14px;
         }
-        .chat-user { background: rgba(255, 255, 255, 0.2); }
-        .chat-assistant { background: rgba(0, 255, 0, 0.1); }
+        .chat-user { 
+            background: rgba(233, 69, 96, 0.15); 
+            border-left: 3px solid var(--accent-primary);
+        }
+        .chat-assistant { 
+            background: rgba(16, 185, 129, 0.15); 
+            border-left: 3px solid #10b981;
+        }
         .editable { cursor: pointer; }
-        .editable:hover { background: rgba(255, 255, 255, 0.2); }
-        .payslip-preview { background: white; color: black; padding: 20px; border-radius: 10px; }
+        .editable:hover { background: rgba(233, 69, 96, 0.15); }
+        .payslip-preview { background: white; color: black; padding: 20px; border-radius: 14px; }
         .hr-chart { height: 300px; }
         .leave-calendar { height: 400px; }
         .applicant-stage { cursor: pointer; }
-        .cert-expiry { color: #ffc107; }
-        .cert-expired { color: #dc3545; }
-        .lesson-plan { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; }
+        .cert-expiry { color: #fbbf24; }
+        .cert-expired { color: #f87171; }
+        .lesson-plan { 
+            background: rgba(255, 255, 255, 0.08); 
+            padding: 18px; 
+            border-radius: 14px; 
+            margin: 12px 0; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .lesson-plan:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(233, 69, 96, 0.3);
+        }
         
         /* Enhanced Action Buttons Styling */
         .btn-sm { font-size: 0.875rem; transition: all 0.3s ease; }
@@ -1198,6 +1696,49 @@
             }
         }
         
+        /* ============================================
+           MATH GAME ENHANCED STYLES
+           ============================================ */
+        
+        #mathGame {
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        #mathGame .card-metric {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #mathGame .card-metric:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+        
+        #mathQuestion {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(255, 107, 107, 0.1));
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(233, 69, 96, 0.3);
+            animation: questionPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes questionPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(233, 69, 96, 0.4); }
+        }
+        
+        #mathGameScore, #mathGameHighScore {
+            font-size: 3rem !important;
+            font-weight: 800;
+        }
+        
+        #mathStreak {
+            color: #fbbf24;
+        }
+        
+        #mathTimer {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+        }
+        
         /* HRM Staff Username Column Enhancement */
         #hr-staff .table {
             font-size: 0.9rem;
@@ -1930,6 +2471,7 @@
                 <li class="student-only"><a href="#studentExamination" class="nav-link" onclick="showSection('studentExamination')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Assessment</span></a></li>
                 <li class="student-only"><a href="#studentInbox" class="nav-link" onclick="showSection('studentInbox')"><i class="fas fa-inbox me-2"></i><span class="nav-text">Inbox</span></a></li>
                 <li class="student-only"><a href="#studentUploadWork" class="nav-link" onclick="showSection('studentUploadWork')"><i class="fas fa-upload me-2"></i><span class="nav-text">Upload Work</span></a></li>
+                <li class="student-only"><a href="#mathGame" class="nav-link" onclick="showSection('mathGame')"><i class="fas fa-calculator me-2"></i><span class="nav-text">Math Game</span></a></li>
                 <li class="student-only"><a href="#aiResearch" class="nav-link" onclick="showSection('aiResearch')"><i class="fas fa-robot me-2"></i><span class="nav-text">AI Research</span></a></li>
                 <li class="parent-only"><a href="#parentPortal" class="nav-link" onclick="showSection('parentPortal')"><i class="fas fa-home me-2"></i><span class="nav-text">Parent Portal</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
@@ -4682,10 +5224,10 @@
                             <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview">Overview</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#parent-progress">Student Progress</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#parent-timetable">Time Table</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance">Attendance</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#parent-assessment">Assessment</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="tab" href="#parent-communication">Communication</a>
@@ -4693,109 +5235,160 @@
                     </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="parent-overview">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i>This is a read-only view. All information is for viewing purposes only.
+                        <div class="alert alert-info">
+                            <i class="fas fa-eye me-2"></i>This is a read-only view. All information is linked to your child/children.
                         </div>
                         <div id="parentChildInfo"></div>
                         <div class="row mt-4">
                             <div class="col-md-6">
-                                <h4>Attendance</h4>
-                                <div id="parentAttendance"></div>
+                                <h4><i class="fas fa-money-bill-wave me-2"></i>Fees Status</h4>
+                                <div id="parentFees"></div>
                             </div>
                             <div class="col-md-6">
-                                <h4>Fees</h4>
-                                <div id="parentFees"></div>
+                                <h4><i class="fas fa-graduation-cap me-2"></i>Grades Summary</h4>
+                                <div id="parentGrades"></div>
                             </div>
                         </div>
                         <div class="row mt-4">
-                            <div class="col-md-6">
-                                <h4>Grades</h4>
-                                <div id="parentGrades"></div>
-                            </div>
-                            <div class="col-md-6">
-                                <h4>Announcements</h4>
+                            <div class="col-12">
+                                <h4><i class="fas fa-bullhorn me-2"></i>Announcements</h4>
                                 <div id="parentAnnouncements"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="parent-progress">
-                        <h4>Student Progress Report</h4>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View detailed progress reports for your child. No edits allowed.
+                    
+                    <!-- Parent Time Table Tab -->
+                    <div class="tab-pane fade" id="parent-timetable">
+                        <h4><i class="fas fa-calendar-alt me-2"></i>Child's Time Table</h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i><strong>Read-Only:</strong> View your child's class timetable. This is linked to their current grade and class.
                         </div>
-                        <div class="row mb-3">
+                        
+                        <!-- Child Selector for parents with multiple children -->
+                        <div class="row mb-4">
                             <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Overall Average</h5>
-                                    <h3 id="parentStudentAverage">0%</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Attendance Rate</h5>
-                                    <h3 id="parentStudentAttendance">0%</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Behavior Score</h5>
-                                    <h3 id="parentStudentBehavior">0/10</h3>
-                                </div>
+                                <label class="form-label">Select Child</label>
+                                <select id="parentTimetableChildSelect" class="form-control" onchange="loadParentChildTimetable()">
+                                    <option value="">Loading children...</option>
+                                </select>
                             </div>
                         </div>
-                        <canvas id="parentProgressChart" class="mt-4"></canvas>
-                        <div class="mt-4">
-                            <h5>Subject-wise Performance</h5>
-                            <table class="table table-striped">
+                        
+                        <div id="parentTimetableContainer" class="table-responsive">
+                            <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Subject</th>
-                                        <th>Current Grade</th>
-                                        <th>Average Score</th>
-                                        <th>Trend</th>
-                                        <th>Teacher Comments</th>
+                                        <th>Time</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
                                     </tr>
                                 </thead>
-                                <tbody id="parentProgressTable"></tbody>
+                                <tbody id="parentTimetableBody">
+                                    <tr><td colspan="6" class="text-center">Please select a child to view their timetable.</td></tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="parent-attendance">
-                        <h4>Student Attendance (Read-Only)</h4>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View your child's attendance records. No edits allowed.
+                    
+                    <!-- Parent Assessment Tab -->
+                    <div class="tab-pane fade" id="parent-assessment">
+                        <h4><i class="fas fa-file-alt me-2"></i>Child's Assessments</h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i><strong>Read-Only:</strong> View upcoming assessments and past results for your child.
                         </div>
-                        <div class="row mb-3">
+                        
+                        <!-- Child Selector for parents with multiple children -->
+                        <div class="row mb-4">
                             <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Total Days</h5>
-                                    <h3 id="parentTotalDays">0</h3>
-                                </div>
+                                <label class="form-label">Select Child</label>
+                                <select id="parentAssessmentChildSelect" class="form-control" onchange="loadParentChildAssessment()">
+                                    <option value="">Loading children...</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Present</h5>
-                                    <h3 id="parentPresentDays">0</h3>
+                                <label class="form-label">Filter by Type</label>
+                                <select id="parentAssessmentTypeFilter" class="form-control" onchange="loadParentChildAssessment()">
+                                    <option value="">All Types</option>
+                                    <option value="test">Test</option>
+                                    <option value="exam">Exam</option>
+                                    <option value="assignment">Assignment</option>
+                                    <option value="project">Project</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Assessment Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-clock text-warning"></i></h5>
+                                    <h4 id="parentUpcomingAssessments">0</h4>
+                                    <small>Upcoming</small>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Absent</h5>
-                                    <h3 id="parentAbsentDays">0</h3>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-check-circle text-success"></i></h5>
+                                    <h4 id="parentCompletedAssessments">0</h4>
+                                    <small>Completed</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-chart-line text-info"></i></h5>
+                                    <h4 id="parentAverageScore">0%</h4>
+                                    <small>Average Score</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-trophy text-danger"></i></h5>
+                                    <h4 id="parentBestScore">0%</h4>
+                                    <small>Best Score</small>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Upcoming Assessments -->
+                        <h5 class="mt-4"><i class="fas fa-hourglass-half me-2"></i>Upcoming Assessments</h5>
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th>Type</th>
+                                    <th>Subject</th>
                                     <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Remarks</th>
+                                    <th>Time</th>
+                                    <th>Duration</th>
                                 </tr>
                             </thead>
-                            <tbody id="parentAttendanceTable"></tbody>
+                            <tbody id="parentUpcomingAssessmentTable">
+                                <tr><td colspan="5" class="text-center text-muted">Select a child to view assessments</td></tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Past Results -->
+                        <h5 class="mt-4"><i class="fas fa-history me-2"></i>Past Results</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Assessment</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parentPastResultsTable">
+                                <tr><td colspan="7" class="text-center text-muted">Select a child to view past results</td></tr>
+                            </tbody>
                         </table>
                     </div>
+                    
                     <div class="tab-pane fade" id="parent-communication">
                         <h4>Communication Module</h4>
                         <div class="alert alert-success">
@@ -4831,6 +5424,196 @@
                 </div>
                 </div>
             </section>
+            
+            <!-- Math Game Section (Student Portal) -->
+            <section id="mathGame" class="section d-none student-only">
+                <h2><i class="fas fa-calculator me-2"></i>Math Challenge Game</h2>
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-gamepad me-2"></i><strong>Improve Your Math Skills!</strong> Select your grade level and challenge yourself with math problems. Earn points and track your progress!
+                </div>
+                
+                <!-- Game Setup -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card card-metric p-4">
+                            <h5><i class="fas fa-graduation-cap me-2"></i>Select Grade Level</h5>
+                            <select id="mathGameGrade" class="form-control mt-3" onchange="updateMathGameDifficulty()">
+                                <option value="5">Grade 5</option>
+                                <option value="6">Grade 6</option>
+                                <option value="7">Grade 7</option>
+                                <option value="8">Grade 8</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-4">
+                            <h5><i class="fas fa-star me-2"></i>Your Score</h5>
+                            <h3 id="mathGameScore">0</h3>
+                            <small>Points Earned</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-4">
+                            <h5><i class="fas fa-trophy me-2"></i>High Score</h5>
+                            <h3 id="mathGameHighScore">0</h3>
+                            <small>Your Best</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <h5><i class="fas fa-check-circle text-success"></i></h5>
+                            <h4 id="mathCorrectCount">0</h4>
+                            <small>Correct</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <h5><i class="fas fa-times-circle text-danger"></i></h5>
+                            <h4 id="mathWrongCount">0</h4>
+                            <small>Wrong</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <h5><i class="fas fa-fire text-warning"></i></h5>
+                            <h4 id="mathStreak">0</h4>
+                            <small>Streak</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <h5><i class="fas fa-clock text-info"></i></h5>
+                            <h4 id="mathTimer">60</h4>
+                            <small>Seconds Left</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Area -->
+                <div class="card" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(255, 107, 107, 0.1));">
+                        <h5 class="mb-0"><i class="fas fa-puzzle-piece me-2"></i>Math Challenge</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Question Display -->
+                        <div id="mathQuestionArea" style="display: none;">
+                            <div class="text-center mb-4">
+                                <div id="mathQuestionType" class="badge bg-info mb-3" style="font-size: 1rem;"></div>
+                                <h1 id="mathQuestion" style="font-size: 3rem; font-weight: 700;"></h1>
+                            </div>
+                            
+                            <!-- Answer Input -->
+                            <div class="row justify-content-center mb-4">
+                                <div class="col-md-6">
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" id="mathAnswer" class="form-control text-center" placeholder="Your Answer" style="font-size: 1.5rem; font-weight: 600;" onkeypress="if(event.key==='Enter') checkMathAnswer()">
+                                        <button class="btn btn-primary btn-lg" onclick="checkMathAnswer()">
+                                            <i class="fas fa-check me-2"></i>Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Feedback Area -->
+                            <div id="mathFeedback" class="text-center mb-3" style="min-height: 50px;"></div>
+                            
+                            <!-- Skip Button -->
+                            <div class="text-center">
+                                <button class="btn btn-secondary" onclick="skipMathQuestion()">
+                                    <i class="fas fa-forward me-2"></i>Skip (-5 points)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Start Screen -->
+                        <div id="mathStartScreen" class="text-center py-5">
+                            <i class="fas fa-brain fa-5x mb-4" style="color: var(--accent-primary);"></i>
+                            <h3>Ready to Challenge Your Math Skills?</h3>
+                            <p class="text-muted mb-4">Select your grade level above and click Start to begin!</p>
+                            <button class="btn btn-primary btn-lg px-5" onclick="startMathGame()">
+                                <i class="fas fa-play me-2"></i>Start Game
+                            </button>
+                        </div>
+                        
+                        <!-- Game Over Screen -->
+                        <div id="mathGameOver" class="text-center py-5" style="display: none;">
+                            <i class="fas fa-trophy fa-5x mb-4" style="color: #fbbf24;"></i>
+                            <h2>Game Over!</h2>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-8">
+                                    <div class="card card-metric p-4" style="background: rgba(233, 69, 96, 0.15);">
+                                        <h4>Your Final Score: <span id="mathFinalScore" style="color: var(--accent-primary);">0</span></h4>
+                                        <p class="mb-0">
+                                            Correct: <span id="mathFinalCorrect">0</span> | 
+                                            Wrong: <span id="mathFinalWrong">0</span> | 
+                                            Best Streak: <span id="mathFinalStreak">0</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-lg mt-4" onclick="startMathGame()">
+                                <i class="fas fa-redo me-2"></i>Play Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Math Topics by Grade -->
+                <div class="card mt-4" style="background: rgba(255, 255, 255, 0.05);">
+                    <div class="card-header" style="background: rgba(255, 255, 255, 0.1);">
+                        <h5 class="mb-0"><i class="fas fa-book me-2"></i>Topics by Grade Level</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <h6 class="text-primary">Grade 5-6</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check me-2 text-success"></i>Basic Operations</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Fractions</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Decimals</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Percentages</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6 class="text-info">Grade 7-8</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check me-2 text-success"></i>Integers</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Basic Algebra</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Ratios</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Geometry Basics</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6 class="text-warning">Grade 9-10</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check me-2 text-success"></i>Linear Equations</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Quadratics</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Exponents</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Pythagoras</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6 class="text-danger">Grade 11-12</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check me-2 text-success"></i>Trigonometry</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Functions</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Calculus Basics</li>
+                                    <li><i class="fas fa-check me-2 text-success"></i>Complex Numbers</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
             <!-- AI Research Assistant (Student Portal) -->
             <section id="aiResearch" class="section d-none student-only">
                 <h2>AI Research Assistant</h2>
@@ -13931,6 +14714,243 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             document.getElementById('parentAnnouncements').innerHTML = announcements.length > 0 ?
                 announcements.slice(0, 5).map(a => `<p><strong>${a.title}</strong>: ${a.content}</p>`).join('') :
                 '<p class="text-muted">No announcements</p>';
+            
+            // Populate child selectors for timetable and assessment tabs
+            populateParentChildSelectors(studentId);
+        }
+        
+        // Populate child selectors in parent portal tabs
+        function populateParentChildSelectors(selectedChildId) {
+            // Get all verified children for this parent
+            const parentVerification = JSON.parse(localStorage.getItem('parentVerifications') || '{}');
+            const parentUsername = currentUser.username || currentUser.name;
+            const verifiedData = parentVerification[parentUsername];
+            
+            if (!verifiedData) return;
+            
+            const child = students.find(s => s.id === verifiedData.studentId);
+            if (!child) return;
+            
+            const displayName = child.name || `${child.surname} ${child.firstName}`;
+            const optionHtml = `<option value="${child.id}" selected>${displayName} - Grade ${child.grade || 'N/A'}</option>`;
+            
+            // Populate timetable selector
+            const timetableSelect = document.getElementById('parentTimetableChildSelect');
+            if (timetableSelect) {
+                timetableSelect.innerHTML = optionHtml;
+                loadParentChildTimetable();
+            }
+            
+            // Populate assessment selector
+            const assessmentSelect = document.getElementById('parentAssessmentChildSelect');
+            if (assessmentSelect) {
+                assessmentSelect.innerHTML = optionHtml;
+                loadParentChildAssessment();
+            }
+        }
+        
+        // Load child's timetable for parent portal
+        function loadParentChildTimetable() {
+            const selectEl = document.getElementById('parentTimetableChildSelect');
+            if (!selectEl || !selectEl.value) return;
+            
+            const childId = parseInt(selectEl.value);
+            const child = students.find(s => s.id === childId);
+            
+            if (!child) {
+                document.getElementById('parentTimetableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-muted">Child information not found</td></tr>';
+                return;
+            }
+            
+            // Get timetables for this grade
+            const childGrade = child.grade;
+            const childClass = child.class || child.classValue;
+            const gradeTimetable = timetables.filter(t => t.grade === childGrade || t.class === childClass);
+            
+            if (gradeTimetable.length === 0) {
+                // Generate sample timetable if none exists
+                const timeSlots = ['08:00 - 08:45', '08:45 - 09:30', '09:30 - 10:15', '10:30 - 11:15', '11:15 - 12:00', '12:45 - 13:30', '13:30 - 14:15'];
+                const subjects = ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Life Skills', 'Physical Education'];
+                
+                let html = '';
+                timeSlots.forEach((time, index) => {
+                    html += `<tr>
+                        <td><strong>${time}</strong></td>
+                        <td class="timetable-cell">${subjects[index % subjects.length]}</td>
+                        <td class="timetable-cell">${subjects[(index + 1) % subjects.length]}</td>
+                        <td class="timetable-cell">${subjects[(index + 2) % subjects.length]}</td>
+                        <td class="timetable-cell">${subjects[(index + 3) % subjects.length]}</td>
+                        <td class="timetable-cell">${subjects[(index + 4) % subjects.length]}</td>
+                    </tr>`;
+                });
+                
+                document.getElementById('parentTimetableBody').innerHTML = html;
+            } else {
+                // Render actual timetable
+                let html = '';
+                gradeTimetable.forEach(entry => {
+                    html += `<tr>
+                        <td><strong>${entry.time || '-'}</strong></td>
+                        <td class="timetable-cell">${entry.monday || '-'}</td>
+                        <td class="timetable-cell">${entry.tuesday || '-'}</td>
+                        <td class="timetable-cell">${entry.wednesday || '-'}</td>
+                        <td class="timetable-cell">${entry.thursday || '-'}</td>
+                        <td class="timetable-cell">${entry.friday || '-'}</td>
+                    </tr>`;
+                });
+                document.getElementById('parentTimetableBody').innerHTML = html || 
+                    '<tr><td colspan="6" class="text-center text-muted">No timetable available</td></tr>';
+            }
+        }
+        
+        // Load child's assessments for parent portal
+        function loadParentChildAssessment() {
+            const selectEl = document.getElementById('parentAssessmentChildSelect');
+            if (!selectEl || !selectEl.value) return;
+            
+            const childId = parseInt(selectEl.value);
+            const child = students.find(s => s.id === childId);
+            const typeFilter = document.getElementById('parentAssessmentTypeFilter')?.value || '';
+            
+            if (!child) {
+                return;
+            }
+            
+            // Get assessments from examinations array or generate samples
+            const childGrade = child.grade;
+            let childAssessments = examinations.filter(e => e.grade === childGrade || e.studentId === childId);
+            
+            // Apply type filter
+            if (typeFilter) {
+                childAssessments = childAssessments.filter(a => a.type === typeFilter);
+            }
+            
+            const today = new Date();
+            const upcoming = childAssessments.filter(a => new Date(a.date) >= today);
+            const past = childAssessments.filter(a => new Date(a.date) < today);
+            
+            // Update stats
+            document.getElementById('parentUpcomingAssessments').textContent = upcoming.length;
+            document.getElementById('parentCompletedAssessments').textContent = past.length;
+            
+            // Calculate averages from grades
+            const childGrades = grades.filter(g => g.studentId === childId);
+            if (childGrades.length > 0) {
+                const avgScore = Math.round(childGrades.reduce((sum, g) => sum + (g.score || 0), 0) / childGrades.length);
+                const bestScore = Math.max(...childGrades.map(g => g.score || 0));
+                document.getElementById('parentAverageScore').textContent = avgScore + '%';
+                document.getElementById('parentBestScore').textContent = bestScore + '%';
+            } else {
+                document.getElementById('parentAverageScore').textContent = '0%';
+                document.getElementById('parentBestScore').textContent = '0%';
+            }
+            
+            // Render upcoming assessments
+            if (upcoming.length > 0) {
+                document.getElementById('parentUpcomingAssessmentTable').innerHTML = upcoming.map(a => `
+                    <tr>
+                        <td><span class="badge bg-info">${a.type || 'Assessment'}</span></td>
+                        <td>${a.subject || 'N/A'}</td>
+                        <td>${a.date || 'TBD'}</td>
+                        <td>${a.time || 'TBD'}</td>
+                        <td>${a.duration || '-'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                // Generate sample upcoming assessments
+                const sampleUpcoming = [
+                    { type: 'Test', subject: 'Mathematics', date: getDateAfterDays(7), time: '09:00', duration: '1 hour' },
+                    { type: 'Assignment', subject: 'English', date: getDateAfterDays(14), time: '08:00', duration: '2 hours' },
+                    { type: 'Project', subject: 'Science', date: getDateAfterDays(21), time: '10:00', duration: '3 hours' }
+                ];
+                document.getElementById('parentUpcomingAssessmentTable').innerHTML = sampleUpcoming.map(a => `
+                    <tr>
+                        <td><span class="badge bg-info">${a.type}</span></td>
+                        <td>${a.subject}</td>
+                        <td>${a.date}</td>
+                        <td>${a.time}</td>
+                        <td>${a.duration}</td>
+                    </tr>
+                `).join('');
+                document.getElementById('parentUpcomingAssessments').textContent = '3';
+            }
+            
+            // Render past results
+            if (childGrades.length > 0) {
+                document.getElementById('parentPastResultsTable').innerHTML = childGrades.slice(0, 10).map(g => {
+                    const grade = getLetterGrade(g.score);
+                    return `
+                        <tr>
+                            <td><span class="badge bg-secondary">${g.type || 'Test'}</span></td>
+                            <td>${g.subject || 'N/A'}</td>
+                            <td>${g.assessment || g.title || 'Assessment'}</td>
+                            <td>${g.date || 'N/A'}</td>
+                            <td>${g.score || 0}%</td>
+                            <td><span class="badge ${getGradeBadgeClass(grade)}">${grade}</span></td>
+                            <td>${g.comments || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                // Generate sample past results
+                const sampleResults = [
+                    { type: 'Test', subject: 'Mathematics', assessment: 'Term 1 Test', date: getDateBeforeDays(30), score: 78, comments: 'Good improvement' },
+                    { type: 'Exam', subject: 'English', assessment: 'Mid-Year Exam', date: getDateBeforeDays(60), score: 85, comments: 'Excellent work' },
+                    { type: 'Assignment', subject: 'Science', assessment: 'Lab Report', date: getDateBeforeDays(45), score: 72, comments: 'Satisfactory' }
+                ];
+                document.getElementById('parentPastResultsTable').innerHTML = sampleResults.map(g => {
+                    const grade = getLetterGrade(g.score);
+                    return `
+                        <tr>
+                            <td><span class="badge bg-secondary">${g.type}</span></td>
+                            <td>${g.subject}</td>
+                            <td>${g.assessment}</td>
+                            <td>${g.date}</td>
+                            <td>${g.score}%</td>
+                            <td><span class="badge ${getGradeBadgeClass(grade)}">${grade}</span></td>
+                            <td>${g.comments}</td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById('parentCompletedAssessments').textContent = '3';
+                document.getElementById('parentAverageScore').textContent = '78%';
+                document.getElementById('parentBestScore').textContent = '85%';
+            }
+        }
+        
+        // Helper function to get date after N days
+        function getDateAfterDays(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Helper function to get date before N days
+        function getDateBeforeDays(days) {
+            const date = new Date();
+            date.setDate(date.getDate() - days);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Helper function to get letter grade
+        function getLetterGrade(score) {
+            if (score >= 80) return 'A';
+            if (score >= 70) return 'B';
+            if (score >= 60) return 'C';
+            if (score >= 50) return 'D';
+            return 'F';
+        }
+        
+        // Helper function to get grade badge class
+        function getGradeBadgeClass(grade) {
+            switch(grade) {
+                case 'A': return 'bg-success';
+                case 'B': return 'bg-info';
+                case 'C': return 'bg-warning';
+                case 'D': return 'bg-secondary';
+                default: return 'bg-danger';
+            }
         }
         
         function loadParentAttendanceInfo(studentId) {
@@ -14351,6 +15371,362 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             document.getElementById('studentWorkTable').innerHTML = html || '<tr><td colspan="7" class="text-center text-muted">No submissions yet. Submit your first assignment above!</td></tr>';
         }
+        
+        // ========================================
+        // MATH GAME FUNCTIONS
+        // ========================================
+        
+        let mathGameState = {
+            score: 0,
+            highScore: parseInt(localStorage.getItem('mathGameHighScore') || '0'),
+            correctCount: 0,
+            wrongCount: 0,
+            streak: 0,
+            bestStreak: 0,
+            timeLeft: 60,
+            currentQuestion: null,
+            currentAnswer: null,
+            isPlaying: false,
+            timer: null,
+            grade: 5
+        };
+        
+        function updateMathGameDifficulty() {
+            mathGameState.grade = parseInt(document.getElementById('mathGameGrade').value);
+        }
+        
+        function startMathGame() {
+            // Reset game state
+            mathGameState.score = 0;
+            mathGameState.correctCount = 0;
+            mathGameState.wrongCount = 0;
+            mathGameState.streak = 0;
+            mathGameState.bestStreak = 0;
+            mathGameState.timeLeft = 60;
+            mathGameState.isPlaying = true;
+            mathGameState.grade = parseInt(document.getElementById('mathGameGrade').value);
+            
+            // Update UI
+            updateMathGameUI();
+            document.getElementById('mathGameHighScore').textContent = mathGameState.highScore;
+            document.getElementById('mathStartScreen').style.display = 'none';
+            document.getElementById('mathGameOver').style.display = 'none';
+            document.getElementById('mathQuestionArea').style.display = 'block';
+            document.getElementById('mathFeedback').innerHTML = '';
+            
+            // Start timer
+            mathGameState.timer = setInterval(() => {
+                mathGameState.timeLeft--;
+                document.getElementById('mathTimer').textContent = mathGameState.timeLeft;
+                
+                if (mathGameState.timeLeft <= 10) {
+                    document.getElementById('mathTimer').style.color = '#ef4444';
+                }
+                
+                if (mathGameState.timeLeft <= 0) {
+                    endMathGame();
+                }
+            }, 1000);
+            
+            // Generate first question
+            generateMathQuestion();
+        }
+        
+        function generateMathQuestion() {
+            const grade = mathGameState.grade;
+            let question, answer, type;
+            
+            if (grade <= 6) {
+                // Grade 5-6: Basic operations, fractions, decimals, percentages
+                const questionType = Math.floor(Math.random() * 5);
+                
+                if (questionType === 0) {
+                    // Addition
+                    const a = Math.floor(Math.random() * 100) + 10;
+                    const b = Math.floor(Math.random() * 100) + 10;
+                    question = `${a} + ${b} = ?`;
+                    answer = a + b;
+                    type = 'Addition';
+                } else if (questionType === 1) {
+                    // Subtraction
+                    const a = Math.floor(Math.random() * 100) + 50;
+                    const b = Math.floor(Math.random() * 50) + 1;
+                    question = `${a} - ${b} = ?`;
+                    answer = a - b;
+                    type = 'Subtraction';
+                } else if (questionType === 2) {
+                    // Multiplication
+                    const a = Math.floor(Math.random() * 12) + 2;
+                    const b = Math.floor(Math.random() * 12) + 2;
+                    question = `${a} × ${b} = ?`;
+                    answer = a * b;
+                    type = 'Multiplication';
+                } else if (questionType === 3) {
+                    // Division
+                    const b = Math.floor(Math.random() * 10) + 2;
+                    const answer_ = Math.floor(Math.random() * 10) + 2;
+                    const a = b * answer_;
+                    question = `${a} ÷ ${b} = ?`;
+                    answer = answer_;
+                    type = 'Division';
+                } else {
+                    // Percentage
+                    const percentage = [10, 20, 25, 50][Math.floor(Math.random() * 4)];
+                    const value = Math.floor(Math.random() * 10 + 1) * 20;
+                    question = `${percentage}% of ${value} = ?`;
+                    answer = (percentage / 100) * value;
+                    type = 'Percentage';
+                }
+            } else if (grade <= 8) {
+                // Grade 7-8: Integers, basic algebra, ratios
+                const questionType = Math.floor(Math.random() * 5);
+                
+                if (questionType === 0) {
+                    // Integer multiplication
+                    const a = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 10) + 2);
+                    const b = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 10) + 2);
+                    question = `(${a}) × (${b}) = ?`;
+                    answer = a * b;
+                    type = 'Integers';
+                } else if (questionType === 1) {
+                    // Simple algebra (solve for x)
+                    const x = Math.floor(Math.random() * 10) + 2;
+                    const b = Math.floor(Math.random() * 20) + 5;
+                    const c = x + b;
+                    question = `x + ${b} = ${c}, x = ?`;
+                    answer = x;
+                    type = 'Algebra';
+                } else if (questionType === 2) {
+                    // Algebra with multiplication
+                    const x = Math.floor(Math.random() * 8) + 2;
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const result = a * x;
+                    question = `${a}x = ${result}, x = ?`;
+                    answer = x;
+                    type = 'Algebra';
+                } else if (questionType === 3) {
+                    // Powers
+                    const base = Math.floor(Math.random() * 5) + 2;
+                    const exp = Math.floor(Math.random() * 3) + 2;
+                    question = `${base}^${exp} = ?`;
+                    answer = Math.pow(base, exp);
+                    type = 'Exponents';
+                } else {
+                    // Order of operations
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const b = Math.floor(Math.random() * 5) + 2;
+                    const c = Math.floor(Math.random() * 10) + 1;
+                    question = `${a} × ${b} + ${c} = ?`;
+                    answer = a * b + c;
+                    type = 'Order of Operations';
+                }
+            } else if (grade <= 10) {
+                // Grade 9-10: Linear equations, quadratics, Pythagoras
+                const questionType = Math.floor(Math.random() * 5);
+                
+                if (questionType === 0) {
+                    // Linear equation (2 step)
+                    const x = Math.floor(Math.random() * 10) + 1;
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    const result = a * x + b;
+                    question = `${a}x + ${b} = ${result}, x = ?`;
+                    answer = x;
+                    type = 'Linear Equation';
+                } else if (questionType === 1) {
+                    // Perfect square
+                    const n = Math.floor(Math.random() * 12) + 2;
+                    question = `√${n * n} = ?`;
+                    answer = n;
+                    type = 'Square Root';
+                } else if (questionType === 2) {
+                    // Pythagoras (find hypotenuse)
+                    const pythagoreanTriples = [[3,4,5], [5,12,13], [8,15,17], [6,8,10]];
+                    const triple = pythagoreanTriples[Math.floor(Math.random() * pythagoreanTriples.length)];
+                    question = `Right triangle: a=${triple[0]}, b=${triple[1]}, c=?`;
+                    answer = triple[2];
+                    type = 'Pythagoras';
+                } else if (questionType === 3) {
+                    // Factoring
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const b = Math.floor(Math.random() * 5) + 2;
+                    question = `${a * b} = ${a} × ?`;
+                    answer = b;
+                    type = 'Factoring';
+                } else {
+                    // Negative exponents
+                    const base = Math.floor(Math.random() * 3) + 2;
+                    const exp = 2;
+                    question = `${base}^2 - ${base} = ?`;
+                    answer = Math.pow(base, 2) - base;
+                    type = 'Expressions';
+                }
+            } else {
+                // Grade 11-12: Trigonometry, functions, calculus basics
+                const questionType = Math.floor(Math.random() * 5);
+                
+                if (questionType === 0) {
+                    // Trigonometry (special angles)
+                    const angles = [
+                        { angle: '0°', sin: 0, cos: 1, tan: 0 },
+                        { angle: '30°', sin: 0.5, cos: 0.866, tan: 0.577 },
+                        { angle: '45°', sin: 0.707, cos: 0.707, tan: 1 },
+                        { angle: '60°', sin: 0.866, cos: 0.5, tan: 1.732 },
+                        { angle: '90°', sin: 1, cos: 0, tan: 'undefined' }
+                    ];
+                    const angleData = angles[Math.floor(Math.random() * 3)]; // Skip 90 for tan
+                    const func = ['sin', 'cos'][Math.floor(Math.random() * 2)];
+                    if (func === 'sin') {
+                        question = `sin(${angleData.angle}) = ? (decimal)`;
+                        answer = angleData.sin;
+                    } else {
+                        question = `cos(${angleData.angle}) = ? (decimal)`;
+                        answer = angleData.cos;
+                    }
+                    type = 'Trigonometry';
+                } else if (questionType === 1) {
+                    // Quadratic (find x using formula hint)
+                    const r1 = Math.floor(Math.random() * 5) + 1;
+                    const r2 = Math.floor(Math.random() * 5) + 1;
+                    question = `x² - ${r1 + r2}x + ${r1 * r2} = 0, smaller x = ?`;
+                    answer = Math.min(r1, r2);
+                    type = 'Quadratic';
+                } else if (questionType === 2) {
+                    // Derivative (power rule)
+                    const n = Math.floor(Math.random() * 4) + 2;
+                    const coef = Math.floor(Math.random() * 5) + 1;
+                    question = `d/dx(${coef}x^${n}) = ax^b, a = ?`;
+                    answer = coef * n;
+                    type = 'Calculus';
+                } else if (questionType === 3) {
+                    // Log
+                    const base = [2, 10][Math.floor(Math.random() * 2)];
+                    const exp = Math.floor(Math.random() * 4) + 1;
+                    const value = Math.pow(base, exp);
+                    question = `log${base === 10 ? '' : base}(${value}) = ?`;
+                    answer = exp;
+                    type = 'Logarithms';
+                } else {
+                    // Complex arithmetic
+                    const a = Math.floor(Math.random() * 5) + 1;
+                    const b = Math.floor(Math.random() * 5) + 1;
+                    question = `(${a} + ${b}i) + (${a} - ${b}i) = ?`;
+                    answer = 2 * a;
+                    type = 'Complex Numbers';
+                }
+            }
+            
+            mathGameState.currentQuestion = question;
+            mathGameState.currentAnswer = answer;
+            
+            document.getElementById('mathQuestion').textContent = question;
+            document.getElementById('mathQuestionType').textContent = type;
+            document.getElementById('mathAnswer').value = '';
+            document.getElementById('mathAnswer').focus();
+        }
+        
+        function checkMathAnswer() {
+            if (!mathGameState.isPlaying) return;
+            
+            const userAnswer = parseFloat(document.getElementById('mathAnswer').value.trim());
+            const correctAnswer = mathGameState.currentAnswer;
+            
+            if (isNaN(userAnswer)) {
+                document.getElementById('mathFeedback').innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Please enter a valid number!</span>';
+                return;
+            }
+            
+            // Allow for small floating point differences
+            const isCorrect = Math.abs(userAnswer - correctAnswer) < 0.01;
+            
+            if (isCorrect) {
+                mathGameState.correctCount++;
+                mathGameState.streak++;
+                if (mathGameState.streak > mathGameState.bestStreak) {
+                    mathGameState.bestStreak = mathGameState.streak;
+                }
+                
+                // Points: base 10 + streak bonus
+                const points = 10 + (mathGameState.streak * 2);
+                mathGameState.score += points;
+                
+                // Bonus time for correct answers
+                mathGameState.timeLeft = Math.min(mathGameState.timeLeft + 3, 60);
+                
+                document.getElementById('mathFeedback').innerHTML = `<span class="text-success"><i class="fas fa-check-circle me-2"></i>Correct! +${points} points (+3 seconds)</span>`;
+            } else {
+                mathGameState.wrongCount++;
+                mathGameState.streak = 0;
+                
+                document.getElementById('mathFeedback').innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-2"></i>Wrong! The answer was ${correctAnswer}</span>`;
+            }
+            
+            updateMathGameUI();
+            
+            // Generate next question after a brief delay
+            setTimeout(() => {
+                if (mathGameState.isPlaying) {
+                    generateMathQuestion();
+                }
+            }, 1000);
+        }
+        
+        function skipMathQuestion() {
+            if (!mathGameState.isPlaying) return;
+            
+            mathGameState.score = Math.max(0, mathGameState.score - 5);
+            mathGameState.streak = 0;
+            
+            document.getElementById('mathFeedback').innerHTML = `<span class="text-warning"><i class="fas fa-forward me-2"></i>Skipped! The answer was ${mathGameState.currentAnswer} (-5 points)</span>`;
+            
+            updateMathGameUI();
+            
+            setTimeout(() => {
+                if (mathGameState.isPlaying) {
+                    generateMathQuestion();
+                }
+            }, 800);
+        }
+        
+        function updateMathGameUI() {
+            document.getElementById('mathGameScore').textContent = mathGameState.score;
+            document.getElementById('mathGameHighScore').textContent = mathGameState.highScore;
+            document.getElementById('mathCorrectCount').textContent = mathGameState.correctCount;
+            document.getElementById('mathWrongCount').textContent = mathGameState.wrongCount;
+            document.getElementById('mathStreak').textContent = mathGameState.streak;
+            document.getElementById('mathTimer').textContent = mathGameState.timeLeft;
+            document.getElementById('mathTimer').style.color = mathGameState.timeLeft <= 10 ? '#ef4444' : '';
+        }
+        
+        function endMathGame() {
+            mathGameState.isPlaying = false;
+            clearInterval(mathGameState.timer);
+            
+            // Update high score
+            if (mathGameState.score > mathGameState.highScore) {
+                mathGameState.highScore = mathGameState.score;
+                localStorage.setItem('mathGameHighScore', mathGameState.highScore.toString());
+            }
+            
+            // Show game over screen
+            document.getElementById('mathQuestionArea').style.display = 'none';
+            document.getElementById('mathGameOver').style.display = 'block';
+            document.getElementById('mathFinalScore').textContent = mathGameState.score;
+            document.getElementById('mathFinalCorrect').textContent = mathGameState.correctCount;
+            document.getElementById('mathFinalWrong').textContent = mathGameState.wrongCount;
+            document.getElementById('mathFinalStreak').textContent = mathGameState.bestStreak;
+            
+            // Update high score display
+            document.getElementById('mathGameHighScore').textContent = mathGameState.highScore;
+        }
+        
+        // Initialize math game high score on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const highScore = localStorage.getItem('mathGameHighScore');
+            if (highScore) {
+                mathGameState.highScore = parseInt(highScore);
+            }
+        });
         
         // Enhanced AI Research
         let researchHistory = [];
