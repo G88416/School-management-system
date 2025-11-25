@@ -7453,7 +7453,8 @@
             // Try Bootstrap Modal first
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                 try {
-                    const modal = new bootstrap.Modal(modalElement);
+                    // Use getOrCreateInstance to reuse existing modal instance or create new one
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                     modal.show();
                     return;
                 } catch (e) {
@@ -11259,7 +11260,7 @@
 
                 // Admission Management
         function showAddAdmissionModal() {
-            new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
+            showModal('addAdmissionModal');
         }
         function renderAdmissions() {
             // Update the report date in the caption
@@ -11400,7 +11401,7 @@
                 
                 saveData();
                 renderAdmissions();
-                bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
+                safeHideModal('addAdmissionModal');
                 addNotification('Admission saved with SA-Sams format and synced to Student Info', 'success');
                 triggerDashboardUpdate();
             }
