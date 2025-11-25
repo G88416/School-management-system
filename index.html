@@ -297,8 +297,59 @@
             background: rgba(233, 69, 96, 0.1);
         }
         
-        /* Enhanced Modal */
+        /* Enhanced Modal - Fallback CSS for when Bootstrap CSS doesn't load */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1055;
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            outline: 0;
+        }
+        .modal.fade {
+            opacity: 0;
+            transition: opacity 0.15s linear;
+        }
+        .modal.show {
+            display: block !important;
+            opacity: 1;
+        }
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 1.75rem auto;
+            max-width: 500px;
+            pointer-events: none;
+        }
+        .modal-dialog.modal-lg {
+            max-width: 800px;
+        }
+        .modal.show .modal-dialog {
+            pointer-events: auto;
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+        .modal-backdrop.fade {
+            opacity: 0;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+        }
         .modal-content {
+            position: relative;
+            pointer-events: auto;
             background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
             border-radius: 24px;
             backdrop-filter: var(--glass-blur);
