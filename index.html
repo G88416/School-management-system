@@ -2562,7 +2562,7 @@
                 <li class="hod-only non-student"><a href="#hodDashboard" class="nav-link active" onclick="showSection('hodDashboard')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">HOD Dashboard</span></a></li>
                 <li class="hod-only non-student"><a href="#teacherMonitoring" class="nav-link" onclick="showSection('teacherMonitoring')"><i class="fas fa-user-check me-2"></i><span class="nav-text">Teacher Monitoring</span></a></li>
                 <li class="hod-only non-student"><a href="#teacherPortalView" class="nav-link" onclick="showSection('teacherPortalView')"><i class="fas fa-eye me-2"></i><span class="nav-text">Teacher Portal View</span></a></li>
-                <li class="hod-only non-student"><a href="#departmentReports" class="nav-link" onclick="showSection('departmentReports')"><i class="fas fa-file-chart-line me-2"></i><span class="nav-text">Department Reports</span></a></li>
+                <li class="hod-only non-student"><a href="#departmentReports" class="nav-link" onclick="showSection('departmentReports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Department Reports</span></a></li>
                 <li class="admin-only non-student"><a href="#admission" class="nav-link" onclick="showSection('admission')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Admission</span></a></li>
                 <li class="non-student"><a href="#students" class="nav-link" onclick="showSection('students')"><i class="fas fa-users me-2"></i><span class="nav-text">Student Info</span></a></li>
                 <li class="non-student"><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
@@ -2821,7 +2821,7 @@
             
             <!-- Department Reports -->
             <section id="departmentReports" class="section d-none hod-only">
-                <h2><i class="fas fa-file-chart-line me-2"></i>Department Reports</h2>
+                <h2><i class="fas fa-chart-bar me-2"></i>Department Reports</h2>
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <select id="reportType" class="form-control">
@@ -3278,7 +3278,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="card card-metric p-3 text-center">
-                                    <div class="mb-2"><i class="fas fa-trending-up fa-2x text-primary"></i></div>
+                                    <div class="mb-2"><i class="fas fa-chart-line fa-2x text-primary"></i></div>
                                     <h6 class="mb-2">Performance Trend</h6>
                                     <h4 class="mb-0" id="performanceTrend">-</h4>
                                 </div>
@@ -9535,38 +9535,40 @@
             }
             sizes.push(otherSize / 1024);
             
-            new Chart(canvas.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Users', 'Students', 'Staff', 'Attendance', 'Fees', 'Other'],
-                    datasets: [{
-                        data: sizes,
-                        backgroundColor: [
-                            '#e94560',
-                            '#ff6b6b',
-                            '#0abde3',
-                            '#10ac84',
-                            '#f39c12',
-                            '#9b59b6'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: 'rgba(255,255,255,0.7)',
-                                padding: 10,
-                                font: { size: 11 }
+            if (typeof Chart !== 'undefined') {
+                new Chart(canvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Users', 'Students', 'Staff', 'Attendance', 'Fees', 'Other'],
+                        datasets: [{
+                            data: sizes,
+                            backgroundColor: [
+                                '#e94560',
+                                '#ff6b6b',
+                                '#0abde3',
+                                '#10ac84',
+                                '#f39c12',
+                                '#9b59b6'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: 'rgba(255,255,255,0.7)',
+                                    padding: 10,
+                                    font: { size: 11 }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
         
         // Load saved storage facility settings
@@ -9602,6 +9604,12 @@
         
         // Populate selects
         function populateSelects() {
+            // Helper function to safely set innerHTML on an element
+            function safeSetInnerHTML(elementId, html) {
+                const el = document.getElementById(elementId);
+                if (el) el.innerHTML = html;
+            }
+            
             // Students
             const studentSelects = document.querySelectorAll('select[id*="Student"], select[id*="student"]');
             studentSelects.forEach(select => {
@@ -9622,26 +9630,25 @@
                 }
             });
             // Attendance class
-            document.getElementById('attendanceClass').innerHTML = '<option value="">All Classes</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            safeSetInnerHTML('attendanceClass', '<option value="">All Classes</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join(''));
             // Bulk class
-            document.getElementById('bulkClass').innerHTML = '<option value="">All Classes</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            safeSetInnerHTML('bulkClass', '<option value="">All Classes</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join(''));
             // Timetable teacher
-            document.getElementById('timetableTeacher').innerHTML = '<option value="">Select Teacher</option>' + staff.filter(s => s.role === 'Teacher').map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+            safeSetInnerHTML('timetableTeacher', '<option value="">Select Teacher</option>' + staff.filter(s => s.role === 'Teacher').map(t => `<option value="${t.name}">${t.name}</option>`).join(''));
             // Exam grade filter
-            document.getElementById('examGradeFilter').innerHTML = '<option value="">All Grades</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            safeSetInnerHTML('examGradeFilter', '<option value="">All Grades</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join(''));
             // Apply job select
-            document.getElementById('applyJobSelect').innerHTML = jobs.filter(j => j.status === 'Open').map(j => `<option value="${j.id}">${j.title}</option>`).join('');
+            safeSetInnerHTML('applyJobSelect', jobs.filter(j => j.status === 'Open').map(j => `<option value="${j.id}">${j.title}</option>`).join(''));
             // Leave staff, review staff, payroll staff
             ['leaveStaff', 'reviewStaff', 'payrollStaff'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = staff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                safeSetInnerHTML(id, staff.map(s => `<option value="${s.id}">${s.name}</option>`).join(''));
             });
             // Grading student
-            document.getElementById('gradeStudent').innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            safeSetInnerHTML('gradeStudent', students.map(s => `<option value="${s.id}">${s.name}</option>`).join(''));
             // Progress student
-            document.getElementById('progressStudent').innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            safeSetInnerHTML('progressStudent', students.map(s => `<option value="${s.id}">${s.name}</option>`).join(''));
             // Grading class
-            document.getElementById('gradingClass').innerHTML = '<option value="">Select Class</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            safeSetInnerHTML('gradingClass', '<option value="">Select Class</option>' + [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join(''));
         }
         // Dashboard
         // Real-time dashboard update interval
@@ -9702,20 +9709,22 @@
                 refreshIndicator.innerHTML = `<i class="fas fa-sync-alt me-1"></i>Last updated: ${timeStr}`;
             }
             
-            // Chart
-            const ctx = document.getElementById('dashboardChart').getContext('2d');
-            if (dashboardChart) dashboardChart.destroy();
-            dashboardChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Students', 'Staff', 'Pending Fees', 'Upcoming Exams'],
-                    datasets: [{
-                        data: [students.length, staff.length, pendingFeesTotal / 1000, upcomingExamsCount],
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-                    }]
-                },
-                options: { responsive: true }
-            });
+            // Chart - with safety check for Chart.js library
+            if (typeof Chart !== 'undefined') {
+                const ctx = document.getElementById('dashboardChart').getContext('2d');
+                if (dashboardChart) dashboardChart.destroy();
+                dashboardChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Students', 'Staff', 'Pending Fees', 'Upcoming Exams'],
+                        datasets: [{
+                            data: [students.length, staff.length, pendingFeesTotal / 1000, upcomingExamsCount],
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
         }
         
         // Trigger dashboard update when data changes
@@ -10016,106 +10025,108 @@
                 return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
             });
             
-            // Subject Performance Chart
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            if (progressChart) progressChart.destroy();
-            progressChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: subjectLabels,
-                    datasets: [{
-                        label: 'Average Score (%)',
-                        data: subjectAverages,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
+            // Subject Performance Chart - with safety check
+            if (typeof Chart !== 'undefined') {
+                const ctx = document.getElementById('progressChart').getContext('2d');
+                if (progressChart) progressChart.destroy();
+                progressChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: subjectLabels,
+                        datasets: [{
+                            label: 'Average Score (%)',
+                            data: subjectAverages,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
                                 }
                             }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { color: '#fff' }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: { color: '#fff' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y + '%';
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
-            
-            // Progress Trend Chart (chronological)
-            const trendCtx = document.getElementById('progressTrendChart').getContext('2d');
-            if (window.progressTrendChart) window.progressTrendChart.destroy();
-            
-            // Sort grades by date if available
-            const sortedGrades = [...studentGrades].sort((a, b) => {
-                const dateA = a.date ? new Date(a.date) : new Date();
-                const dateB = b.date ? new Date(b.date) : new Date();
-                return dateA - dateB;
-            });
-            
-            window.progressTrendChart = new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: sortedGrades.map((g, i) => g.date ? new Date(g.date).toLocaleDateString() : `Entry ${i + 1}`),
-                    datasets: [{
-                        label: 'Score Trend',
-                        data: sortedGrades.map(g => g.score),
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
+                });
+                
+                // Progress Trend Chart (chronological)
+                const trendCtx = document.getElementById('progressTrendChart').getContext('2d');
+                if (window.progressTrendChart) window.progressTrendChart.destroy();
+                
+                // Sort grades by date if available
+                const sortedGrades = [...studentGrades].sort((a, b) => {
+                    const dateA = a.date ? new Date(a.date) : new Date();
+                    const dateB = b.date ? new Date(b.date) : new Date();
+                    return dateA - dateB;
+                });
+                
+                window.progressTrendChart = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedGrades.map((g, i) => g.date ? new Date(g.date).toLocaleDateString() : `Entry ${i + 1}`),
+                        datasets: [{
+                            label: 'Score Trend',
+                            data: sortedGrades.map(g => g.score),
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
                                 }
                             }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { color: '#fff' }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Score: ' + context.parsed.y + '%';
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: { color: '#fff' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Score: ' + context.parsed.y + '%';
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
             
             // Helper function to get grade letter
             function getGrade(score) {
@@ -13684,20 +13695,22 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             document.getElementById('pendingLeaves').textContent = leaveRequests.filter(l => l.status === 'Pending').length;
             document.getElementById('approvedLeaves').textContent = leaveRequests.filter(l => l.status === 'Approved').length;
             document.getElementById('rejectedLeaves').textContent = leaveRequests.filter(l => l.status === 'Rejected').length;
-            // Chart
-            const ctx = document.getElementById('leaveChart').getContext('2d');
-            if (leaveChart) leaveChart.destroy();
-            leaveChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Pending', 'Approved', 'Rejected'],
-                    datasets: [{
-                        data: [leaveRequests.filter(l => l.status === 'Pending').length, leaveRequests.filter(l => l.status === 'Approved').length, leaveRequests.filter(l => l.status === 'Rejected').length],
-                        backgroundColor: ['#FFCE56', '#36A2EB', '#FF6384']
-                    }]
-                },
-                options: { responsive: true }
-            });
+            // Chart - with safety check
+            if (typeof Chart !== 'undefined') {
+                const ctx = document.getElementById('leaveChart').getContext('2d');
+                if (leaveChart) leaveChart.destroy();
+                leaveChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Pending', 'Approved', 'Rejected'],
+                        datasets: [{
+                            data: [leaveRequests.filter(l => l.status === 'Pending').length, leaveRequests.filter(l => l.status === 'Approved').length, leaveRequests.filter(l => l.status === 'Rejected').length],
+                            backgroundColor: ['#FFCE56', '#36A2EB', '#FF6384']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
         }
         function showAddLeaveModal() {
             new bootstrap.Modal(document.getElementById('addLeaveModal')).show();
@@ -13750,21 +13763,23 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             document.getElementById('totalReviews').textContent = performanceReviews.length;
             document.getElementById('goalsAchieved').textContent = performanceReviews.filter(r => r.score > 80).length;
             document.getElementById('pendingFeedback').textContent = 0; // Mock
-            // Chart
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            if (performanceChart) performanceChart.destroy();
-            performanceChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Scores'],
-                    datasets: [{
-                        label: 'Average',
-                        data: [avgScore],
-                        backgroundColor: '#4BC0C0'
-                    }]
-                },
-                options: { responsive: true }
-            });
+            // Chart - with safety check
+            if (typeof Chart !== 'undefined') {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                if (performanceChart) performanceChart.destroy();
+                performanceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Scores'],
+                        datasets: [{
+                            label: 'Average',
+                            data: [avgScore],
+                            backgroundColor: '#4BC0C0'
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
         }
         function showAddReviewModal() {
             new bootstrap.Modal(document.getElementById('addReviewModal')).show();
@@ -16772,7 +16787,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     syncOfflineData();
                 } else {
                     statusIndicator.className = 'badge bg-danger shadow';
-                    statusIndicator.innerHTML = '<i class="fas fa-wifi-slash me-1"></i>Offline';
+                    statusIndicator.innerHTML = '<i class="fas fa-times-circle me-1"></i>Offline';
                 }
             }
         }
