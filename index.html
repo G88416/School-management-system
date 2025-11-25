@@ -7966,7 +7966,14 @@
                                             }
                                             try {
                                                 const posterData = posterCanvas.toDataURL({multiplier: 1});
-                                                const gallery = JSON.parse(localStorage.getItem('posterGallery') || '[]');
+                                                let gallery = [];
+                                                try {
+                                                    gallery = JSON.parse(localStorage.getItem('posterGallery') || '[]');
+                                                    if (!Array.isArray(gallery)) gallery = [];
+                                                } catch (parseError) {
+                                                    // Handle corrupted localStorage data
+                                                    gallery = [];
+                                                }
                                                 const newPoster = {
                                                     id: Date.now(),
                                                     name: prompt('Enter poster name:', 'My Poster ' + (gallery.length + 1)) || 'Untitled Poster',
