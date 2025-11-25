@@ -13849,10 +13849,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             container.innerHTML = messages.map(m => `
                 <div class="chat-message ${m.sender === currentUser?.name ? 'chat-user' : 'chat-assistant'}">
                     <div class="d-flex justify-content-between align-items-start mb-1">
-                        <strong>${m.sender || 'Unknown'}${m.recipient ? ` → ${m.recipient}` : ''}</strong>
-                        <small class="text-muted">${m.timestamp || 'N/A'}</small>
+                        <strong>${escapeHtml(m.sender || 'Unknown')}${m.recipient ? ` → ${escapeHtml(m.recipient)}` : ''}</strong>
+                        <small class="text-muted">${escapeHtml(m.timestamp || 'N/A')}</small>
                     </div>
-                    <p class="mb-1">${m.text || ''}</p>
+                    <p class="mb-1">${escapeHtml(m.text || '')}</p>
                     ${m.viaSMS ? '<small class="badge bg-info"><i class="fas fa-sms me-1"></i>SMS</small>' : ''}
                 </div>
             `).join('');
@@ -17445,7 +17445,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                         };
                         const eventType = e.type || e.eventType || 'other';
                         const color = colors[eventType] || '#cccccc';
-                        const title = e.title || e.name || 'Event';
+                        const title = escapeHtml(e.title || e.name || 'Event');
                         calendarHTML += `<div style="background: ${color}; padding: 2px 4px; margin: 2px 0; border-radius: 3px; font-size: 0.7rem; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${title}">
                             ${title}
                         </div>`;
@@ -17489,9 +17489,9 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                 } else {
                     upcomingContainer.innerHTML = upcomingEvents.map(e => `
                         <div class="p-2 mb-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
-                            <strong>${e.title || e.name}</strong>
-                            <br><small><i class="fas fa-calendar me-1"></i>${e.date || e.eventDate} ${e.time || ''}</small>
-                            ${e.location ? `<br><small><i class="fas fa-map-marker-alt me-1"></i>${e.location}</small>` : ''}
+                            <strong>${escapeHtml(e.title || e.name)}</strong>
+                            <br><small><i class="fas fa-calendar me-1"></i>${escapeHtml(e.date || e.eventDate)} ${escapeHtml(e.time || '')}</small>
+                            ${e.location ? `<br><small><i class="fas fa-map-marker-alt me-1"></i>${escapeHtml(e.location)}</small>` : ''}
                         </div>
                     `).join('');
                 }
