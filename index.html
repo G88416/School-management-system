@@ -535,6 +535,44 @@
             box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
         }
         
+        /* Enhanced shadow effect for pressed/active tabs */
+        .nav-tabs .nav-link:active,
+        .nav-tabs .nav-link:focus {
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4), inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            background: rgba(233, 69, 96, 0.25);
+            transform: scale(0.98);
+        }
+        
+        .nav-tabs .nav-link.active:active,
+        .nav-tabs .nav-link.active:focus {
+            box-shadow: 0 6px 25px rgba(233, 69, 96, 0.5), inset 0 3px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Finance Management Table - Status, Receipt, Action columns alignment */
+        #fees table th:nth-child(5),
+        #fees table td:nth-child(5),
+        #fees table th:nth-child(6),
+        #fees table td:nth-child(6),
+        #fees table th:nth-child(7),
+        #fees table td:nth-child(7) {
+            font-size: calc(0.875rem - 3pt);
+            padding: 10px 8px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        #fees table td:nth-child(5) .badge {
+            font-size: calc(0.8rem - 3pt);
+            padding: 4px 10px;
+        }
+        
+        #fees table td:nth-child(6) .btn,
+        #fees table td:nth-child(7) .btn {
+            font-size: calc(0.8rem - 3pt);
+            padding: 5px 10px;
+            margin: 1px;
+        }
+        
         .btn-toggle-sidebar {
             position: fixed;
             top: 20px;
@@ -712,6 +750,54 @@
         .uploaded-files-list { max-height: 500px; overflow-y: auto; }
         .file-item { background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .file-item:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        /* Online Applications Tab - Quick Responsive Styles */
+        #online-applications {
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #online-applications .virtual-forms-section {
+            animation: fadeInFast 0.3s ease-out;
+        }
+        
+        @keyframes fadeInFast {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #online-applications .form-card {
+            transition: all 0.2s ease-out;
+        }
+        
+        #online-applications .btn {
+            transition: all 0.15s ease-out;
+        }
+        
+        #online-applications .btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Admission Tabs Quick Response */
+        #admissionTabs .nav-link {
+            transition: all 0.2s ease-out;
+        }
+        
+        #admissionTabs .nav-link:active {
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4), inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            transform: scale(0.98);
+        }
+        
+        /* Enhanced scroll tabs shadow effect on press */
+        .nav-tabs,
+        .nav-pills {
+            scroll-behavior: smooth;
+        }
+        
+        .nav-tabs .nav-link:active,
+        .nav-pills .nav-link:active {
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4), inset 0 2px 10px rgba(0, 0, 0, 0.25);
+            background: rgba(233, 69, 96, 0.25);
+        }
         
         /* Theme Generator Styles */
         .theme-option {
@@ -1243,6 +1329,28 @@
             
             #fees .card-metric h3 {
                 font-size: calc(1.5rem - 3pt) !important;
+            }
+            
+            /* Finance Management: Reduce Status, Receipt, and Action columns by 3pt */
+            #fees table th:nth-child(5),
+            #fees table td:nth-child(5),
+            #fees table th:nth-child(6),
+            #fees table td:nth-child(6),
+            #fees table th:nth-child(7),
+            #fees table td:nth-child(7) {
+                font-size: calc(0.85rem - 3pt) !important;
+                padding: calc(8px - 1pt) calc(5px - 1pt) !important;
+            }
+            
+            #fees table td:nth-child(5) .badge {
+                font-size: calc(0.75rem - 3pt) !important;
+                padding: calc(4px - 1pt) calc(8px - 1pt) !important;
+            }
+            
+            #fees table td:nth-child(6) .btn,
+            #fees table td:nth-child(7) .btn {
+                font-size: calc(0.75rem - 3pt) !important;
+                padding: calc(4px - 1pt) calc(8px - 1pt) !important;
             }
             
             /* HR Management: Reduce tabs by 3pt */
@@ -2994,7 +3102,7 @@
                         </select>
                     </div>
                 </div>
-                <button class="btn btn-success mb-3" onclick="showBulkAttendanceModal()">Bulk Mark Attendance</button>
+                <button class="btn btn-success mb-3" onclick="markAllPresent()"><i class="fas fa-check-double me-2"></i>Mark All Present</button>
                 <button class="btn btn-secondary mb-3" onclick="showImportAttendanceModal()">Import Attendance (CSV/Excel)</button>
                 <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
                 <button class="btn btn-danger mb-3" onclick="resetAttendance()">Reset Attendance (Save to Vault)</button>
@@ -6033,26 +6141,31 @@
                     </div>
                 </div>
             </div>
-            <!-- Bulk Attendance Modal -->
-            <div class="modal fade" id="bulkAttendanceModal">
+            <!-- Mark All Present Modal -->
+            <div class="modal fade" id="markAllPresentModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Bulk Mark Attendance</h5>
+                            <h5 class="modal-title"><i class="fas fa-check-double me-2"></i>Mark All Present</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="date" id="bulkAttendanceDate" class="form-control mb-2">
-                            <select id="bulkStatus" class="form-control mb-2">
-                                <option value="Present">All Present</option>
-                                <option value="Absent">All Absent</option>
-                            </select>
-                            <select id="bulkClass" class="form-control mb-2">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>This will mark all students as present for the selected date and class.
+                            </div>
+                            <label for="markAllPresentDate" class="form-label">Select Date:</label>
+                            <input type="date" id="markAllPresentDate" class="form-control mb-3">
+                            <label for="markAllPresentClass" class="form-label">Select Class (Optional):</label>
+                            <select id="markAllPresentClass" class="form-control mb-2">
                                 <option value="">All Classes</option>
                             </select>
+                            <div id="markAllPresentPreview" class="mt-3 p-3" style="background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                <small class="text-muted">Select a date and class to see how many students will be marked present.</small>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" onclick="bulkMarkAttendance()">Mark</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" onclick="confirmMarkAllPresent()"><i class="fas fa-check me-2"></i>Mark All Present</button>
                         </div>
                     </div>
                 </div>
@@ -12083,22 +12196,79 @@ ACCOUNT INFORMATION:
             bootstrap.Modal.getInstance(document.getElementById('attendanceModal')).hide();
             addNotification('Attendance marked', 'success');
         }
-        function showBulkAttendanceModal() {
-            new bootstrap.Modal(document.getElementById('bulkAttendanceModal')).show();
+        // Mark All Present Functions
+        function markAllPresent() {
+            // Populate class select from students
+            const classes = [...new Set(students.map(s => s.grade).filter(Boolean))].sort();
+            document.getElementById('markAllPresentClass').innerHTML = '<option value="">All Classes</option>' + 
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Set default date to today
+            document.getElementById('markAllPresentDate').value = new Date().toISOString().split('T')[0];
+            
+            // Update preview
+            updateMarkAllPresentPreview();
+            
+            new bootstrap.Modal(document.getElementById('markAllPresentModal')).show();
         }
-        function bulkMarkAttendance() {
-            const date = document.getElementById('bulkAttendanceDate').value;
-            const status = document.getElementById('bulkStatus').value;
-            const classFilter = document.getElementById('bulkClass').value;
+        
+        function updateMarkAllPresentPreview() {
+            const classFilter = document.getElementById('markAllPresentClass').value;
+            const date = document.getElementById('markAllPresentDate').value;
             const filteredStudents = classFilter ? students.filter(s => s.grade === classFilter) : students;
+            
+            const previewEl = document.getElementById('markAllPresentPreview');
+            if (filteredStudents.length > 0) {
+                previewEl.innerHTML = `
+                    <div class="text-success">
+                        <i class="fas fa-users me-2"></i><strong>${filteredStudents.length}</strong> students will be marked as <span class="badge bg-success">Present</span> on <strong>${date || 'selected date'}</strong>
+                    </div>
+                `;
+            } else {
+                previewEl.innerHTML = `<div class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>No students found for the selected criteria.</div>`;
+            }
+        }
+        
+        function confirmMarkAllPresent() {
+            const date = document.getElementById('markAllPresentDate').value;
+            const classFilter = document.getElementById('markAllPresentClass').value;
+            
+            if (!date) {
+                addNotification('Please select a date', 'warning');
+                return;
+            }
+            
+            const filteredStudents = classFilter ? students.filter(s => s.grade === classFilter) : students;
+            
+            if (filteredStudents.length === 0) {
+                addNotification('No students found for the selected criteria', 'warning');
+                return;
+            }
+            
             if (!attendanceRecords[date]) attendanceRecords[date] = {};
+            
             filteredStudents.forEach(s => {
-                attendanceRecords[date][s.id] = { status };
+                attendanceRecords[date][s.id] = { status: 'Present', notes: 'Marked via Mark All Present' };
             });
+            
             saveData();
             loadAttendance();
-            bootstrap.Modal.getInstance(document.getElementById('bulkAttendanceModal')).hide();
-            addNotification('Bulk attendance marked', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('markAllPresentModal')).hide();
+            addNotification(`✅ Successfully marked ${filteredStudents.length} students as Present for ${date}`, 'success');
+            logAudit('Mark All Present', `Marked ${filteredStudents.length} students present for ${date}${classFilter ? ` (${classFilter})` : ''}`, 'Medium');
+        }
+        
+        // Add event listeners for preview updates
+        document.getElementById('markAllPresentDate')?.addEventListener('change', updateMarkAllPresentPreview);
+        document.getElementById('markAllPresentClass')?.addEventListener('change', updateMarkAllPresentPreview);
+        
+        function showBulkAttendanceModal() {
+            // Redirect to new Mark All Present function for backward compatibility
+            markAllPresent();
+        }
+        function bulkMarkAttendance() {
+            // Redirect to new function for backward compatibility
+            confirmMarkAllPresent();
         }
         
         function showImportAttendanceModal() {
@@ -13664,31 +13834,85 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
 
         // Communication
         function renderMessages() {
-            document.getElementById('messagesContainer').innerHTML = messages.map(m => `
-                <div class="chat-message ${m.sender === currentUser.name ? 'chat-user' : 'chat-assistant'}">
-                    <strong>${m.sender}:</strong> ${m.text} <small>${m.timestamp}</small>
+            const container = document.getElementById('messagesContainer');
+            if (!container) return;
+            
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No messages yet. Click "Send Message" to start a conversation.
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = messages.map(m => `
+                <div class="chat-message ${m.sender === currentUser?.name ? 'chat-user' : 'chat-assistant'}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong>${escapeHtml(m.sender || 'Unknown')}${m.recipient ? ` → ${escapeHtml(m.recipient)}` : ''}</strong>
+                        <small class="text-muted">${escapeHtml(m.timestamp || 'N/A')}</small>
+                    </div>
+                    <p class="mb-1">${escapeHtml(m.text || '')}</p>
+                    ${m.viaSMS ? '<small class="badge bg-info"><i class="fas fa-sms me-1"></i>SMS</small>' : ''}
                 </div>
             `).join('');
         }
         function showSendMessageModal() {
+            // Populate recipient dropdown with students and staff
+            const recipientSelect = document.getElementById('messageRecipient');
+            if (recipientSelect) {
+                let options = '<option value="">Select Recipient (or leave blank for broadcast)</option>';
+                options += '<optgroup label="Students">';
+                students.forEach(s => {
+                    options += `<option value="${s.name}">${s.name} (${s.grade || 'N/A'})</option>`;
+                });
+                options += '</optgroup>';
+                options += '<optgroup label="Staff">';
+                staff.forEach(s => {
+                    options += `<option value="${s.name}">${s.name} (${s.role || 'N/A'})</option>`;
+                });
+                options += '</optgroup>';
+                recipientSelect.innerHTML = options;
+            }
             new bootstrap.Modal(document.getElementById('sendMessageModal')).show();
         }
         function sendMessage() {
-            const recipient = document.getElementById('messageRecipient').value;
-            const text = document.getElementById('messageText').value;
-            const viaSMS = document.getElementById('sendViaSMS').checked;
-            if (text) {
-                const id = Date.now();
-                messages.push({ id, sender: currentUser.name, recipient, text, timestamp: new Date().toLocaleString(), viaSMS });
-                if (viaSMS) {
-                    // Mock SMS
-                    addNotification('SMS sent via WinSMS', 'info');
-                }
-                saveData();
-                renderMessages();
-                bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
-                addNotification('Message sent', 'success');
+            const recipient = document.getElementById('messageRecipient')?.value || '';
+            const text = document.getElementById('messageText')?.value?.trim();
+            const viaSMS = document.getElementById('sendViaSMS')?.checked || false;
+            
+            if (!text) {
+                addNotification('Please enter a message', 'warning');
+                return;
             }
+            
+            if (!currentUser) {
+                addNotification('Please log in to send messages', 'error');
+                return;
+            }
+            
+            const id = Date.now();
+            messages.push({ 
+                id, 
+                sender: currentUser.name, 
+                recipient: recipient || 'All', 
+                text, 
+                timestamp: new Date().toLocaleString(), 
+                viaSMS 
+            });
+            
+            if (viaSMS) {
+                addNotification('SMS sent via WinSMS', 'info');
+            }
+            
+            saveData();
+            renderMessages();
+            
+            // Clear form
+            document.getElementById('messageText').value = '';
+            
+            bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
+            addNotification(`Message sent${recipient ? ` to ${recipient}` : ' to All'}`, 'success');
         }
         function viewAnnouncements() {
             announcements.forEach(a => {
@@ -17098,7 +17322,201 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         }
         
         function showUpcomingEventsCalendar() {
-            addNotification('Calendar view coming soon!', 'info');
+            // Create and display a calendar modal for events
+            const today = new Date();
+            const currentMonth = today.toISOString().slice(0, 7);
+            
+            // Get all events
+            const allEvents = JSON.parse(localStorage.getItem('schoolEvents') || '[]');
+            const calendarEventsData = calendarEvents || [];
+            const combinedEvents = [...allEvents, ...calendarEventsData];
+            
+            // Generate calendar HTML
+            const modalId = 'eventsCalendarModal';
+            let existingModal = document.getElementById(modalId);
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modalHTML = `
+                <div class="modal fade" id="${modalId}" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="fas fa-calendar me-2"></i>Events Calendar</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <input type="month" id="eventsCalendarMonth" class="form-control" value="${currentMonth}" onchange="renderEventsCalendar()">
+                                    </div>
+                                    <div class="col-md-8 text-end">
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="navigateEventsCalendar(-1)"><i class="fas fa-chevron-left"></i> Previous</button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="navigateEventsCalendar(1)">Next <i class="fas fa-chevron-right"></i></button>
+                                    </div>
+                                </div>
+                                <div id="eventsCalendarView"></div>
+                                <div class="mt-3">
+                                    <h6>Upcoming Events</h6>
+                                    <div id="eventsCalendarUpcoming"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            renderEventsCalendar();
+            new bootstrap.Modal(document.getElementById(modalId)).show();
+        }
+        
+        function navigateEventsCalendar(direction) {
+            const monthInput = document.getElementById('eventsCalendarMonth');
+            if (!monthInput) return;
+            
+            const current = new Date(monthInput.value + '-01');
+            current.setMonth(current.getMonth() + direction);
+            monthInput.value = current.toISOString().slice(0, 7);
+            renderEventsCalendar();
+        }
+        
+        function renderEventsCalendar() {
+            const monthInput = document.getElementById('eventsCalendarMonth');
+            if (!monthInput) return;
+            
+            const currentMonth = monthInput.value ? new Date(monthInput.value + '-01') : new Date();
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            // Get all events
+            const schoolEvents = JSON.parse(localStorage.getItem('schoolEvents') || '[]');
+            const allEvents = [...schoolEvents, ...(calendarEvents || [])];
+            
+            // Generate calendar HTML
+            let calendarHTML = '<table class="table table-bordered" style="background: rgba(255,255,255,0.1);">';
+            calendarHTML += '<thead><tr style="background: rgba(255,255,255,0.2);">';
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                calendarHTML += `<th class="text-center" style="color: #fff;">${day}</th>`;
+            });
+            calendarHTML += '</tr></thead><tbody><tr>';
+            
+            // Empty cells for days before start of month
+            for (let i = 0; i < startDay; i++) {
+                calendarHTML += '<td style="background: rgba(255,255,255,0.02);"></td>';
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = allEvents.filter(e => e.date === currentDate || e.eventDate === currentDate);
+                const isToday = currentDate === today;
+                
+                const cellStyle = isToday ? 'background: rgba(233, 69, 96, 0.3); border: 2px solid var(--accent-primary);' : 'background: rgba(255,255,255,0.05);';
+                
+                calendarHTML += `<td style="height: 100px; vertical-align: top; cursor: pointer; ${cellStyle}" onclick="showEventsForDate('${currentDate}')">`;
+                calendarHTML += `<strong style="color: ${isToday ? 'var(--accent-secondary)' : '#fff'};">${day}</strong><br>`;
+                
+                if (dayEvents.length > 0) {
+                    dayEvents.slice(0, 3).forEach(e => {
+                        const colors = {
+                            'excursion': '#36A2EB',
+                            'fundraising': '#FFCE56',
+                            'sports': '#FF6384',
+                            'cultural': '#4BC0C0',
+                            'academic': '#9966FF',
+                            'meeting': '#FF9F40',
+                            'ceremony': '#C9CBCF',
+                            'Class': '#36A2EB',
+                            'Meeting': '#FFCE56',
+                            'Exam': '#FF6384',
+                            'Event': '#4BC0C0',
+                            'Deadline': '#FF9F40'
+                        };
+                        const eventType = e.type || e.eventType || 'other';
+                        const color = colors[eventType] || '#cccccc';
+                        const title = escapeHtml(e.title || e.name || 'Event');
+                        calendarHTML += `<div style="background: ${color}; padding: 2px 4px; margin: 2px 0; border-radius: 3px; font-size: 0.7rem; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${title}">
+                            ${title}
+                        </div>`;
+                    });
+                    if (dayEvents.length > 3) {
+                        calendarHTML += `<small style="color: rgba(255,255,255,0.6);">+${dayEvents.length - 3} more</small>`;
+                    }
+                }
+                
+                calendarHTML += '</td>';
+                
+                if ((startDay + day) % 7 === 0) {
+                    calendarHTML += '</tr><tr>';
+                }
+            }
+            
+            // Fill remaining cells
+            const totalCells = startDay + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                calendarHTML += '<td style="background: rgba(255,255,255,0.02);"></td>';
+            }
+            
+            calendarHTML += '</tr></tbody></table>';
+            
+            const calendarView = document.getElementById('eventsCalendarView');
+            if (calendarView) {
+                calendarView.innerHTML = calendarHTML;
+            }
+            
+            // Render upcoming events
+            const upcomingEvents = allEvents
+                .filter(e => (e.date || e.eventDate) >= today)
+                .sort((a, b) => (a.date || a.eventDate).localeCompare(b.date || b.eventDate))
+                .slice(0, 5);
+            
+            const upcomingContainer = document.getElementById('eventsCalendarUpcoming');
+            if (upcomingContainer) {
+                if (upcomingEvents.length === 0) {
+                    upcomingContainer.innerHTML = '<p class="text-muted">No upcoming events.</p>';
+                } else {
+                    upcomingContainer.innerHTML = upcomingEvents.map(e => `
+                        <div class="p-2 mb-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                            <strong>${escapeHtml(e.title || e.name)}</strong>
+                            <br><small><i class="fas fa-calendar me-1"></i>${escapeHtml(e.date || e.eventDate)} ${escapeHtml(e.time || '')}</small>
+                            ${e.location ? `<br><small><i class="fas fa-map-marker-alt me-1"></i>${escapeHtml(e.location)}</small>` : ''}
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        function showEventsForDate(date) {
+            const schoolEvents = JSON.parse(localStorage.getItem('schoolEvents') || '[]');
+            const allEvents = [...schoolEvents, ...(calendarEvents || [])];
+            const dayEvents = allEvents.filter(e => e.date === date || e.eventDate === date);
+            
+            if (dayEvents.length === 0) {
+                addNotification(`No events scheduled for ${date}`, 'info');
+                return;
+            }
+            
+            let message = `Events on ${date}:\n\n`;
+            dayEvents.forEach(e => {
+                message += `• ${e.title || e.name}`;
+                if (e.time) message += ` at ${e.time}`;
+                if (e.location) message += ` (${e.location})`;
+                message += '\n';
+            });
+            
+            alert(message);
         }
         
         function populateEventSelects() {
@@ -18556,7 +18974,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         loadSavedTheme(); // Load saved theme on page load
         loadVirtualForms(); // Load virtual forms
         document.getElementById('payrollMonthFilter').value = new Date().toISOString().slice(0,7);
-        document.getElementById('bulkAttendanceDate').value = new Date().toISOString().split('T')[0];
+        if (document.getElementById('markAllPresentDate')) {
+            document.getElementById('markAllPresentDate').value = new Date().toISOString().split('T')[0];
+        }
         if (document.getElementById('calendarMonth')) {
             document.getElementById('calendarMonth').value = new Date().toISOString().slice(0,7);
         }
