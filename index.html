@@ -6450,293 +6450,296 @@
                                     </button>
                                 </div>
                                 <div class="tab-pane fade" id="create-poster">
-                                    <!-- Spectacular Poster Creator – Canva-Level Beauty (100% Free & Offline) -->
-                                    <!-- Fabric.js v6 (latest 2025) -->
-                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/6.4.4/fabric.min.js"></script>
-                                    
-                                    <!-- Google Fonts (most popular for posters) -->
-                                    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Oswald:wght@700&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-                                    
+                                    <!-- Advanced Online Poster Creator -->
+                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
                                     <style>
-                                        #poster-creator-container { 
-                                            margin:0; 
-                                            font-family:'Montserrat',sans-serif; 
-                                            background:#f8f9fa; 
-                                            display:grid; 
-                                            grid-template-columns:260px 1fr 300px; 
-                                            height:85vh; 
-                                            overflow:hidden; 
-                                            border-radius:20px;
-                                            box-shadow:0 10px 50px rgba(0,0,0,0.15);
+                                        #poster-creator-section {
+                                            font-family: Arial, sans-serif;
+                                            margin: 0;
+                                            padding: 0;
+                                            background-color: #f4f4f4;
                                         }
-                                        #poster-left, #poster-right { 
-                                            background:rgba(255, 255, 255, 0.98); 
-                                            border-right:1px solid rgba(0,0,0,0.08); 
-                                            padding:20px; 
-                                            overflow-y:auto; 
-                                            box-shadow:0 4px 20px rgba(0,0,0,0.08); 
-                                            backdrop-filter: blur(15px);
-                                            scrollbar-width: thin;
+                                        #poster-creator-section .poster-container {
+                                            display: flex;
+                                            min-height: 80vh;
                                         }
-                                        #poster-right { border-left:1px solid rgba(0,0,0,0.08); border-right:none; }
-                                        #poster-creator-container h2 { 
-                                            margin:0 0 20px; 
-                                            font-size:20px; 
-                                            color:#1a1a1a; 
-                                            font-weight:700;
-                                            text-align:center;
-                                            padding-bottom:10px;
-                                            border-bottom:2px solid #007bff;
+                                        #poster-creator-section #canvas-container {
+                                            flex: 1;
+                                            display: flex;
+                                            justify-content: center;
+                                            align-items: center;
+                                            background-color: white;
+                                            border: 1px solid #ddd;
                                         }
-                                        #poster-creator-container h3 { 
-                                            margin:0 0 12px; 
-                                            font-size:15px; 
-                                            color:#444; 
-                                            font-weight:600;
+                                        #poster-creator-section #posterCanvas {
+                                            border: 1px solid #ccc;
+                                            box-shadow: 0 0 10px rgba(0,0,0,0.1);
                                         }
-                                        #poster-creator-container button, 
-                                        #poster-creator-container select, 
-                                        #poster-creator-container input:not([type="color"]):not([type="range"]) { 
-                                            width:100%; 
-                                            padding:12px 14px; 
-                                            margin:8px 0; 
-                                            border-radius:10px; 
-                                            border:1px solid #e0e0e0; 
-                                            background:#fff; 
-                                            cursor:pointer; 
-                                            transition:all 0.3s ease;
-                                            font-size:14px;
-                                            font-weight:500;
+                                        #poster-creator-section .toolbar {
+                                            width: 250px;
+                                            background-color: #fff;
+                                            padding: 20px;
+                                            overflow-y: auto;
+                                            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
                                         }
-                                        #poster-creator-container button { 
-                                            background:linear-gradient(135deg, #667eea, #764ba2);
-                                            color:#fff;
-                                            border:none;
-                                            box-shadow:0 2px 8px rgba(102,126,234,0.3);
+                                        #poster-creator-section .toolbar h3 {
+                                            margin-top: 0;
+                                            color: #333;
                                         }
-                                        #poster-creator-container button:hover { 
-                                            transform:translateY(-3px); 
-                                            box-shadow:0 6px 16px rgba(102,126,234,0.4);
+                                        #poster-creator-section .toolbar button, 
+                                        #poster-creator-section .toolbar input, 
+                                        #poster-creator-section .toolbar select {
+                                            width: 100%;
+                                            margin-bottom: 10px;
+                                            padding: 8px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 4px;
                                         }
-                                        #poster-creator-container button:active { 
-                                            transform:translateY(-1px); 
-                                            box-shadow:0 3px 10px rgba(102,126,234,0.3);
+                                        #poster-creator-section .toolbar button {
+                                            background-color: #007bff;
+                                            color: white;
+                                            border: none;
+                                            cursor: pointer;
                                         }
-                                        .poster-section { 
-                                            margin-bottom:28px; 
-                                            padding:15px;
-                                            background:rgba(248,249,250,0.6);
-                                            border-radius:12px;
+                                        #poster-creator-section .toolbar button:hover {
+                                            background-color: #0056b3;
                                         }
-                                        .poster-color-picker { 
-                                            height:50px; 
-                                            width:100%; 
-                                            border:3px solid #e0e0e0; 
-                                            border-radius:10px; 
-                                            cursor:pointer;
-                                            transition:all 0.3s;
+                                        #poster-creator-section .color-picker {
+                                            width: 100%;
+                                            height: 40px;
                                         }
-                                        .poster-color-picker:hover {
-                                            border-color:#007bff;
-                                            transform:scale(1.02);
+                                        #poster-creator-section #export-btn {
+                                            background-color: #28a745;
+                                            margin-top: 20px;
                                         }
-                                        #poster-canvas-wrapper { 
-                                            background:linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%); 
-                                            display:flex; 
-                                            align-items:center; 
-                                            justify-content:center; 
-                                            overflow:auto; 
-                                            padding:30px;
-                                            position:relative;
+                                        #poster-creator-section #export-btn:hover {
+                                            background-color: #218838;
                                         }
-                                        #poster-canvas { 
-                                            box-shadow:0 25px 80px rgba(0,0,0,0.5); 
-                                            background:white; 
-                                            border-radius:12px;
-                                            max-width:100%;
-                                            max-height:100%;
-                                        }
-                                        #poster-layers { list-style:none; padding:0; margin:0; }
-                                        #poster-layers li { 
-                                            padding:12px 14px; 
-                                            background:#f8f9fa; 
-                                            margin:8px 0; 
-                                            border-radius:8px; 
-                                            cursor:pointer; 
-                                            display:flex; 
-                                            justify-content:space-between; 
-                                            align-items:center;
-                                            transition:all 0.25s;
-                                            font-size:13px;
-                                            border:1px solid transparent;
-                                        }
-                                        #poster-layers li:hover { 
-                                            background:#e9ecef; 
-                                            transform:translateX(5px);
-                                            border-color:#007bff;
-                                        }
-                                        #poster-layers li.active { 
-                                            background:linear-gradient(135deg, #007bff, #0056b3); 
-                                            color:white; 
-                                            font-weight:600;
-                                            box-shadow:0 4px 12px rgba(0,123,255,0.3);
-                                        }
-                                        .poster-template-thumb { 
-                                            height:130px; 
-                                            background-size:cover; 
-                                            background-position:center; 
-                                            border-radius:12px; 
-                                            margin:12px 0; 
-                                            cursor:pointer; 
-                                            border:3px solid #e0e0e0; 
-                                            transition:all 0.3s ease;
-                                            position:relative;
-                                            overflow:hidden;
-                                        }
-                                        .poster-template-thumb:hover { 
-                                            border-color:#007bff; 
-                                            transform:scale(1.06) translateY(-2px); 
-                                            box-shadow:0 10px 30px rgba(0,123,255,0.35);
-                                        }
-                                        .poster-template-thumb::after {
-                                            content:'✨ Click to Use Template';
-                                            position:absolute;
-                                            bottom:0;
-                                            left:0;
-                                            right:0;
-                                            background:rgba(0,0,0,0.85);
-                                            color:#fff;
-                                            padding:10px;
-                                            text-align:center;
-                                            font-size:12px;
-                                            font-weight:600;
-                                            opacity:0;
-                                            transition:opacity 0.3s;
-                                        }
-                                        .poster-template-thumb:hover::after { opacity:1; }
-                                        
-                                        /* Responsive Design for Mobile */
-                                        @media (max-width: 1200px) {
-                                            #poster-creator-container {
-                                                grid-template-columns:240px 1fr 280px;
-                                            }
-                                        }
-                                        @media (max-width: 1024px) {
-                                            #poster-creator-container {
-                                                grid-template-columns:1fr;
-                                                grid-template-rows:auto 1fr auto;
-                                                height:auto;
-                                                min-height:95vh;
-                                            }
-                                            #poster-left, #poster-right {
-                                                border:none;
-                                                border-bottom:2px solid rgba(0,0,0,0.1);
-                                            }
-                                            #poster-canvas-wrapper {
-                                                min-height:550px;
-                                                padding:20px;
-                                            }
-                                            .poster-template-thumb { height:90px; }
-                                            #poster-creator-container h2 { font-size:18px; }
-                                        }
-                                        @media (max-width: 768px) {
-                                            #poster-creator-container { 
-                                                height:auto;
-                                                border-radius:15px;
-                                            }
-                                            #poster-canvas-wrapper { 
-                                                padding:15px; 
-                                                min-height:450px;
-                                            }
-                                            #poster-canvas { 
-                                                max-width:calc(100vw - 30px);
-                                                height:auto;
-                                            }
-                                            #poster-left, #poster-right {
-                                                padding:15px;
-                                            }
-                                            .poster-section { padding:12px; margin-bottom:20px; }
-                                            #poster-creator-container button {
-                                                padding:10px 12px;
-                                                font-size:13px;
-                                            }
-                                            .poster-template-thumb { height:70px; }
-                                        }
-                                        @media (max-width: 480px) {
-                                            #poster-creator-container {
-                                                border-radius:10px;
-                                            }
-                                            #poster-canvas-wrapper {
-                                                min-height:350px;
-                                                padding:10px;
-                                            }
-                                            #poster-canvas {
-                                                max-width:100%;
-                                            }
-                                            .poster-template-thumb { height:60px; }
+                                        #poster-creator-section .controls {
+                                            margin-bottom: 20px;
+                                            padding: 10px;
+                                            border: 1px solid #eee;
+                                            border-radius: 4px;
                                         }
                                     </style>
                                     
-                                    <div id="poster-creator-container">
-                                        <!-- LEFT SIDEBAR -->
-                                        <div id="poster-left">
-                                            <h2>🎨 Poster Creator</h2>
-                                            <div class="poster-section">
-                                                <h3>Add Elements</h3>
-                                                <button onclick="addPosterText()">📝 Add Heading</button>
-                                                <button onclick="addPosterText('Body text here...',40)">📄 Add Paragraph</button>
-                                                <button onclick="uploadPosterImage()">🖼️ Upload Image</button>
-                                                <button onclick="addPosterShape('rect')">⬜ Rectangle</button>
-                                                <button onclick="addPosterShape('circle')">⭕ Circle</button>
-                                                <button onclick="addPosterShape('triangle')">🔺 Triangle</button>
+                                    <div id="poster-creator-section">
+                                        <div class="poster-container">
+                                            <div class="toolbar">
+                                                <h3>Poster Creator</h3>
+                                                
+                                                <div class="controls">
+                                                    <h4>Background</h4>
+                                                    <input type="color" id="poster-bg-color" class="color-picker" value="#ffffff">
+                                                    <button onclick="setPosterBackgroundColor()">Apply BG Color</button>
+                                                </div>
+                                                
+                                                <div class="controls">
+                                                    <h4>Add Text</h4>
+                                                    <input type="text" id="poster-text-input" placeholder="Enter text" value="Sample Text">
+                                                    <select id="poster-font-family">
+                                                        <option value="Arial">Arial</option>
+                                                        <option value="Helvetica">Helvetica</option>
+                                                        <option value="Times New Roman">Times New Roman</option>
+                                                        <option value="Georgia">Georgia</option>
+                                                        <option value="Courier New">Courier New</option>
+                                                    </select>
+                                                    <input type="number" id="poster-font-size" placeholder="Font Size" value="40" min="10" max="100">
+                                                    <input type="color" id="poster-text-color" class="color-picker" value="#000000">
+                                                    <button onclick="addPosterTextElement()">Add Text</button>
+                                                </div>
+                                                
+                                                <div class="controls">
+                                                    <h4>Add Image</h4>
+                                                    <input type="file" id="poster-image-upload" accept="image/*">
+                                                    <button onclick="addPosterImageFromUrl()">Add from URL</button>
+                                                    <input type="url" id="poster-image-url" placeholder="Image URL">
+                                                </div>
+                                                
+                                                <div class="controls">
+                                                    <h4>Actions</h4>
+                                                    <button onclick="posterBringToFront()">Bring to Front</button>
+                                                    <button onclick="posterSendToBack()">Send to Back</button>
+                                                    <button onclick="deletePosterSelected()">Delete Selected</button>
+                                                    <button onclick="clearPosterCanvas()">Clear All</button>
+                                                </div>
+                                                
+                                                <div class="controls">
+                                                    <h4>Export</h4>
+                                                    <button id="export-btn" onclick="exportPosterAsPng()">Export as PNG</button>
+                                                    <button onclick="exportPosterAsPdf()">Export as PDF</button>
+                                                </div>
                                             </div>
-                                            <div class="poster-section">
-                                                <h3>Background</h3>
-                                                <input type="color" class="poster-color-picker" onchange="setPosterBgColor(this.value)" value="#ffffff">
-                                                <button onclick="unsplashPosterBg()">🌄 Random Unsplash Background</button>
+                                            
+                                            <div id="canvas-container">
+                                                <canvas id="posterCanvas" width="800" height="600"></canvas>
                                             </div>
-                                            <div class="poster-section">
-                                                <h3>Quick Templates</h3>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?event')" onclick="loadPosterTemplate('event')"></div>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?sale')" onclick="loadPosterTemplate('sale')"></div>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?motivation')" onclick="loadPosterTemplate('motivation')"></div>
-                                            </div>
-                                            <div class="poster-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
-                                                <h3 style="color: #10b981;">💾 Save & Export</h3>
-                                                <button onclick="downloadPoster()" style="background: linear-gradient(135deg, #10b981, #22c55e);">📥 Download PNG</button>
-                                                <button onclick="savePosterToGallery()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">💾 Save to Gallery</button>
-                                                <button onclick="clearPosterCanvas()" style="background: linear-gradient(135deg, #ef4444, #f87171);">🗑️ Clear Canvas</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- CENTER CANVAS -->
-                                        <div id="poster-canvas-wrapper">
-                                            <canvas id="poster-canvas" width="800" height="1200"></canvas>
-                                        </div>
-                                        
-                                        <!-- RIGHT SIDEBAR – Properties & Layers -->
-                                        <div id="poster-right">
-                                            <h2>Properties</h2>
-                                            <div id="poster-props" style="display:none">
-                                                <select id="posterFontFamily" onchange="setPosterProp('fontFamily',this.value)">
-                                                    <option>Bebas Neue</option>
-                                                    <option>Montserrat</option>
-                                                    <option>Playfair Display</option>
-                                                    <option>Oswald</option>
-                                                    <option>Dancing Script</option>
-                                                </select>
-                                                <input type="range" id="posterFontSize" min="10" max="300" value="80" onchange="setPosterProp('fontSize',this.value)">
-                                                <input type="color" class="poster-color-picker" id="posterFill" value="#000000" onchange="setPosterProp('fill',this.value)">
-                                                <button onclick="togglePosterProp('fontWeight','bold')">Bold</button>
-                                                <button onclick="togglePosterProp('fontStyle','italic')">Italic</button>
-                                                <button onclick="setPosterProp('textAlign','center')">Center</button>
-                                                <button onclick="deletePosterActive()">Delete</button>
-                                                <button onclick="posterCanvas.bringToFront(posterActiveObject)">Bring to Front</button>
-                                            </div>
-                                            <h2>Layers</h2>
-                                            <ul id="poster-layers"></ul>
                                         </div>
                                     </div>
+
+                                    <script>
+                                        // Initialize Fabric.js canvas for poster creator
+                                        var posterCanvas;
+                                        
+                                        function initPosterCanvas() {
+                                            if (typeof fabric !== 'undefined' && document.getElementById('posterCanvas')) {
+                                                posterCanvas = new fabric.Canvas('posterCanvas', {
+                                                    backgroundColor: '#ffffff',
+                                                    selection: true,
+                                                    preserveObjectStacking: true
+                                                });
+
+                                                // Enable drag-and-drop for images
+                                                document.getElementById('poster-image-upload').addEventListener('change', function(e) {
+                                                    var file = e.target.files[0];
+                                                    if (file) {
+                                                        var reader = new FileReader();
+                                                        reader.onload = function(event) {
+                                                            fabric.Image.fromURL(event.target.result, function(img) {
+                                                                img.scale(0.5);
+                                                                posterCanvas.add(img);
+                                                                posterCanvas.renderAll();
+                                                            });
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                });
+
+                                                // Make canvas responsive
+                                                resizePosterCanvas();
+                                                window.addEventListener('resize', resizePosterCanvas);
+                                                
+                                                // Keyboard shortcuts
+                                                document.addEventListener('keydown', function(e) {
+                                                    if (e.key === 'Delete' && posterCanvas) {
+                                                        deletePosterSelected();
+                                                    }
+                                                });
+                                            }
+                                        }
+
+                                        function setPosterBackgroundColor() {
+                                            if (!posterCanvas) return;
+                                            var color = document.getElementById('poster-bg-color').value;
+                                            posterCanvas.setBackgroundColor(color, posterCanvas.renderAll.bind(posterCanvas));
+                                        }
+
+                                        function addPosterTextElement() {
+                                            if (!posterCanvas) return;
+                                            var text = document.getElementById('poster-text-input').value;
+                                            var fontFamily = document.getElementById('poster-font-family').value;
+                                            var fontSize = parseInt(document.getElementById('poster-font-size').value);
+                                            var textColor = document.getElementById('poster-text-color').value;
+
+                                            if (!text) return;
+
+                                            var textObj = new fabric.IText(text, {
+                                                left: 100,
+                                                top: 100,
+                                                fontFamily: fontFamily,
+                                                fontSize: fontSize,
+                                                fill: textColor,
+                                                editable: true
+                                            });
+
+                                            posterCanvas.add(textObj);
+                                            posterCanvas.setActiveObject(textObj);
+                                            posterCanvas.renderAll();
+
+                                            // Clear input
+                                            document.getElementById('poster-text-input').value = '';
+                                        }
+
+                                        function addPosterImageFromUrl() {
+                                            if (!posterCanvas) return;
+                                            var url = document.getElementById('poster-image-url').value;
+                                            if (!url) return;
+
+                                            fabric.Image.fromURL(url, function(img) {
+                                                img.scale(0.5);
+                                                posterCanvas.add(img);
+                                                posterCanvas.renderAll();
+                                            });
+                                            document.getElementById('poster-image-url').value = '';
+                                        }
+
+                                        function posterBringToFront() {
+                                            if (!posterCanvas) return;
+                                            var activeObject = posterCanvas.getActiveObject();
+                                            if (activeObject) {
+                                                activeObject.bringToFront();
+                                                posterCanvas.renderAll();
+                                            }
+                                        }
+
+                                        function posterSendToBack() {
+                                            if (!posterCanvas) return;
+                                            var activeObject = posterCanvas.getActiveObject();
+                                            if (activeObject) {
+                                                activeObject.sendToBack();
+                                                posterCanvas.renderAll();
+                                            }
+                                        }
+
+                                        function deletePosterSelected() {
+                                            if (!posterCanvas) return;
+                                            var activeObject = posterCanvas.getActiveObject();
+                                            if (activeObject) {
+                                                posterCanvas.remove(activeObject);
+                                                posterCanvas.renderAll();
+                                            }
+                                        }
+
+                                        function clearPosterCanvas() {
+                                            if (!posterCanvas) return;
+                                            if (confirm('Clear all elements?')) {
+                                                posterCanvas.clear();
+                                                posterCanvas.setBackgroundColor('#ffffff', posterCanvas.renderAll.bind(posterCanvas));
+                                            }
+                                        }
+
+                                        function exportPosterAsPng() {
+                                            if (!posterCanvas) return;
+                                            var dataURL = posterCanvas.toDataURL({
+                                                format: 'png',
+                                                quality: 1
+                                            });
+                                            var link = document.createElement('a');
+                                            link.download = 'poster.png';
+                                            link.href = dataURL;
+                                            link.click();
+                                        }
+
+                                        function exportPosterAsPdf() {
+                                            // For PDF export, we'll use html2canvas and jsPDF (add CDNs if needed)
+                                            alert('PDF export requires additional setup. Use PNG for now, or add jsPDF/html2canvas libraries.');
+                                        }
+
+                                        function resizePosterCanvas() {
+                                            if (!posterCanvas) return;
+                                            var container = document.getElementById('canvas-container');
+                                            if (container) {
+                                                var width = container.clientWidth - 20;
+                                                var height = container.clientHeight - 20;
+                                                posterCanvas.setWidth(width);
+                                                posterCanvas.setHeight(height);
+                                            }
+                                        }
+
+                                        // Initialize poster canvas when the tab is shown
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            // Try to initialize immediately
+                                            setTimeout(initPosterCanvas, 500);
+                                            
+                                            // Also try when the tab becomes visible
+                                            var posterTab = document.querySelector('[href="#create-poster"]');
+                                            if (posterTab) {
+                                                posterTab.addEventListener('click', function() {
+                                                    setTimeout(initPosterCanvas, 100);
+                                                });
+                                            }
+                                        });
+                                    </script>
                                     
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
@@ -7639,385 +7642,6 @@
         var dataVault = [];
         var teacherChats = [];
         var adminMessages = [];
-                                    let posterCanvas;
-                                    let posterActiveObject = null;
-                                    let posterInitialized = false;
-                                    
-                                    // Initialize poster creator when tab is shown
-                                    function initPosterCreator() {
-                                        if (posterInitialized) return;
-                                        posterInitialized = true;
-                                        
-                                        posterCanvas = new fabric.Canvas('poster-canvas', { 
-                                            preserveObjectStacking: true,
-                                            backgroundColor: '#f8f9fa'
-                                        });
-                                        
-                                        // Update right panel when selection changes
-                                        posterCanvas.on('selection:created', updatePosterUI);
-                                        posterCanvas.on('selection:updated', updatePosterUI);
-                                        posterCanvas.on('selection:cleared', () => { 
-                                            document.getElementById('poster-props').style.display='none'; 
-                                            updatePosterLayers(); 
-                                        });
-                                        posterCanvas.on('object:modified', updatePosterLayers);
-                                        posterCanvas.on('object:added', updatePosterLayers);
-                                        posterCanvas.on('object:removed', updatePosterLayers);
-                                        
-                                        // Initial welcome text
-                                        addPosterText('YOUR POSTER\nHERE');
-                                        updatePosterLayers();
-                                    }
-                                    
-                                    // Listen for tab shown event
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        const posterTab = document.querySelector('a[href="#create-poster"]');
-                                        if (posterTab) {
-                                            posterTab.addEventListener('shown.bs.tab', function() {
-                                                setTimeout(initPosterCreator, 100);
-                                            });
-                                        }
-                                    });
-                                    
-                                    function updatePosterUI(e) {
-                                        posterActiveObject = posterCanvas.getActiveObject();
-                                        if (!posterActiveObject) return;
-                                        document.getElementById('poster-props').style.display = 'block';
-                                        if (posterActiveObject.type.includes('text') || posterActiveObject.type === 'i-text' || posterActiveObject.type === 'textbox') {
-                                            document.getElementById('posterFontFamily').value = posterActiveObject.fontFamily || 'Montserrat';
-                                            document.getElementById('posterFontSize').value = posterActiveObject.fontSize || 60;
-                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
-                                        } else {
-                                            document.getElementById('posterFill').value = rgbToPosterHex(posterActiveObject.fill);
-                                        }
-                                        updatePosterLayers();
-                                    }
-                                        
-                                        function setPosterProp(prop, value) {
-                                            if (!posterActiveObject) return;
-                                            if (prop === 'fontSize') value = parseInt(value);
-                                            posterActiveObject.set(prop, value);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function togglePosterProp(prop, value) {
-                                            if (!posterActiveObject) return;
-                                            const current = posterActiveObject.get(prop);
-                                            posterActiveObject.set(prop, current === value ? '' : value);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function addPosterText(text = 'YOUR EVENT\nHERE', size = 100) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const textbox = new fabric.Textbox(text, {
-                                                left: 100, 
-                                                top: 100, 
-                                                width: 600,
-                                                fontSize: size,
-                                                fontFamily: 'Bebas Neue',
-                                                fill: '#212529',
-                                                textAlign: 'center',
-                                                fontWeight: 'bold',
-                                                shadow: 'rgba(0,0,0,0.3) 5px 5px 15px',
-                                                editable: true
-                                            });
-                                            posterCanvas.add(textbox);
-                                            posterCanvas.setActiveObject(textbox);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function addPosterShape(type) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            let shape;
-                                            if (type==='rect') shape = new fabric.Rect({width:300, height:200, fill:'#ff5722', rx:20});
-                                            if (type==='circle') shape = new fabric.Circle({radius:150, fill:'#2196f3'});
-                                            if (type==='triangle') shape = new fabric.Triangle({width:250, height:220, fill:'#4caf50'});
-                                            shape.set({left:200, top:200, shadow:'rgba(0,0,0,0.3) 10px 10px 20px'});
-                                            posterCanvas.add(shape);
-                                            posterCanvas.setActiveObject(shape);
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                        }
-                                        
-                                        function uploadPosterImage() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const input = document.createElement('input');
-                                            input.type = 'file';
-                                            input.accept = 'image/*';
-                                            input.onchange = e => {
-                                                const file = e.target.files[0];
-                                                if (!file) return;
-                                                const reader = new FileReader();
-                                                reader.onload = event => fabric.Image.fromURL(event.target.result, img => {
-                                                    img.scale(0.5);
-                                                    posterCanvas.centerObject(img);
-                                                    posterCanvas.add(img);
-                                                    posterCanvas.renderAll();
-                                                    updatePosterLayers();
-                                                });
-                                                reader.readAsDataURL(file);
-                                            };
-                                            input.click();
-                                        }
-                                        
-                                        function unsplashPosterBg() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            const keyword = prompt('Unsplash keyword (e.g. abstract, nature, party)', 'abstract');
-                                            if (!keyword) return;
-                                            // Sanitize keyword to prevent URL injection - replace spaces with hyphens
-                                            const sanitizedKeyword = encodeURIComponent(keyword.replace(/[^\w-]/g, '').replace(/\s+/g, '-'));
-                                            const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                            addNotification('Loading background image...', 'info');
-                                            fabric.Image.fromURL(url, img => {
-                                                posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                    scaleX: posterCanvas.width / img.width, 
-                                                    scaleY: posterCanvas.height / img.height 
-                                                });
-                                                addNotification('Background loaded successfully!', 'success');
-                                            }, { crossOrigin: 'anonymous' });
-                                        }
-                                        
-                                        function setPosterBgColor(c) { 
-                                            if (!posterCanvas) return;
-                                            posterCanvas.backgroundColor = c; 
-                                            posterCanvas.renderAll(); 
-                                        }
-                                        
-                                        function downloadPoster() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            try {
-                                                const link = document.createElement('a');
-                                                link.download = 'my-poster-' + Date.now() + '.png';
-                                                link.href = posterCanvas.toDataURL({multiplier: 2}); // 2x resolution for print
-                                                link.click();
-                                                addNotification('Poster downloaded successfully!', 'success');
-                                            } catch (error) {
-                                                addNotification('Error downloading poster: ' + error.message, 'error');
-                                            }
-                                        }
-                                        
-                                        // Simple templates
-                                        function loadPosterTemplate(type) {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            posterCanvas.clear();
-                                            posterCanvas.backgroundColor = '#ffffff';
-                                            
-                                            if (type==='event') {
-                                                // Load event template
-                                                const keyword = 'concert';
-                                                const sanitizedKeyword = encodeURIComponent(keyword);
-                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                                fabric.Image.fromURL(url, img => {
-                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                        scaleX: posterCanvas.width / img.width, 
-                                                        scaleY: posterCanvas.height / img.height 
-                                                    });
-                                                    setTimeout(() => {
-                                                        addPosterText('LIVE\nCONCERT',120);
-                                                        setTimeout(() => {
-                                                            const subtext = new fabric.Textbox('Friday 25 Dec\nDoors open 19:00', {
-                                                                left: 100, top: 400, width: 600,
-                                                                fontSize: 60,
-                                                                fontFamily: 'Montserrat',
-                                                                fill: '#ffffff',
-                                                                textAlign: 'center',
-                                                                shadow: 'rgba(0,0,0,0.5) 3px 3px 10px'
-                                                            });
-                                                            posterCanvas.add(subtext);
-                                                            posterCanvas.renderAll();
-                                                            updatePosterLayers();
-                                                        }, 100);
-                                                    }, 200);
-                                                }, { crossOrigin: 'anonymous' });
-                                            }
-                                            else if (type==='sale') {
-                                                posterCanvas.backgroundColor = '#ff1744';
-                                                posterCanvas.renderAll();
-                                                setTimeout(() => {
-                                                    const mainText = new fabric.Textbox('MEGA\nSALE', {
-                                                        left: 100, top: 300, width: 600,
-                                                        fontSize: 150,
-                                                        fontFamily: 'Bebas Neue',
-                                                        fill: '#ffffff',
-                                                        textAlign: 'center',
-                                                        fontWeight: 'bold',
-                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
-                                                    });
-                                                    posterCanvas.add(mainText);
-                                                    
-                                                    const subText = new fabric.Textbox('50% OFF', {
-                                                        left: 150, top: 650, width: 500,
-                                                        fontSize: 100,
-                                                        fontFamily: 'Bebas Neue',
-                                                        fill: '#ffeb3b',
-                                                        textAlign: 'center',
-                                                        fontWeight: 'bold',
-                                                        shadow: 'rgba(0,0,0,0.5) 5px 5px 20px'
-                                                    });
-                                                    posterCanvas.add(subText);
-                                                    posterCanvas.renderAll();
-                                                    updatePosterLayers();
-                                                }, 100);
-                                            }
-                                            else if (type==='motivation') {
-                                                const keyword = 'mountain';
-                                                const sanitizedKeyword = encodeURIComponent(keyword);
-                                                const url = `https://source.unsplash.com/random/${posterCanvas.width}x${posterCanvas.height}/?${sanitizedKeyword}`;
-                                                fabric.Image.fromURL(url, img => {
-                                                    posterCanvas.setBackgroundImage(img, posterCanvas.renderAll.bind(posterCanvas), { 
-                                                        scaleX: posterCanvas.width / img.width, 
-                                                        scaleY: posterCanvas.height / img.height 
-                                                    });
-                                                    setTimeout(() => {
-                                                        const mainText = new fabric.Textbox('DREAM BIG\nWORK HARD', {
-                                                            left: 100, top: 400, width: 600,
-                                                            fontSize: 120,
-                                                            fontFamily: 'Bebas Neue',
-                                                            fill: '#ffffff',
-                                                            textAlign: 'center',
-                                                            fontWeight: 'bold',
-                                                            shadow: 'rgba(0,0,0,0.8) 5px 5px 20px'
-                                                        });
-                                                        posterCanvas.add(mainText);
-                                                        posterCanvas.renderAll();
-                                                        updatePosterLayers();
-                                                    }, 200);
-                                                }, { crossOrigin: 'anonymous' });
-                                            }
-                                            addNotification('Template loaded successfully!', 'success');
-                                        }
-                                        
-                                        // Layers list
-                                        function updatePosterLayers() {
-                                            if (!posterCanvas) return;
-                                            const list = document.getElementById('poster-layers');
-                                            if (!list) return;
-                                            list.innerHTML = '';
-                                            const objects = posterCanvas.getObjects();
-                                            if (objects.length === 0) {
-                                                list.innerHTML = '<li style="text-align:center;color:#999;">No layers yet</li>';
-                                                return;
-                                            }
-                                            objects.slice().reverse().forEach((obj, index) => {
-                                                const li = document.createElement('li');
-                                                let layerName = '';
-                                                if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
-                                                    layerName = obj.text ? obj.text.slice(0,20) + (obj.text.length > 20 ? '...' : '') : 'Text';
-                                                } else if (obj.type === 'image') {
-                                                    layerName = 'Image';
-                                                } else {
-                                                    layerName = obj.type.charAt(0).toUpperCase() + obj.type.slice(1);
-                                                }
-                                                
-                                                const icon = obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text' ? '📝' : 
-                                                           obj.type === 'image' ? '🖼️' : 
-                                                           obj.type === 'rect' ? '⬜' : 
-                                                           obj.type === 'circle' ? '⭕' : 
-                                                           obj.type === 'triangle' ? '🔺' : '📦';
-                                                
-                                                li.innerHTML = `<span>${icon} ${layerName}</span><span style="font-size:11px;opacity:0.7;">Layer ${objects.length - index}</span>`;
-                                                li.onclick = () => {
-                                                    posterCanvas.setActiveObject(obj);
-                                                    posterCanvas.renderAll();
-                                                };
-                                                if (posterCanvas.getActiveObject() === obj) li.classList.add('active');
-                                                list.appendChild(li);
-                                            });
-                                        }
-                                        
-                                        function deletePosterActive() {
-                                            if (!posterCanvas) return;
-                                            const activeObj = posterCanvas.getActiveObject();
-                                            if (activeObj) {
-                                                posterCanvas.remove(activeObj);
-                                                posterActiveObject = null;
-                                                posterCanvas.renderAll();
-                                                updatePosterLayers();
-                                                addNotification('Object deleted', 'info');
-                                            }
-                                        }
-                                        
-                                        // Save poster to gallery (localStorage)
-                                        function savePosterToGallery() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            try {
-                                                const posterData = posterCanvas.toDataURL({multiplier: 1});
-                                                let gallery = [];
-                                                try {
-                                                    gallery = JSON.parse(localStorage.getItem('posterGallery') || '[]');
-                                                    if (!Array.isArray(gallery)) gallery = [];
-                                                } catch (parseError) {
-                                                    // Handle corrupted localStorage data
-                                                    gallery = [];
-                                                }
-                                                const newPoster = {
-                                                    id: Date.now(),
-                                                    name: prompt('Enter poster name:', 'My Poster ' + (gallery.length + 1)) || 'Untitled Poster',
-                                                    image: posterData,
-                                                    createdAt: new Date().toISOString()
-                                                };
-                                                gallery.unshift(newPoster);
-                                                // Keep only last 20 posters to avoid localStorage limits
-                                                if (gallery.length > 20) gallery.pop();
-                                                localStorage.setItem('posterGallery', JSON.stringify(gallery));
-                                                addNotification('✅ Poster saved to gallery successfully!', 'success');
-                                            } catch (error) {
-                                                addNotification('Error saving poster: ' + error.message, 'error');
-                                            }
-                                        }
-                                        
-                                        // Clear poster canvas
-                                        function clearPosterCanvas() {
-                                            if (!posterCanvas) {
-                                                addNotification('Please wait, poster creator is initializing...', 'warning');
-                                                return;
-                                            }
-                                            if (!confirm('Are you sure you want to clear the canvas? All unsaved changes will be lost.')) {
-                                                return;
-                                            }
-                                            posterCanvas.clear();
-                                            posterCanvas.backgroundColor = '#ffffff';
-                                            posterCanvas.renderAll();
-                                            updatePosterLayers();
-                                            addNotification('Canvas cleared', 'info');
-                                        }
-                                        
-                                        // Helper to convert rgb to hex for color picker
-                                        function rgbToPosterHex(color) {
-                                            if (!color) return '#000000';
-                                            if (typeof color === 'string' && color.startsWith('rgb')) {
-                                                const matches = color.match(/\d+/g);
-                                                if (matches && matches.length >= 3) {
-                                                    const [r,g,b] = matches;
-                                                    return "#" + ((1 << 24) + (parseInt(r) << 16) + (parseInt(g) << 8) + parseInt(b)).toString(16).slice(1);
-                                                }
-                                            }
-                                            return color || '#000000';
-                                        }
         var selectedChatStudent = null;
         var isOnline = navigator.onLine;
         var offlineQueue = [];
