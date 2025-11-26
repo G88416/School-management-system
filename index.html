@@ -6609,9 +6609,11 @@
                                                 resizePosterCanvas();
                                                 window.addEventListener('resize', resizePosterCanvas);
                                                 
-                                                // Keyboard shortcuts
+                                                // Keyboard shortcuts - only trigger when not in input fields
                                                 document.addEventListener('keydown', function(e) {
-                                                    if (e.key === 'Delete' && posterCanvas) {
+                                                    var tagName = document.activeElement.tagName.toLowerCase();
+                                                    var isInputField = tagName === 'input' || tagName === 'textarea' || tagName === 'select';
+                                                    if (e.key === 'Delete' && posterCanvas && !isInputField) {
                                                         deletePosterSelected();
                                                     }
                                                 });
@@ -6711,8 +6713,9 @@
                                         }
 
                                         function exportPosterAsPdf() {
-                                            // For PDF export, we'll use html2canvas and jsPDF (add CDNs if needed)
-                                            alert('PDF export requires additional setup. Use PNG for now, or add jsPDF/html2canvas libraries.');
+                                            // PDF export functionality placeholder
+                                            // This would require additional libraries like jsPDF and html2canvas
+                                            alert('PDF export is not available in this version. Please use "Export as PNG" instead.');
                                         }
 
                                         function resizePosterCanvas() {
