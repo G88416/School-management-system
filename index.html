@@ -4863,6 +4863,9 @@
                                         <button class="btn btn-g19-primary btn-sm" onclick="saveG19ThemeSettings()">
                                             <i class="fas fa-save me-2"></i>Save Theme Settings
                                         </button>
+                                        <button class="btn btn-sm ms-2" onclick="generateAllCustomColors()" style="background: linear-gradient(135deg, #10b981, #22c55e); color: #fff; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                                            <i class="fas fa-magic me-2"></i>GenerateAll
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -6546,8 +6549,9 @@
                                             align-items:center; 
                                             justify-content:center; 
                                             overflow:auto; 
-                                            padding:30px;
+                                            padding:40px;
                                             position:relative;
+                                            min-height:700px;
                                         }
                                         #poster-canvas { 
                                             box-shadow:0 25px 80px rgba(0,0,0,0.5); 
@@ -6555,6 +6559,7 @@
                                             border-radius:12px;
                                             max-width:100%;
                                             max-height:100%;
+                                            transition: all 0.3s ease;
                                         }
                                         #poster-layers { list-style:none; padding:0; margin:0; }
                                         #poster-layers li { 
@@ -6680,20 +6685,28 @@
                                     <div id="poster-creator-container">
                                         <!-- LEFT SIDEBAR -->
                                         <div id="poster-left">
-                                            <h2>🎨 Poster Creator</h2>
+                                            <h2>🎨 Advanced Poster Creator</h2>
                                             <div class="poster-section">
                                                 <h3>Add Elements</h3>
                                                 <button onclick="addPosterText()">📝 Add Heading</button>
                                                 <button onclick="addPosterText('Body text here...',40)">📄 Add Paragraph</button>
                                                 <button onclick="uploadPosterImage()">🖼️ Upload Image</button>
+                                                <input type="file" id="poster-image-upload" accept="image/*" style="display:none;" onchange="handlePosterImageUpload(this)">
+                                                <button onclick="addImageFromUrl()">🔗 Add from URL</button>
+                                            </div>
+                                            <div class="poster-section">
+                                                <h3>Shapes</h3>
                                                 <button onclick="addPosterShape('rect')">⬜ Rectangle</button>
                                                 <button onclick="addPosterShape('circle')">⭕ Circle</button>
                                                 <button onclick="addPosterShape('triangle')">🔺 Triangle</button>
+                                                <button onclick="addPosterShape('line')">➖ Line</button>
+                                                <button onclick="addPosterShape('star')">⭐ Star</button>
                                             </div>
                                             <div class="poster-section">
                                                 <h3>Background</h3>
                                                 <input type="color" class="poster-color-picker" onchange="setPosterBgColor(this.value)" value="#ffffff">
                                                 <button onclick="unsplashPosterBg()">🌄 Random Unsplash Background</button>
+                                                <button onclick="setGradientBackground()">🌈 Gradient Background</button>
                                             </div>
                                             <div class="poster-section">
                                                 <h3>Quick Templates</h3>
@@ -6704,34 +6717,56 @@
                                             <div class="poster-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
                                                 <h3 style="color: #10b981;">💾 Save & Export</h3>
                                                 <button onclick="downloadPoster()" style="background: linear-gradient(135deg, #10b981, #22c55e);">📥 Download PNG</button>
-                                                <button onclick="savePosterToGallery()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">💾 Save to Gallery</button>
+                                                <button onclick="exportPosterPDF()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">📄 Export PDF</button>
+                                                <button onclick="savePosterToGallery()" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">💾 Save to Gallery</button>
                                                 <button onclick="clearPosterCanvas()" style="background: linear-gradient(135deg, #ef4444, #f87171);">🗑️ Clear Canvas</button>
                                             </div>
                                         </div>
                                         
-                                        <!-- CENTER CANVAS -->
+                                        <!-- CENTER CANVAS - Bigger and Smarter -->
                                         <div id="poster-canvas-wrapper">
-                                            <canvas id="poster-canvas" width="800" height="1200"></canvas>
+                                            <canvas id="poster-canvas" width="900" height="650"></canvas>
                                         </div>
                                         
                                         <!-- RIGHT SIDEBAR – Properties & Layers -->
                                         <div id="poster-right">
                                             <h2>Properties</h2>
                                             <div id="poster-props" style="display:none">
+                                                <label style="color:#333;font-size:12px;font-weight:600;">Font Family</label>
                                                 <select id="posterFontFamily" onchange="setPosterProp('fontFamily',this.value)">
-                                                    <option>Bebas Neue</option>
-                                                    <option>Montserrat</option>
-                                                    <option>Playfair Display</option>
-                                                    <option>Oswald</option>
-                                                    <option>Dancing Script</option>
+                                                    <option value="Arial">Arial</option>
+                                                    <option value="Helvetica">Helvetica</option>
+                                                    <option value="Times New Roman">Times New Roman</option>
+                                                    <option value="Georgia">Georgia</option>
+                                                    <option value="Courier New">Courier New</option>
+                                                    <option value="Bebas Neue">Bebas Neue</option>
+                                                    <option value="Montserrat">Montserrat</option>
+                                                    <option value="Playfair Display">Playfair Display</option>
+                                                    <option value="Oswald">Oswald</option>
+                                                    <option value="Dancing Script">Dancing Script</option>
+                                                    <option value="Roboto">Roboto</option>
                                                 </select>
-                                                <input type="range" id="posterFontSize" min="10" max="300" value="80" onchange="setPosterProp('fontSize',this.value)">
+                                                <label style="color:#333;font-size:12px;font-weight:600;">Font Size: <span id="fontSizeValue">80</span>px</label>
+                                                <input type="range" id="posterFontSize" min="10" max="300" value="80" oninput="document.getElementById('fontSizeValue').textContent=this.value" onchange="setPosterProp('fontSize',this.value)">
+                                                <label style="color:#333;font-size:12px;font-weight:600;">Fill Color</label>
                                                 <input type="color" class="poster-color-picker" id="posterFill" value="#000000" onchange="setPosterProp('fill',this.value)">
-                                                <button onclick="togglePosterProp('fontWeight','bold')">Bold</button>
-                                                <button onclick="togglePosterProp('fontStyle','italic')">Italic</button>
-                                                <button onclick="setPosterProp('textAlign','center')">Center</button>
-                                                <button onclick="deletePosterActive()">Delete</button>
-                                                <button onclick="posterCanvas.bringToFront(posterActiveObject)">Bring to Front</button>
+                                                <label style="color:#333;font-size:12px;font-weight:600;">Text Styling</label>
+                                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                                                    <button onclick="togglePosterProp('fontWeight','bold')" style="flex:1;">Bold</button>
+                                                    <button onclick="togglePosterProp('fontStyle','italic')" style="flex:1;">Italic</button>
+                                                    <button onclick="togglePosterProp('underline',true)" style="flex:1;">Underline</button>
+                                                </div>
+                                                <label style="color:#333;font-size:12px;font-weight:600;margin-top:10px;">Text Align</label>
+                                                <div style="display:flex;gap:5px;">
+                                                    <button onclick="setPosterProp('textAlign','left')" style="flex:1;">Left</button>
+                                                    <button onclick="setPosterProp('textAlign','center')" style="flex:1;">Center</button>
+                                                    <button onclick="setPosterProp('textAlign','right')" style="flex:1;">Right</button>
+                                                </div>
+                                                <label style="color:#333;font-size:12px;font-weight:600;margin-top:10px;">Actions</label>
+                                                <button onclick="bringToFront()">Bring to Front</button>
+                                                <button onclick="sendToBack()">Send to Back</button>
+                                                <button onclick="duplicatePosterObject()">Duplicate</button>
+                                                <button onclick="deletePosterActive()" style="background:linear-gradient(135deg, #ef4444, #f87171);">Delete Selected</button>
                                             </div>
                                             <h2>Layers</h2>
                                             <ul id="poster-layers"></ul>
@@ -8018,6 +8053,264 @@
                                             }
                                             return color || '#000000';
                                         }
+                                        
+                                        // Enhanced poster functions
+                                        function handlePosterImageUpload(input) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const file = input.files[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = function(event) {
+                                                fabric.Image.fromURL(event.target.result, function(img) {
+                                                    img.scale(0.5);
+                                                    posterCanvas.centerObject(img);
+                                                    posterCanvas.add(img);
+                                                    posterCanvas.setActiveObject(img);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
+                                                    addNotification('Image added successfully!', 'success');
+                                                });
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                        
+                                        function addImageFromUrl() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const url = prompt('Enter image URL:', 'https://example.com/image.jpg');
+                                            if (!url) return;
+                                            addNotification('Loading image...', 'info');
+                                            fabric.Image.fromURL(url, function(img) {
+                                                if (img) {
+                                                    img.scale(0.5);
+                                                    posterCanvas.centerObject(img);
+                                                    posterCanvas.add(img);
+                                                    posterCanvas.setActiveObject(img);
+                                                    posterCanvas.renderAll();
+                                                    updatePosterLayers();
+                                                    addNotification('Image added successfully!', 'success');
+                                                } else {
+                                                    addNotification('Failed to load image from URL.', 'error');
+                                                }
+                                            }, { crossOrigin: 'anonymous' });
+                                        }
+                                        
+                                        function setGradientBackground() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            const gradients = [
+                                                { name: 'Sunset', colors: ['#f46b45', '#eea849'] },
+                                                { name: 'Ocean', colors: ['#1e3c72', '#2a5298'] },
+                                                { name: 'Purple', colors: ['#667eea', '#764ba2'] },
+                                                { name: 'Emerald', colors: ['#134e5e', '#71b280'] },
+                                                { name: 'Midnight', colors: ['#232526', '#414345'] },
+                                                { name: 'Rose', colors: ['#ee9ca7', '#ffdde1'] }
+                                            ];
+                                            const choice = prompt('Choose gradient:\n1. Sunset\n2. Ocean\n3. Purple\n4. Emerald\n5. Midnight\n6. Rose', '1');
+                                            const idx = parseInt(choice) - 1;
+                                            if (idx >= 0 && idx < gradients.length) {
+                                                const gradient = new fabric.Gradient({
+                                                    type: 'linear',
+                                                    coords: { x1: 0, y1: 0, x2: posterCanvas.width, y2: posterCanvas.height },
+                                                    colorStops: [
+                                                        { offset: 0, color: gradients[idx].colors[0] },
+                                                        { offset: 1, color: gradients[idx].colors[1] }
+                                                    ]
+                                                });
+                                                // Create a gradient rectangle as background
+                                                const bgRect = new fabric.Rect({
+                                                    left: 0,
+                                                    top: 0,
+                                                    width: posterCanvas.width,
+                                                    height: posterCanvas.height,
+                                                    fill: gradient,
+                                                    selectable: false,
+                                                    evented: false
+                                                });
+                                                // Clear existing background and add gradient rect
+                                                posterCanvas.backgroundColor = '#ffffff';
+                                                posterCanvas.renderAll();
+                                                // Insert at the bottom layer
+                                                posterCanvas.insertAt(bgRect, 0);
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification(`${gradients[idx].name} gradient applied!`, 'success');
+                                            }
+                                        }
+                                        
+                                        function bringToFront() {
+                                            if (!posterCanvas) return;
+                                            const activeObj = posterCanvas.getActiveObject();
+                                            if (activeObj) {
+                                                activeObj.bringToFront();
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Object brought to front', 'info');
+                                            }
+                                        }
+                                        
+                                        function sendToBack() {
+                                            if (!posterCanvas) return;
+                                            const activeObj = posterCanvas.getActiveObject();
+                                            if (activeObj) {
+                                                activeObj.sendToBack();
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Object sent to back', 'info');
+                                            }
+                                        }
+                                        
+                                        function duplicatePosterObject() {
+                                            if (!posterCanvas) return;
+                                            const activeObj = posterCanvas.getActiveObject();
+                                            if (!activeObj) {
+                                                addNotification('Please select an object to duplicate', 'warning');
+                                                return;
+                                            }
+                                            activeObj.clone(function(cloned) {
+                                                cloned.set({
+                                                    left: activeObj.left + 20,
+                                                    top: activeObj.top + 20
+                                                });
+                                                posterCanvas.add(cloned);
+                                                posterCanvas.setActiveObject(cloned);
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Object duplicated', 'success');
+                                            });
+                                        }
+                                        
+                                        function exportPosterPDF() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            // Check if jsPDF is available
+                                            if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+                                                addNotification('PDF export requires jsPDF library. Using PNG download instead.', 'warning');
+                                                downloadPoster();
+                                                return;
+                                            }
+                                            try {
+                                                const PDF = window.jspdf?.jsPDF || jsPDF;
+                                                const imgData = posterCanvas.toDataURL({ format: 'png', quality: 1 });
+                                                const pdf = new PDF({
+                                                    orientation: posterCanvas.width > posterCanvas.height ? 'landscape' : 'portrait',
+                                                    unit: 'px',
+                                                    format: [posterCanvas.width, posterCanvas.height]
+                                                });
+                                                pdf.addImage(imgData, 'PNG', 0, 0, posterCanvas.width, posterCanvas.height);
+                                                pdf.save('poster-' + Date.now() + '.pdf');
+                                                addNotification('PDF exported successfully!', 'success');
+                                            } catch (error) {
+                                                addNotification('Error exporting PDF: ' + error.message, 'error');
+                                            }
+                                        }
+                                        
+                                        // Enhanced shape with line and star
+                                        const originalAddPosterShape = addPosterShape;
+                                        addPosterShape = function(type) {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            let shape;
+                                            if (type === 'rect') {
+                                                shape = new fabric.Rect({ width: 300, height: 200, fill: '#ff5722', rx: 20 });
+                                            } else if (type === 'circle') {
+                                                shape = new fabric.Circle({ radius: 150, fill: '#2196f3' });
+                                            } else if (type === 'triangle') {
+                                                shape = new fabric.Triangle({ width: 250, height: 220, fill: '#4caf50' });
+                                            } else if (type === 'line') {
+                                                shape = new fabric.Line([50, 50, 300, 50], {
+                                                    stroke: '#333333',
+                                                    strokeWidth: 5
+                                                });
+                                            } else if (type === 'star') {
+                                                // Create a 5-pointed star using polygon
+                                                const points = [];
+                                                const outerRadius = 100;
+                                                const innerRadius = 50;
+                                                const numPoints = 5;
+                                                for (let i = 0; i < numPoints * 2; i++) {
+                                                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                                                    const angle = (i * Math.PI / numPoints) - Math.PI / 2;
+                                                    points.push({
+                                                        x: radius * Math.cos(angle),
+                                                        y: radius * Math.sin(angle)
+                                                    });
+                                                }
+                                                shape = new fabric.Polygon(points, {
+                                                    fill: '#ffc107',
+                                                    stroke: '#ff9800',
+                                                    strokeWidth: 2
+                                                });
+                                            }
+                                            if (shape) {
+                                                shape.set({ left: 200, top: 200, shadow: 'rgba(0,0,0,0.3) 10px 10px 20px' });
+                                                posterCanvas.add(shape);
+                                                posterCanvas.setActiveObject(shape);
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                            }
+                                        };
+                                        
+                                        // Keyboard shortcuts for poster canvas
+                                        document.addEventListener('keydown', function(e) {
+                                            // Only if poster canvas exists and is active
+                                            if (!posterCanvas) return;
+                                            const activeElement = document.activeElement;
+                                            // Don't trigger if user is typing in an input
+                                            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) return;
+                                            
+                                            // Delete key
+                                            if (e.key === 'Delete' || e.key === 'Backspace') {
+                                                const activeObj = posterCanvas.getActiveObject();
+                                                if (activeObj) {
+                                                    e.preventDefault();
+                                                    deletePosterActive();
+                                                }
+                                            }
+                                            // Ctrl/Cmd + D for duplicate
+                                            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                                                const activeObj = posterCanvas.getActiveObject();
+                                                if (activeObj) {
+                                                    e.preventDefault();
+                                                    duplicatePosterObject();
+                                                }
+                                            }
+                                        });
+                                        
+                                        // Make poster canvas responsive
+                                        function resizePosterCanvas() {
+                                            const wrapper = document.getElementById('poster-canvas-wrapper');
+                                            if (!wrapper || !posterCanvas) return;
+                                            const wrapperWidth = wrapper.clientWidth - 60;
+                                            const wrapperHeight = wrapper.clientHeight - 60;
+                                            // Keep aspect ratio but maximize size
+                                            const aspectRatio = 900 / 650;
+                                            let newWidth = wrapperWidth;
+                                            let newHeight = wrapperWidth / aspectRatio;
+                                            if (newHeight > wrapperHeight) {
+                                                newHeight = wrapperHeight;
+                                                newWidth = newHeight * aspectRatio;
+                                            }
+                                            // Only resize if significantly different
+                                            if (Math.abs(posterCanvas.width - newWidth) > 50) {
+                                                posterCanvas.setDimensions({ width: Math.max(newWidth, 400), height: Math.max(newHeight, 300) });
+                                                posterCanvas.renderAll();
+                                            }
+                                        }
+                                        
+                                        // Responsive resize on window resize
+                                        window.addEventListener('resize', debounce(resizePosterCanvas, 250));
         var selectedChatStudent = null;
         var isOnline = navigator.onLine;
         var offlineQueue = [];
@@ -9235,6 +9528,170 @@
             
             logUserActivity('g19systems', 'G19Admin', 'Theme Settings', 'Saved portal theme settings');
         }
+        
+        // GenerateAll - Apply saved custom colors throughout the entire application
+        function generateAllCustomColors() {
+            const saved = localStorage.getItem('g19ThemeSettings');
+            if (!saved) {
+                addNotification('No saved theme settings found. Please save theme settings first.', 'warning');
+                return;
+            }
+            
+            try {
+                const settings = JSON.parse(saved);
+                const accentColor = settings.accentColor || '#e94560';
+                const theme = g19ThemePresets[settings.theme] || g19ThemePresets['default'];
+                
+                // Apply custom colors to the entire application (main app, not just G19 portal)
+                const root = document.documentElement;
+                
+                // Apply accent color as the primary accent throughout the app
+                root.style.setProperty('--accent-primary', accentColor);
+                root.style.setProperty('--accent-secondary', lightenColor(accentColor, 15));
+                root.style.setProperty('--accent-tertiary', theme.gradientStart);
+                root.style.setProperty('--glow-color', accentColor + '66');
+                
+                // Apply gradient colors to the main app background
+                root.style.setProperty('--primary-gradient-start', theme.gradientStart);
+                root.style.setProperty('--primary-gradient-end', theme.gradientEnd);
+                
+                // Update table header background with accent color
+                root.style.setProperty('--table-th-bg', accentColor + '33');
+                
+                // Update body background
+                document.body.style.background = `linear-gradient(135deg, ${theme.gradientStart} 0%, ${theme.gradientEnd} 100%)`;
+                
+                // Update sidebar styling
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.style.boxShadow = `0 0 60px ${accentColor}33`;
+                }
+                
+                // Update all primary buttons to use the accent color
+                const primaryButtons = document.querySelectorAll('.btn-primary');
+                primaryButtons.forEach(btn => {
+                    btn.style.background = `linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)})`;
+                    btn.style.boxShadow = `0 4px 15px ${accentColor}4D`;
+                });
+                
+                // Update nav-link active states
+                const activeNavLinks = document.querySelectorAll('.nav-tabs .nav-link.active');
+                activeNavLinks.forEach(link => {
+                    link.style.background = `linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)})`;
+                    link.style.boxShadow = `0 4px 15px ${accentColor}4D`;
+                });
+                
+                // Update badges with primary class
+                const primaryBadges = document.querySelectorAll('.badge.bg-primary');
+                primaryBadges.forEach(badge => {
+                    badge.style.background = `linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)})`;
+                });
+                
+                // Update card-metric hover effects
+                const style = document.createElement('style');
+                style.id = 'generatedCustomColors';
+                // Remove existing generated styles if any
+                const existingStyle = document.getElementById('generatedCustomColors');
+                if (existingStyle) existingStyle.remove();
+                
+                style.textContent = `
+                    .card-metric:hover {
+                        box-shadow: 0 20px 50px ${accentColor}33, 0 10px 25px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+                        border-color: ${accentColor}66 !important;
+                    }
+                    .sidebar .nav-link:hover {
+                        background: ${accentColor}26 !important;
+                        box-shadow: 0 4px 20px ${accentColor}33 !important;
+                        border-color: ${accentColor}4D !important;
+                    }
+                    .sidebar .nav-link:hover::before,
+                    .sidebar .nav-link.active::before {
+                        background: linear-gradient(180deg, ${accentColor}, ${lightenColor(accentColor, 15)}) !important;
+                    }
+                    .sidebar .nav-link.active {
+                        background: linear-gradient(135deg, ${accentColor}40, ${lightenColor(accentColor, 15)}26) !important;
+                        box-shadow: 0 6px 25px ${accentColor}4D !important;
+                        border-color: ${accentColor}66 !important;
+                    }
+                    .sidebar .nav-link:hover i,
+                    .sidebar .nav-link.active i {
+                        color: ${accentColor} !important;
+                    }
+                    .btn-primary {
+                        background: linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)}) !important;
+                        box-shadow: 0 4px 15px ${accentColor}4D !important;
+                    }
+                    .btn-primary:hover {
+                        background: linear-gradient(135deg, ${lightenColor(accentColor, 15)}, ${accentColor}) !important;
+                        box-shadow: 0 8px 25px ${accentColor}66 !important;
+                    }
+                    .nav-tabs .nav-link.active {
+                        background: linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)}) !important;
+                        box-shadow: 0 4px 15px ${accentColor}4D !important;
+                    }
+                    .nav-tabs .nav-link:hover {
+                        background: ${accentColor}26 !important;
+                    }
+                    .badge.bg-primary {
+                        background: linear-gradient(135deg, ${accentColor}, ${lightenColor(accentColor, 15)}) !important;
+                    }
+                    .table th {
+                        background: ${accentColor}33 !important;
+                    }
+                    .section > h2::after {
+                        background: linear-gradient(90deg, ${accentColor}, ${lightenColor(accentColor, 15)}) !important;
+                    }
+                    .section > h2 {
+                        background: linear-gradient(135deg, #fff, ${lightenColor(accentColor, 15)}) !important;
+                        -webkit-background-clip: text !important;
+                        background-clip: text !important;
+                    }
+                    .card-metric h3 {
+                        background: linear-gradient(135deg, #fff, ${lightenColor(accentColor, 15)}) !important;
+                        -webkit-background-clip: text !important;
+                        background-clip: text !important;
+                    }
+                    .card-metric h5 i {
+                        color: ${accentColor} !important;
+                    }
+                    .login-title {
+                        background: linear-gradient(135deg, #fff, ${lightenColor(accentColor, 15)}) !important;
+                        -webkit-background-clip: text !important;
+                        background-clip: text !important;
+                    }
+                    .logo-image {
+                        filter: drop-shadow(0 4px 15px ${accentColor}4D) !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Save the generated state
+                localStorage.setItem('customColorsGenerated', 'true');
+                localStorage.setItem('generatedAccentColor', accentColor);
+                localStorage.setItem('generatedTheme', settings.theme);
+                
+                addNotification('Custom colors applied throughout the entire application!', 'success');
+                logUserActivity('g19systems', 'G19Admin', 'GenerateAll', `Applied custom colors (${accentColor}) to entire application`);
+                
+            } catch (e) {
+                console.error('Error generating custom colors:', e);
+                addNotification('Error applying custom colors. Please try again.', 'error');
+            }
+        }
+        
+        // Load generated custom colors on page load if previously applied
+        function loadGeneratedCustomColors() {
+            const generated = localStorage.getItem('customColorsGenerated');
+            if (generated === 'true') {
+                // Re-apply the generated colors
+                setTimeout(generateAllCustomColors, 500);
+            }
+        }
+        
+        // Call on page load after other initializations
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadGeneratedCustomColors, 1000);
+        });
         
         function loadG19ThemeSettings() {
             const saved = localStorage.getItem('g19ThemeSettings');
