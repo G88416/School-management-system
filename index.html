@@ -8192,16 +8192,24 @@
                                                 addNotification('Please wait, poster creator is initializing...', 'warning');
                                                 return;
                                             }
-                                            // Check if jsPDF is available
-                                            if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+                                            // Check if jsPDF is available (handle various loading scenarios)
+                                            let PDFConstructor = null;
+                                            if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+                                                PDFConstructor = window.jspdf.jsPDF;
+                                            } else if (typeof jsPDF !== 'undefined') {
+                                                PDFConstructor = jsPDF;
+                                            } else if (typeof window.jsPDF !== 'undefined') {
+                                                PDFConstructor = window.jsPDF;
+                                            }
+                                            
+                                            if (!PDFConstructor) {
                                                 addNotification('PDF export requires jsPDF library. Using PNG download instead.', 'warning');
                                                 downloadPoster();
                                                 return;
                                             }
                                             try {
-                                                const PDF = window.jspdf?.jsPDF || jsPDF;
                                                 const imgData = posterCanvas.toDataURL({ format: 'png', quality: 1 });
-                                                const pdf = new PDF({
+                                                const pdf = new PDFConstructor({
                                                     orientation: posterCanvas.width > posterCanvas.height ? 'landscape' : 'portrait',
                                                     unit: 'px',
                                                     format: [posterCanvas.width, posterCanvas.height]
@@ -8267,8 +8275,14 @@
                                             // Only if poster canvas exists and is active
                                             if (!posterCanvas) return;
                                             const activeElement = document.activeElement;
-                                            // Don't trigger if user is typing in an input
-                                            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) return;
+                                            // Don't trigger if user is interacting with form elements or editable content
+                                            if (activeElement && (
+                                                activeElement.tagName === 'INPUT' || 
+                                                activeElement.tagName === 'TEXTAREA' ||
+                                                activeElement.tagName === 'SELECT' ||
+                                                activeElement.tagName === 'BUTTON' ||
+                                                activeElement.isContentEditable
+                                            )) return;
                                             
                                             // Delete key
                                             if (e.key === 'Delete' || e.key === 'Backspace') {
