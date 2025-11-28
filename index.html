@@ -774,6 +774,79 @@
             background: rgba(16, 185, 129, 0.15); 
             border-left: 3px solid #10b981;
         }
+        
+        /* Voice Note and Voice Call Styles */
+        .recording-indicator {
+            animation: pulse-recording 1s infinite;
+        }
+        @keyframes pulse-recording {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .voice-note-message {
+            background: rgba(14, 165, 233, 0.15);
+            border-left: 3px solid #0ea5e9;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .voice-note-message .voice-note-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .voice-note-message .play-btn {
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .voice-note-message .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+        .voice-note-message .waveform {
+            flex: 1;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .voice-call-notification {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .incoming-call-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+            border-radius: 20px;
+            padding: 30px;
+            z-index: 2000;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            display: none;
+        }
+        .incoming-call-modal.show {
+            display: block;
+            animation: callPulse 0.5s ease;
+        }
+        @keyframes callPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
         .editable { cursor: pointer; }
         .editable:hover { background: rgba(233, 69, 96, 0.15); }
         .payslip-preview { background: white; color: black; padding: 20px; border-radius: 14px; }
@@ -3617,12 +3690,59 @@
                                                 <p class="text-muted text-center">No messages yet. Select a student to begin.</p>
                                             </div>
                                             <div class="card-footer">
+                                                <!-- Voice Call Controls for Teacher -->
+                                                <div id="teacherVoiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-phone-volume text-success me-2"></i>
+                                                            <span id="teacherCallStatusText">Conference Call Active</span>
+                                                            <span id="teacherCallParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                                        </div>
+                                                        <div>
+                                                            <button class="btn btn-sm btn-warning me-2" id="teacherMuteCallBtn" onclick="toggleMuteTeacherCall()">
+                                                                <i class="fas fa-microphone"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger" onclick="endTeacherVoiceCall()">
+                                                                <i class="fas fa-phone-slash me-1"></i>End Call
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Voice Note Recording Controls for Teacher -->
+                                                <div id="teacherVoiceNoteControls" class="mb-2" style="display: none;">
+                                                    <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(233, 69, 96, 0.2); border-radius: 8px;">
+                                                        <div>
+                                                            <i class="fas fa-circle text-danger me-2 recording-indicator"></i>
+                                                            <span>Recording... <span id="teacherRecordingDuration">0:00</span></span>
+                                                        </div>
+                                                        <div>
+                                                            <button class="btn btn-sm btn-danger me-2" onclick="cancelTeacherVoiceNote()">
+                                                                <i class="fas fa-times"></i> Cancel
+                                                            </button>
+                                                            <button class="btn btn-sm btn-success" onclick="sendTeacherVoiceNote()">
+                                                                <i class="fas fa-paper-plane"></i> Send
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" id="chatMessageInput" placeholder="Type your message..." disabled>
+                                                    <button class="btn btn-info" onclick="startTeacherVoiceNote()" title="Send Voice Note (VN)" id="teacherVoiceNoteBtn" disabled>
+                                                        <i class="fas fa-microphone"></i>
+                                                    </button>
+                                                    <button class="btn btn-success" onclick="startTeacherVoiceCall()" title="Start Conference Voice Call" id="teacherVoiceCallBtn" disabled>
+                                                        <i class="fas fa-phone"></i>
+                                                    </button>
                                                     <button class="btn btn-primary" onclick="sendChatMessage()" id="sendChatBtn" disabled>
                                                         <i class="fas fa-paper-plane"></i> Send
                                                     </button>
                                                 </div>
+                                                <small class="text-muted mt-2 d-block">
+                                                    <i class="fas fa-microphone me-1"></i>Voice Note | 
+                                                    <i class="fas fa-phone me-1"></i>Conference Call
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -4338,12 +4458,59 @@
                             <!-- Chat messages will appear here -->
                         </div>
                         <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
+                            <!-- Voice Call Controls -->
+                            <div id="voiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-phone-volume text-success me-2"></i>
+                                        <span id="callStatusText">Conference Call Active</span>
+                                        <span id="callParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-warning me-2" id="muteCallBtn" onclick="toggleMuteCall()">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="endVoiceCall()">
+                                            <i class="fas fa-phone-slash me-1"></i>End Call
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Voice Note Recording Controls -->
+                            <div id="voiceNoteControls" class="mb-2" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(233, 69, 96, 0.2); border-radius: 8px;">
+                                    <div>
+                                        <i class="fas fa-circle text-danger me-2 recording-indicator"></i>
+                                        <span>Recording... <span id="recordingDuration">0:00</span></span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-danger me-2" onclick="cancelVoiceNote()">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                        <button class="btn btn-sm btn-success" onclick="sendVoiceNote()">
+                                            <i class="fas fa-paper-plane"></i> Send
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="input-group">
                                 <input type="text" id="liveChatInput" class="form-control" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendLiveChatMessage()">
+                                <button class="btn btn-info" onclick="startVoiceNote()" title="Send Voice Note (VN)">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="btn btn-success" onclick="startVoiceCall()" title="Start Conference Voice Call">
+                                    <i class="fas fa-phone"></i>
+                                </button>
                                 <button class="btn btn-primary" onclick="sendLiveChatMessage()">
                                     <i class="fas fa-paper-plane me-2"></i>Send
                                 </button>
                             </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="fas fa-microphone me-1"></i>Voice Note | 
+                                <i class="fas fa-phone me-1"></i>Conference Call (multiple users)
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -5581,12 +5748,59 @@
                                 <p class="text-center text-muted">No messages yet. Start a conversation!</p>
                             </div>
                             <div class="card-footer" style="background: rgba(255, 255, 255, 0.15);">
+                                <!-- Voice Call Controls for Parent -->
+                                <div id="parentVoiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-phone-volume text-success me-2"></i>
+                                            <span id="parentCallStatusText">Conference Call Active</span>
+                                            <span id="parentCallParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-warning me-2" id="parentMuteCallBtn" onclick="toggleMuteParentCall()">
+                                                <i class="fas fa-microphone"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="endParentVoiceCall()">
+                                                <i class="fas fa-phone-slash me-1"></i>End Call
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Voice Note Recording Controls for Parent -->
+                                <div id="parentVoiceNoteControls" class="mb-2" style="display: none;">
+                                    <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(233, 69, 96, 0.2); border-radius: 8px;">
+                                        <div>
+                                            <i class="fas fa-circle text-danger me-2 recording-indicator"></i>
+                                            <span>Recording... <span id="parentRecordingDuration">0:00</span></span>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-danger me-2" onclick="cancelParentVoiceNote()">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                            <button class="btn btn-sm btn-success" onclick="sendParentVoiceNote()">
+                                                <i class="fas fa-paper-plane"></i> Send
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="parentChatInput" placeholder="Type your message...">
+                                    <button class="btn btn-info" onclick="startParentVoiceNote()" title="Send Voice Note (VN)">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <button class="btn btn-success" onclick="startParentVoiceCall()" title="Start Conference Voice Call">
+                                        <i class="fas fa-phone"></i>
+                                    </button>
                                     <button class="btn btn-primary" onclick="sendParentMessage()">
                                         <i class="fas fa-paper-plane"></i> Send
                                     </button>
                                 </div>
+                                <small class="text-muted mt-2 d-block">
+                                    <i class="fas fa-microphone me-1"></i>Voice Note | 
+                                    <i class="fas fa-phone me-1"></i>Conference Call
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -14950,19 +15164,51 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 const bgClass = isCurrentUser ? 'bg-primary' : 'bg-secondary';
                 const roleColor = msg.role === 'teacher' ? 'warning' : msg.role === 'admin' ? 'danger' : 'info';
                 
-                html += `
-                    <div class="${alignClass} mb-3">
-                        <div class="d-inline-block" style="max-width: 70%;">
-                            <div class="mb-1">
-                                <span class="badge bg-${roleColor}">${msg.sender}</span>
-                                <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
-                            </div>
-                            <div class="p-3 rounded ${bgClass}" style="word-wrap: break-word;">
-                                ${msg.text}
+                // Handle different message types
+                if (msg.type === 'voice_note') {
+                    html += `
+                        <div class="${alignClass} mb-3">
+                            <div class="d-inline-block" style="max-width: 70%;">
+                                <div class="mb-1">
+                                    <span class="badge bg-${roleColor}">${msg.sender}</span>
+                                    <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
+                                </div>
+                                <div class="voice-note-message">
+                                    <div class="voice-note-player">
+                                        <button class="play-btn" onclick="playVoiceNote('${msg.audioUrl}', this)">
+                                            <i class="fas fa-play text-white"></i>
+                                        </button>
+                                        <div class="waveform"></div>
+                                        <span class="text-muted">🎤 ${formatDuration(msg.duration)}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else if (msg.type === 'call_log') {
+                    html += `
+                        <div class="text-center mb-3">
+                            <div class="voice-call-notification d-inline-block">
+                                <i class="fas fa-phone-alt me-2"></i>${msg.text}
+                                <br><small class="text-muted">Participants: ${msg.participants ? msg.participants.join(', ') : 'N/A'}</small>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="${alignClass} mb-3">
+                            <div class="d-inline-block" style="max-width: 70%;">
+                                <div class="mb-1">
+                                    <span class="badge bg-${roleColor}">${msg.sender}</span>
+                                    <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
+                                </div>
+                                <div class="p-3 rounded ${bgClass}" style="word-wrap: break-word;">
+                                    ${msg.text}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
             });
             
             container.innerHTML = html || '<p class="text-center text-muted">No messages yet. Start the conversation!</p>';
@@ -14970,6 +15216,421 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         function startChat() {
             startLiveChat();
+        }
+        
+        // ========================================
+        // VOICE NOTE AND VOICE CALL FUNCTIONS
+        // ========================================
+        
+        // Voice Note Variables
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingTimer = null;
+        let recordingSeconds = 0;
+        let currentRecordingContext = null; // 'live', 'teacher', 'parent'
+        
+        // Voice Call Variables
+        let activeVoiceCall = null;
+        let callParticipants = [];
+        let isMuted = false;
+        let peerConnections = {};
+        
+        // ===== LIVE CHAT VOICE NOTE FUNCTIONS =====
+        function startVoiceNote() {
+            currentRecordingContext = 'live';
+            startRecording('voiceNoteControls', 'recordingDuration');
+        }
+        
+        function cancelVoiceNote() {
+            cancelRecording('voiceNoteControls');
+        }
+        
+        function sendVoiceNote() {
+            stopRecordingAndSend('live', 'voiceNoteControls');
+        }
+        
+        // ===== TEACHER CHAT VOICE NOTE FUNCTIONS =====
+        function startTeacherVoiceNote() {
+            if (!selectedChatStudent) {
+                addNotification('Please select a student first', 'warning');
+                return;
+            }
+            currentRecordingContext = 'teacher';
+            startRecording('teacherVoiceNoteControls', 'teacherRecordingDuration');
+        }
+        
+        function cancelTeacherVoiceNote() {
+            cancelRecording('teacherVoiceNoteControls');
+        }
+        
+        function sendTeacherVoiceNote() {
+            stopRecordingAndSend('teacher', 'teacherVoiceNoteControls');
+        }
+        
+        // ===== PARENT CHAT VOICE NOTE FUNCTIONS =====
+        function startParentVoiceNote() {
+            currentRecordingContext = 'parent';
+            startRecording('parentVoiceNoteControls', 'parentRecordingDuration');
+        }
+        
+        function cancelParentVoiceNote() {
+            cancelRecording('parentVoiceNoteControls');
+        }
+        
+        function sendParentVoiceNote() {
+            stopRecordingAndSend('parent', 'parentVoiceNoteControls');
+        }
+        
+        // ===== COMMON RECORDING FUNCTIONS =====
+        async function startRecording(controlsId, durationId) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                recordingSeconds = 0;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.start();
+                document.getElementById(controlsId).style.display = 'block';
+                
+                // Start timer
+                recordingTimer = setInterval(() => {
+                    recordingSeconds++;
+                    const mins = Math.floor(recordingSeconds / 60);
+                    const secs = recordingSeconds % 60;
+                    document.getElementById(durationId).textContent = 
+                        `${mins}:${secs.toString().padStart(2, '0')}`;
+                }, 1000);
+                
+                addNotification('Recording started... Speak now!', 'info');
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                addNotification('Unable to access microphone. Please check permissions.', 'error');
+            }
+        }
+        
+        function cancelRecording(controlsId) {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+            clearInterval(recordingTimer);
+            document.getElementById(controlsId).style.display = 'none';
+            audioChunks = [];
+            recordingSeconds = 0;
+            addNotification('Recording cancelled', 'info');
+        }
+        
+        function stopRecordingAndSend(context, controlsId) {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                addNotification('No recording in progress', 'warning');
+                return;
+            }
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Create voice note message
+                const voiceNoteMessage = {
+                    id: Date.now(),
+                    sender: currentUser.name,
+                    role: currentUser.role,
+                    type: 'voice_note',
+                    audioUrl: audioUrl,
+                    duration: recordingSeconds,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Add message based on context
+                if (context === 'live') {
+                    liveChatMessages.push(voiceNoteMessage);
+                    localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+                    renderLiveChatMessages();
+                } else if (context === 'teacher') {
+                    const chatMessage = {
+                        id: Date.now(),
+                        studentId: selectedChatStudent.id,
+                        senderId: 'teacher',
+                        senderName: currentUser.name,
+                        type: 'voice_note',
+                        message: '🎤 Voice Note (' + formatDuration(recordingSeconds) + ')',
+                        audioUrl: audioUrl,
+                        duration: recordingSeconds,
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    };
+                    teacherChats.push(chatMessage);
+                    localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+                    loadChatMessages();
+                } else if (context === 'parent') {
+                    addVoiceNoteToParentChat(voiceNoteMessage);
+                }
+                
+                // Clean up
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                document.getElementById(controlsId).style.display = 'none';
+                clearInterval(recordingTimer);
+                recordingSeconds = 0;
+                audioChunks = [];
+                
+                addNotification('Voice note sent successfully!', 'success');
+            };
+            
+            mediaRecorder.stop();
+        }
+        
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function addVoiceNoteToParentChat(voiceNote) {
+            const chatContainer = document.getElementById('parentChatMessages');
+            const messageHtml = `
+                <div class="voice-note-message">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-info">${voiceNote.sender}</span>
+                        <small class="text-muted">${new Date(voiceNote.timestamp).toLocaleString()}</small>
+                    </div>
+                    <div class="voice-note-player">
+                        <button class="play-btn" onclick="playVoiceNote('${voiceNote.audioUrl}', this)">
+                            <i class="fas fa-play text-white"></i>
+                        </button>
+                        <div class="waveform"></div>
+                        <span class="text-muted">${formatDuration(voiceNote.duration)}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (chatContainer.innerHTML.includes('No messages yet')) {
+                chatContainer.innerHTML = messageHtml;
+            } else {
+                chatContainer.innerHTML += messageHtml;
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function playVoiceNote(audioUrl, button) {
+            const audio = new Audio(audioUrl);
+            const icon = button.querySelector('i');
+            
+            icon.className = 'fas fa-pause text-white';
+            audio.play();
+            
+            audio.onended = () => {
+                icon.className = 'fas fa-play text-white';
+            };
+        }
+        
+        // ===== VOICE CALL FUNCTIONS =====
+        function startVoiceCall() {
+            initVoiceCall('live');
+        }
+        
+        function startTeacherVoiceCall() {
+            if (!selectedChatStudent) {
+                addNotification('Please select a student first', 'warning');
+                return;
+            }
+            initVoiceCall('teacher');
+        }
+        
+        function startParentVoiceCall() {
+            initVoiceCall('parent');
+        }
+        
+        async function initVoiceCall(context) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                activeVoiceCall = {
+                    context: context,
+                    startTime: Date.now(),
+                    stream: stream,
+                    participants: [currentUser.name]
+                };
+                
+                callParticipants = [currentUser.name];
+                isMuted = false;
+                
+                // Show call controls based on context
+                if (context === 'live') {
+                    document.getElementById('voiceCallControls').style.display = 'block';
+                    updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                } else if (context === 'teacher') {
+                    document.getElementById('teacherVoiceCallControls').style.display = 'block';
+                    updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
+                    // Add student to call
+                    callParticipants.push(selectedChatStudent.name);
+                } else if (context === 'parent') {
+                    document.getElementById('parentVoiceCallControls').style.display = 'block';
+                    updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                }
+                
+                // Simulate adding participants
+                simulateConferenceCall(context);
+                
+                addNotification('Conference call started! Others can join.', 'success');
+                
+                // Broadcast call start to other users
+                broadcastCallEvent('call_started', context);
+                
+            } catch (err) {
+                console.error('Error starting voice call:', err);
+                addNotification('Unable to start call. Please check microphone permissions.', 'error');
+            }
+        }
+        
+        function updateCallStatus(controlsId, statusId, participantCountId) {
+            const statusText = document.getElementById(statusId);
+            const participantCount = document.getElementById(participantCountId);
+            
+            if (statusText) {
+                statusText.textContent = 'Conference Call Active';
+            }
+            if (participantCount) {
+                participantCount.textContent = callParticipants.length + ' participant' + (callParticipants.length !== 1 ? 's' : '');
+            }
+        }
+        
+        function simulateConferenceCall(context) {
+            // Simulate other participants joining
+            const possibleParticipants = context === 'live' ? 
+                ['Teacher A', 'Teacher B', 'Admin'] : 
+                context === 'teacher' ? ['Parent'] : ['Teacher'];
+            
+            setTimeout(() => {
+                if (activeVoiceCall) {
+                    const newParticipant = possibleParticipants[0];
+                    callParticipants.push(newParticipant);
+                    
+                    if (context === 'live') {
+                        updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                    } else if (context === 'teacher') {
+                        updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
+                    } else if (context === 'parent') {
+                        updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                    }
+                    
+                    addNotification(newParticipant + ' joined the call', 'info');
+                }
+            }, 3000);
+        }
+        
+        function toggleMuteCall() {
+            toggleMute('muteCallBtn');
+        }
+        
+        function toggleMuteTeacherCall() {
+            toggleMute('teacherMuteCallBtn');
+        }
+        
+        function toggleMuteParentCall() {
+            toggleMute('parentMuteCallBtn');
+        }
+        
+        function toggleMute(btnId) {
+            isMuted = !isMuted;
+            const btn = document.getElementById(btnId);
+            
+            if (activeVoiceCall && activeVoiceCall.stream) {
+                activeVoiceCall.stream.getAudioTracks().forEach(track => {
+                    track.enabled = !isMuted;
+                });
+            }
+            
+            if (isMuted) {
+                btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-secondary');
+                addNotification('Microphone muted', 'info');
+            } else {
+                btn.innerHTML = '<i class="fas fa-microphone"></i>';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-warning');
+                addNotification('Microphone unmuted', 'info');
+            }
+        }
+        
+        function endVoiceCall() {
+            endCall('live');
+        }
+        
+        function endTeacherVoiceCall() {
+            endCall('teacher');
+        }
+        
+        function endParentVoiceCall() {
+            endCall('parent');
+        }
+        
+        function endCall(context) {
+            if (activeVoiceCall && activeVoiceCall.stream) {
+                activeVoiceCall.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Hide call controls
+            if (context === 'live') {
+                document.getElementById('voiceCallControls').style.display = 'none';
+            } else if (context === 'teacher') {
+                document.getElementById('teacherVoiceCallControls').style.display = 'none';
+            } else if (context === 'parent') {
+                document.getElementById('parentVoiceCallControls').style.display = 'none';
+            }
+            
+            // Calculate call duration
+            const duration = activeVoiceCall ? Math.floor((Date.now() - activeVoiceCall.startTime) / 1000) : 0;
+            
+            // Add call log to chat
+            const callLogMessage = {
+                id: Date.now(),
+                sender: currentUser.name,
+                role: currentUser.role,
+                type: 'call_log',
+                text: `📞 Conference call ended (${formatDuration(duration)}) - ${callParticipants.length} participants`,
+                participants: [...callParticipants],
+                duration: duration,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (context === 'live') {
+                liveChatMessages.push(callLogMessage);
+                localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+                renderLiveChatMessages();
+            }
+            
+            // Reset call state
+            activeVoiceCall = null;
+            callParticipants = [];
+            isMuted = false;
+            
+            addNotification('Call ended', 'info');
+            broadcastCallEvent('call_ended', context);
+        }
+        
+        function broadcastCallEvent(event, context) {
+            // Store call event for other users to see
+            const callEvents = JSON.parse(localStorage.getItem('callEvents') || '[]');
+            callEvents.push({
+                event: event,
+                context: context,
+                user: currentUser.name,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('callEvents', JSON.stringify(callEvents.slice(-50)));
+        }
+        
+        // Enable teacher buttons when student is selected
+        function enableTeacherChatButtons() {
+            const voiceNoteBtn = document.getElementById('teacherVoiceNoteBtn');
+            const voiceCallBtn = document.getElementById('teacherVoiceCallBtn');
+            if (voiceNoteBtn) voiceNoteBtn.disabled = false;
+            if (voiceCallBtn) voiceCallBtn.disabled = false;
         }
 
         // Content Management
@@ -17464,6 +18125,12 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             document.getElementById('chatMessageInput').disabled = false;
             document.getElementById('sendChatBtn').disabled = false;
             
+            // Enable voice note and voice call buttons
+            const voiceNoteBtn = document.getElementById('teacherVoiceNoteBtn');
+            const voiceCallBtn = document.getElementById('teacherVoiceCallBtn');
+            if (voiceNoteBtn) voiceNoteBtn.disabled = false;
+            if (voiceCallBtn) voiceCallBtn.disabled = false;
+            
             loadChatMessages();
             markMessagesAsRead(studentId);
             loadChatStudents(); // Refresh to update unread count
@@ -17485,6 +18152,27 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             
             container.innerHTML = studentChats.map(chat => {
                 const isSent = chat.senderId === 'teacher';
+                
+                // Handle voice note messages
+                if (chat.type === 'voice_note') {
+                    return `
+                        <div class="mb-3 ${isSent ? 'text-end' : 'text-start'}">
+                            <div class="voice-note-message d-inline-block" style="max-width: 70%;">
+                                <div class="voice-note-player">
+                                    <button class="play-btn" onclick="playVoiceNote('${chat.audioUrl}', this)">
+                                        <i class="fas fa-play text-white"></i>
+                                    </button>
+                                    <div class="waveform"></div>
+                                    <span class="text-muted">🎤 ${formatDuration(chat.duration || 0)}</span>
+                                </div>
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                    ${new Date(chat.timestamp).toLocaleString()}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }
+                
                 return `
                     <div class="mb-3 ${isSent ? 'text-end' : 'text-start'}">
                         <div class="d-inline-block" style="max-width: 70%; background: ${isSent ? 'rgba(0, 123, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)'}; 
