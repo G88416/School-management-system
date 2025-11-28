@@ -847,6 +847,114 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         
+        /* Video Chat Styles */
+        .video-chat-container {
+            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .video-chat-container.active {
+            display: block;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .video-participant {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        .video-participant video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        .video-participant .participant-name {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #fff;
+        }
+        .video-participant.local-video {
+            border: 2px solid var(--accent-primary);
+        }
+        .video-participant .muted-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(239, 68, 68, 0.8);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #fff;
+            display: none;
+        }
+        .video-participant .muted-indicator.show {
+            display: block;
+        }
+        .video-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .video-controls .btn {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .video-controls .btn:hover {
+            transform: scale(1.1);
+        }
+        .video-controls .btn-end-call {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            border: none;
+            color: #fff;
+        }
+        .video-controls .btn-mute {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            border: none;
+            color: #1a1a2e;
+        }
+        .video-controls .btn-mute.muted {
+            background: linear-gradient(135deg, #6b7280, #9ca3af);
+        }
+        .video-controls .btn-video {
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            border: none;
+            color: #fff;
+        }
+        .video-controls .btn-video.off {
+            background: linear-gradient(135deg, #6b7280, #9ca3af);
+        }
+        .video-call-status {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .video-call-status .call-timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #10b981;
+        }
+        
         .editable { cursor: pointer; }
         .editable:hover { background: rgba(233, 69, 96, 0.15); }
         .payslip-preview { background: white; color: black; padding: 20px; border-radius: 14px; }
@@ -3690,6 +3798,34 @@
                                                 <p class="text-muted text-center">No messages yet. Select a student to begin.</p>
                                             </div>
                                             <div class="card-footer">
+                                                <!-- Video Chat Container for Teacher -->
+                                                <div id="teacherVideoChatContainer" class="video-chat-container mb-3">
+                                                    <div class="video-call-status">
+                                                        <span id="teacherVideoCallStatusText">Video Call Active</span>
+                                                        <span class="call-timer" id="teacherVideoCallTimer">0:00</span>
+                                                        <span id="teacherVideoParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                                    </div>
+                                                    <div class="video-grid" id="teacherVideoGrid">
+                                                        <!-- Local video -->
+                                                        <div class="video-participant local-video">
+                                                            <video id="teacherLocalVideo" autoplay muted playsinline></video>
+                                                            <span class="participant-name">You</span>
+                                                            <span class="muted-indicator" id="teacherLocalMutedIndicator"><i class="fas fa-microphone-slash"></i> Muted</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="video-controls">
+                                                        <button class="btn btn-mute" id="teacherVideoMuteBtn" onclick="toggleTeacherVideoMute()" title="Toggle Microphone">
+                                                            <i class="fas fa-microphone"></i>
+                                                        </button>
+                                                        <button class="btn btn-video" id="teacherVideoCameraBtn" onclick="toggleTeacherVideoCamera()" title="Toggle Camera">
+                                                            <i class="fas fa-video"></i>
+                                                        </button>
+                                                        <button class="btn btn-end-call" onclick="endTeacherVideoCall()" title="End Video Call">
+                                                            <i class="fas fa-phone-slash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
                                                 <!-- Voice Call Controls for Teacher -->
                                                 <div id="teacherVoiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
                                                     <div class="d-flex justify-content-between align-items-center">
@@ -3735,13 +3871,17 @@
                                                     <button class="btn btn-success" onclick="startTeacherVoiceCall()" title="Start Conference Voice Call" id="teacherVoiceCallBtn" disabled>
                                                         <i class="fas fa-phone"></i>
                                                     </button>
+                                                    <button class="btn btn-warning" onclick="startTeacherVideoCall()" title="Start Video Call" id="teacherVideoCallBtn" disabled>
+                                                        <i class="fas fa-video"></i>
+                                                    </button>
                                                     <button class="btn btn-primary" onclick="sendChatMessage()" id="sendChatBtn" disabled>
                                                         <i class="fas fa-paper-plane"></i> Send
                                                     </button>
                                                 </div>
                                                 <small class="text-muted mt-2 d-block">
                                                     <i class="fas fa-microphone me-1"></i>Voice Note | 
-                                                    <i class="fas fa-phone me-1"></i>Conference Call
+                                                    <i class="fas fa-phone me-1"></i>Voice Call | 
+                                                    <i class="fas fa-video me-1"></i>Video Call
                                                 </small>
                                             </div>
                                         </div>
@@ -4458,6 +4598,35 @@
                             <!-- Chat messages will appear here -->
                         </div>
                         <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
+                            <!-- Video Chat Container -->
+                            <div id="videoChatContainer" class="video-chat-container mb-3">
+                                <div class="video-call-status">
+                                    <span id="videoCallStatusText">Video Call Active</span>
+                                    <span class="call-timer" id="videoCallTimer">0:00</span>
+                                    <span id="videoParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                </div>
+                                <div class="video-grid" id="videoGrid">
+                                    <!-- Local video -->
+                                    <div class="video-participant local-video">
+                                        <video id="localVideo" autoplay muted playsinline></video>
+                                        <span class="participant-name">You</span>
+                                        <span class="muted-indicator" id="localMutedIndicator"><i class="fas fa-microphone-slash"></i> Muted</span>
+                                    </div>
+                                    <!-- Remote participants will be added here dynamically -->
+                                </div>
+                                <div class="video-controls">
+                                    <button class="btn btn-mute" id="videoMuteBtn" onclick="toggleVideoMute()" title="Toggle Microphone">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <button class="btn btn-video" id="videoCameraBtn" onclick="toggleVideoCamera()" title="Toggle Camera">
+                                        <i class="fas fa-video"></i>
+                                    </button>
+                                    <button class="btn btn-end-call" onclick="endVideoCall()" title="End Video Call">
+                                        <i class="fas fa-phone-slash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <!-- Voice Call Controls -->
                             <div id="voiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -4503,13 +4672,17 @@
                                 <button class="btn btn-success" onclick="startVoiceCall()" title="Start Conference Voice Call">
                                     <i class="fas fa-phone"></i>
                                 </button>
+                                <button class="btn btn-warning" onclick="startVideoCall()" title="Start Video Call">
+                                    <i class="fas fa-video"></i>
+                                </button>
                                 <button class="btn btn-primary" onclick="sendLiveChatMessage()">
                                     <i class="fas fa-paper-plane me-2"></i>Send
                                 </button>
                             </div>
                             <small class="text-muted mt-2 d-block">
                                 <i class="fas fa-microphone me-1"></i>Voice Note | 
-                                <i class="fas fa-phone me-1"></i>Conference Call (multiple users)
+                                <i class="fas fa-phone me-1"></i>Voice Call | 
+                                <i class="fas fa-video me-1"></i>Video Call
                             </small>
                         </div>
                     </div>
@@ -5748,6 +5921,34 @@
                                 <p class="text-center text-muted">No messages yet. Start a conversation!</p>
                             </div>
                             <div class="card-footer" style="background: rgba(255, 255, 255, 0.15);">
+                                <!-- Video Chat Container for Parent -->
+                                <div id="parentVideoChatContainer" class="video-chat-container mb-3">
+                                    <div class="video-call-status">
+                                        <span id="parentVideoCallStatusText">Video Call Active</span>
+                                        <span class="call-timer" id="parentVideoCallTimer">0:00</span>
+                                        <span id="parentVideoParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                    </div>
+                                    <div class="video-grid" id="parentVideoGrid">
+                                        <!-- Local video -->
+                                        <div class="video-participant local-video">
+                                            <video id="parentLocalVideo" autoplay muted playsinline></video>
+                                            <span class="participant-name">You</span>
+                                            <span class="muted-indicator" id="parentLocalMutedIndicator"><i class="fas fa-microphone-slash"></i> Muted</span>
+                                        </div>
+                                    </div>
+                                    <div class="video-controls">
+                                        <button class="btn btn-mute" id="parentVideoMuteBtn" onclick="toggleParentVideoMute()" title="Toggle Microphone">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <button class="btn btn-video" id="parentVideoCameraBtn" onclick="toggleParentVideoCamera()" title="Toggle Camera">
+                                            <i class="fas fa-video"></i>
+                                        </button>
+                                        <button class="btn btn-end-call" onclick="endParentVideoCall()" title="End Video Call">
+                                            <i class="fas fa-phone-slash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
                                 <!-- Voice Call Controls for Parent -->
                                 <div id="parentVoiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -5793,13 +5994,17 @@
                                     <button class="btn btn-success" onclick="startParentVoiceCall()" title="Start Conference Voice Call">
                                         <i class="fas fa-phone"></i>
                                     </button>
+                                    <button class="btn btn-warning" onclick="startParentVideoCall()" title="Start Video Call">
+                                        <i class="fas fa-video"></i>
+                                    </button>
                                     <button class="btn btn-primary" onclick="sendParentMessage()">
                                         <i class="fas fa-paper-plane"></i> Send
                                     </button>
                                 </div>
                                 <small class="text-muted mt-2 d-block">
                                     <i class="fas fa-microphone me-1"></i>Voice Note | 
-                                    <i class="fas fa-phone me-1"></i>Conference Call
+                                    <i class="fas fa-phone me-1"></i>Voice Call | 
+                                    <i class="fas fa-video me-1"></i>Video Call
                                 </small>
                             </div>
                         </div>
@@ -15625,12 +15830,417 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             localStorage.setItem('callEvents', JSON.stringify(callEvents.slice(-50)));
         }
         
+        // ===== VIDEO CALL FUNCTIONS =====
+        // Video call state - consolidated into a single object for better maintainability
+        const videoCallState = {
+            activeCall: null,
+            timer: null,
+            seconds: 0,
+            isMuted: false,
+            isCameraOff: false,
+            participants: []
+        };
+        
+        // Start video call for each context
+        function startVideoCall() {
+            initVideoCall('live');
+        }
+        
+        function startTeacherVideoCall() {
+            if (!selectedChatStudent) {
+                addNotification('Please select a student first', 'warning');
+                return;
+            }
+            initVideoCall('teacher');
+        }
+        
+        function startParentVideoCall() {
+            initVideoCall('parent');
+        }
+        
+        // Initialize video call with camera and microphone
+        async function initVideoCall(context) {
+            try {
+                // Request access to camera and microphone
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }, 
+                    audio: true 
+                });
+                
+                videoCallState.activeCall = {
+                    context: context,
+                    startTime: Date.now(),
+                    stream: stream,
+                    participants: [currentUser.name]
+                };
+                
+                videoCallState.participants = [currentUser.name];
+                videoCallState.isMuted = false;
+                videoCallState.isCameraOff = false;
+                videoCallState.seconds = 0;
+                
+                // Get container and video elements based on context
+                let containerId, videoId, timerElement;
+                if (context === 'live') {
+                    containerId = 'videoChatContainer';
+                    videoId = 'localVideo';
+                    timerElement = 'videoCallTimer';
+                } else if (context === 'teacher') {
+                    containerId = 'teacherVideoChatContainer';
+                    videoId = 'teacherLocalVideo';
+                    timerElement = 'teacherVideoCallTimer';
+                } else if (context === 'parent') {
+                    containerId = 'parentVideoChatContainer';
+                    videoId = 'parentLocalVideo';
+                    timerElement = 'parentVideoCallTimer';
+                }
+                
+                // Show video container
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.classList.add('active');
+                }
+                
+                // Attach stream to local video element
+                const localVideo = document.getElementById(videoId);
+                if (localVideo) {
+                    localVideo.srcObject = stream;
+                }
+                
+                // Start call timer
+                videoCallState.timer = setInterval(() => {
+                    videoCallState.seconds++;
+                    const mins = Math.floor(videoCallState.seconds / 60);
+                    const secs = videoCallState.seconds % 60;
+                    const timer = document.getElementById(timerElement);
+                    if (timer) {
+                        timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+                
+                // Update participant count
+                updateVideoCallStatus(context);
+                
+                // Simulate other participants joining
+                simulateVideoCallParticipants(context);
+                
+                addNotification('Video call started! Camera and microphone active.', 'success');
+                broadcastCallEvent('video_call_started', context);
+                
+            } catch (err) {
+                console.error('Error starting video call:', err);
+                let errorMessage = 'Unable to start video call.';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'Camera and microphone access denied. Please allow permissions in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera or microphone found. Please connect a webcam and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage = 'Camera or microphone is already in use by another application.';
+                }
+                addNotification(errorMessage, 'error');
+            }
+        }
+        
+        // Update video call status display
+        function updateVideoCallStatus(context) {
+            let statusId, countId;
+            if (context === 'live') {
+                statusId = 'videoCallStatusText';
+                countId = 'videoParticipantCount';
+            } else if (context === 'teacher') {
+                statusId = 'teacherVideoCallStatusText';
+                countId = 'teacherVideoParticipantCount';
+            } else if (context === 'parent') {
+                statusId = 'parentVideoCallStatusText';
+                countId = 'parentVideoParticipantCount';
+            }
+            
+            const statusText = document.getElementById(statusId);
+            const countBadge = document.getElementById(countId);
+            
+            if (statusText) {
+                statusText.textContent = 'Video Call Active';
+            }
+            if (countBadge) {
+                countBadge.textContent = videoCallState.participants.length + ' participant' + (videoCallState.participants.length !== 1 ? 's' : '');
+            }
+        }
+        
+        // Simulate other participants joining the video call
+        function simulateVideoCallParticipants(context) {
+            const possibleParticipants = context === 'live' ? 
+                ['Teacher A', 'Teacher B'] : 
+                context === 'teacher' ? ['Student/Parent'] : ['Teacher'];
+            
+            setTimeout(() => {
+                if (videoCallState.activeCall && videoCallState.activeCall.context === context) {
+                    const newParticipant = possibleParticipants[0];
+                    videoCallState.participants.push(newParticipant);
+                    
+                    // Add simulated remote participant video placeholder
+                    addRemoteParticipantVideo(context, newParticipant);
+                    
+                    updateVideoCallStatus(context);
+                    addNotification(newParticipant + ' joined the video call', 'info');
+                }
+            }, 3000);
+        }
+        
+        // Add remote participant video placeholder
+        function addRemoteParticipantVideo(context, participantName) {
+            let gridId;
+            if (context === 'live') {
+                gridId = 'videoGrid';
+            } else if (context === 'teacher') {
+                gridId = 'teacherVideoGrid';
+            } else if (context === 'parent') {
+                gridId = 'parentVideoGrid';
+            }
+            
+            const grid = document.getElementById(gridId);
+            if (grid) {
+                const participantDiv = document.createElement('div');
+                participantDiv.className = 'video-participant';
+                // Sanitize participant name for ID attribute - only allow alphanumeric and dash
+                const sanitizedId = participantName.replace(/[^a-zA-Z0-9]/g, '-');
+                participantDiv.id = `remote-${sanitizedId}`;
+                
+                // Create inner content safely without innerHTML
+                const innerDiv = document.createElement('div');
+                innerDiv.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-user';
+                icon.style.cssText = 'font-size: 3rem; color: rgba(255,255,255,0.5);';
+                innerDiv.appendChild(icon);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'participant-name';
+                nameSpan.textContent = participantName; // Safe: textContent escapes HTML
+                
+                participantDiv.appendChild(innerDiv);
+                participantDiv.appendChild(nameSpan);
+                grid.appendChild(participantDiv);
+            }
+        }
+        
+        // Toggle mute functions for each context
+        function toggleVideoMute() {
+            toggleVideoMuteInternal('live');
+        }
+        
+        function toggleTeacherVideoMute() {
+            toggleVideoMuteInternal('teacher');
+        }
+        
+        function toggleParentVideoMute() {
+            toggleVideoMuteInternal('parent');
+        }
+        
+        function toggleVideoMuteInternal(context) {
+            videoCallState.isMuted = !videoCallState.isMuted;
+            
+            let btnId, indicatorId;
+            if (context === 'live') {
+                btnId = 'videoMuteBtn';
+                indicatorId = 'localMutedIndicator';
+            } else if (context === 'teacher') {
+                btnId = 'teacherVideoMuteBtn';
+                indicatorId = 'teacherLocalMutedIndicator';
+            } else if (context === 'parent') {
+                btnId = 'parentVideoMuteBtn';
+                indicatorId = 'parentLocalMutedIndicator';
+            }
+            
+            const btn = document.getElementById(btnId);
+            const indicator = document.getElementById(indicatorId);
+            
+            // Toggle audio track
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getAudioTracks().forEach(track => {
+                    track.enabled = !videoCallState.isMuted;
+                });
+            }
+            
+            if (videoCallState.isMuted) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                    btn.classList.add('muted');
+                }
+                if (indicator) {
+                    indicator.classList.add('show');
+                }
+                addNotification('Microphone muted', 'info');
+            } else {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-microphone"></i>';
+                    btn.classList.remove('muted');
+                }
+                if (indicator) {
+                    indicator.classList.remove('show');
+                }
+                addNotification('Microphone unmuted', 'info');
+            }
+        }
+        
+        // Toggle camera functions for each context
+        function toggleVideoCamera() {
+            toggleVideoCameraInternal('live');
+        }
+        
+        function toggleTeacherVideoCamera() {
+            toggleVideoCameraInternal('teacher');
+        }
+        
+        function toggleParentVideoCamera() {
+            toggleVideoCameraInternal('parent');
+        }
+        
+        function toggleVideoCameraInternal(context) {
+            videoCallState.isCameraOff = !videoCallState.isCameraOff;
+            
+            let btnId;
+            if (context === 'live') {
+                btnId = 'videoCameraBtn';
+            } else if (context === 'teacher') {
+                btnId = 'teacherVideoCameraBtn';
+            } else if (context === 'parent') {
+                btnId = 'parentVideoCameraBtn';
+            }
+            
+            const btn = document.getElementById(btnId);
+            
+            // Toggle video track
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getVideoTracks().forEach(track => {
+                    track.enabled = !videoCallState.isCameraOff;
+                });
+            }
+            
+            if (videoCallState.isCameraOff) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-video-slash"></i>';
+                    btn.classList.add('off');
+                }
+                addNotification('Camera turned off', 'info');
+            } else {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-video"></i>';
+                    btn.classList.remove('off');
+                }
+                addNotification('Camera turned on', 'info');
+            }
+        }
+        
+        // End video call functions for each context
+        function endVideoCall() {
+            endVideoCallInternal('live');
+        }
+        
+        function endTeacherVideoCall() {
+            endVideoCallInternal('teacher');
+        }
+        
+        function endParentVideoCall() {
+            endVideoCallInternal('parent');
+        }
+        
+        function endVideoCallInternal(context) {
+            // Stop all media tracks
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Clear timer
+            if (videoCallState.timer) {
+                clearInterval(videoCallState.timer);
+                videoCallState.timer = null;
+            }
+            
+            // Get container and reset
+            let containerId, gridId;
+            if (context === 'live') {
+                containerId = 'videoChatContainer';
+                gridId = 'videoGrid';
+            } else if (context === 'teacher') {
+                containerId = 'teacherVideoChatContainer';
+                gridId = 'teacherVideoGrid';
+            } else if (context === 'parent') {
+                containerId = 'parentVideoChatContainer';
+                gridId = 'parentVideoGrid';
+            }
+            
+            // Hide container
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.remove('active');
+            }
+            
+            // Remove remote participant videos (keep local)
+            const grid = document.getElementById(gridId);
+            if (grid) {
+                const remoteParticipants = grid.querySelectorAll('.video-participant:not(.local-video)');
+                remoteParticipants.forEach(p => p.remove());
+            }
+            
+            // Calculate call duration
+            const duration = videoCallState.seconds;
+            
+            // Add call log to chat
+            const callLogMessage = {
+                id: Date.now(),
+                sender: currentUser.name,
+                role: currentUser.role,
+                type: 'video_call_log',
+                text: `📹 Video call ended (${formatDuration(duration)}) - ${videoCallState.participants.length} participants`,
+                participants: [...videoCallState.participants],
+                duration: duration,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (context === 'live') {
+                liveChatMessages.push(callLogMessage);
+                localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+                renderLiveChatMessages();
+            } else if (context === 'teacher') {
+                const chatMessage = {
+                    id: Date.now(),
+                    studentId: selectedChatStudent ? selectedChatStudent.id : null,
+                    senderId: 'teacher',
+                    senderName: currentUser.name,
+                    type: 'video_call_log',
+                    message: `📹 Video call ended (${formatDuration(duration)})`,
+                    duration: duration,
+                    timestamp: new Date().toISOString(),
+                    read: true
+                };
+                teacherChats.push(chatMessage);
+                localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+                loadChatMessages();
+            }
+            
+            // Reset state
+            videoCallState.activeCall = null;
+            videoCallState.seconds = 0;
+            videoCallState.isMuted = false;
+            videoCallState.isCameraOff = false;
+            videoCallState.participants = [];
+            
+            addNotification('Video call ended', 'info');
+            broadcastCallEvent('video_call_ended', context);
+        }
+        
         // Enable teacher buttons when student is selected
         function enableTeacherChatButtons() {
             const voiceNoteBtn = document.getElementById('teacherVoiceNoteBtn');
             const voiceCallBtn = document.getElementById('teacherVoiceCallBtn');
+            const videoCallBtn = document.getElementById('teacherVideoCallBtn');
             if (voiceNoteBtn) voiceNoteBtn.disabled = false;
             if (voiceCallBtn) voiceCallBtn.disabled = false;
+            if (videoCallBtn) videoCallBtn.disabled = false;
         }
 
         // Content Management
