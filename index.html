@@ -18126,10 +18126,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             document.getElementById('sendChatBtn').disabled = false;
             
             // Enable voice note and voice call buttons
-            const voiceNoteBtn = document.getElementById('teacherVoiceNoteBtn');
-            const voiceCallBtn = document.getElementById('teacherVoiceCallBtn');
-            if (voiceNoteBtn) voiceNoteBtn.disabled = false;
-            if (voiceCallBtn) voiceCallBtn.disabled = false;
+            enableTeacherChatButtons();
             
             loadChatMessages();
             markMessagesAsRead(studentId);
