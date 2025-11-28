@@ -15831,13 +15831,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         // ===== VIDEO CALL FUNCTIONS =====
-        // Video call state variables
-        let activeVideoCall = null;
-        let videoCallTimer = null;
-        let videoCallSeconds = 0;
-        let isVideoMuted = false;
-        let isCameraOff = false;
-        let videoCallParticipants = [];
+        // Video call state - consolidated into a single object for better maintainability
+        const videoCallState = {
+            activeCall: null,
+            timer: null,
+            seconds: 0,
+            isMuted: false,
+            isCameraOff: false,
+            participants: []
+        };
         
         // Start video call for each context
         function startVideoCall() {
@@ -15869,17 +15871,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     audio: true 
                 });
                 
-                activeVideoCall = {
+                videoCallState.activeCall = {
                     context: context,
                     startTime: Date.now(),
                     stream: stream,
                     participants: [currentUser.name]
                 };
                 
-                videoCallParticipants = [currentUser.name];
-                isVideoMuted = false;
-                isCameraOff = false;
-                videoCallSeconds = 0;
+                videoCallState.participants = [currentUser.name];
+                videoCallState.isMuted = false;
+                videoCallState.isCameraOff = false;
+                videoCallState.seconds = 0;
                 
                 // Get container and video elements based on context
                 let containerId, videoId, timerElement;
@@ -15910,10 +15912,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 }
                 
                 // Start call timer
-                videoCallTimer = setInterval(() => {
-                    videoCallSeconds++;
-                    const mins = Math.floor(videoCallSeconds / 60);
-                    const secs = videoCallSeconds % 60;
+                videoCallState.timer = setInterval(() => {
+                    videoCallState.seconds++;
+                    const mins = Math.floor(videoCallState.seconds / 60);
+                    const secs = videoCallState.seconds % 60;
                     const timer = document.getElementById(timerElement);
                     if (timer) {
                         timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -15964,7 +15966,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 statusText.textContent = 'Video Call Active';
             }
             if (countBadge) {
-                countBadge.textContent = videoCallParticipants.length + ' participant' + (videoCallParticipants.length !== 1 ? 's' : '');
+                countBadge.textContent = videoCallState.participants.length + ' participant' + (videoCallState.participants.length !== 1 ? 's' : '');
             }
         }
         
@@ -15975,9 +15977,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 context === 'teacher' ? ['Student/Parent'] : ['Teacher'];
             
             setTimeout(() => {
-                if (activeVideoCall && activeVideoCall.context === context) {
+                if (videoCallState.activeCall && videoCallState.activeCall.context === context) {
                     const newParticipant = possibleParticipants[0];
-                    videoCallParticipants.push(newParticipant);
+                    videoCallState.participants.push(newParticipant);
                     
                     // Add simulated remote participant video placeholder
                     addRemoteParticipantVideo(context, newParticipant);
@@ -16003,13 +16005,24 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             if (grid) {
                 const participantDiv = document.createElement('div');
                 participantDiv.className = 'video-participant';
-                participantDiv.id = `remote-${participantName.replace(/\s+/g, '-')}`;
-                participantDiv.innerHTML = `
-                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));">
-                        <i class="fas fa-user" style="font-size: 3rem; color: rgba(255,255,255,0.5);"></i>
-                    </div>
-                    <span class="participant-name">${participantName}</span>
-                `;
+                // Sanitize participant name for ID attribute - only allow alphanumeric and dash
+                const sanitizedId = participantName.replace(/[^a-zA-Z0-9]/g, '-');
+                participantDiv.id = `remote-${sanitizedId}`;
+                
+                // Create inner content safely without innerHTML
+                const innerDiv = document.createElement('div');
+                innerDiv.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-user';
+                icon.style.cssText = 'font-size: 3rem; color: rgba(255,255,255,0.5);';
+                innerDiv.appendChild(icon);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'participant-name';
+                nameSpan.textContent = participantName; // Safe: textContent escapes HTML
+                
+                participantDiv.appendChild(innerDiv);
+                participantDiv.appendChild(nameSpan);
                 grid.appendChild(participantDiv);
             }
         }
@@ -16028,7 +16041,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function toggleVideoMuteInternal(context) {
-            isVideoMuted = !isVideoMuted;
+            videoCallState.isMuted = !videoCallState.isMuted;
             
             let btnId, indicatorId;
             if (context === 'live') {
@@ -16046,13 +16059,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const indicator = document.getElementById(indicatorId);
             
             // Toggle audio track
-            if (activeVideoCall && activeVideoCall.stream) {
-                activeVideoCall.stream.getAudioTracks().forEach(track => {
-                    track.enabled = !isVideoMuted;
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getAudioTracks().forEach(track => {
+                    track.enabled = !videoCallState.isMuted;
                 });
             }
             
-            if (isVideoMuted) {
+            if (videoCallState.isMuted) {
                 if (btn) {
                     btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
                     btn.classList.add('muted');
@@ -16087,7 +16100,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function toggleVideoCameraInternal(context) {
-            isCameraOff = !isCameraOff;
+            videoCallState.isCameraOff = !videoCallState.isCameraOff;
             
             let btnId;
             if (context === 'live') {
@@ -16101,13 +16114,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const btn = document.getElementById(btnId);
             
             // Toggle video track
-            if (activeVideoCall && activeVideoCall.stream) {
-                activeVideoCall.stream.getVideoTracks().forEach(track => {
-                    track.enabled = !isCameraOff;
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getVideoTracks().forEach(track => {
+                    track.enabled = !videoCallState.isCameraOff;
                 });
             }
             
-            if (isCameraOff) {
+            if (videoCallState.isCameraOff) {
                 if (btn) {
                     btn.innerHTML = '<i class="fas fa-video-slash"></i>';
                     btn.classList.add('off');
@@ -16137,14 +16150,14 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         function endVideoCallInternal(context) {
             // Stop all media tracks
-            if (activeVideoCall && activeVideoCall.stream) {
-                activeVideoCall.stream.getTracks().forEach(track => track.stop());
+            if (videoCallState.activeCall && videoCallState.activeCall.stream) {
+                videoCallState.activeCall.stream.getTracks().forEach(track => track.stop());
             }
             
             // Clear timer
-            if (videoCallTimer) {
-                clearInterval(videoCallTimer);
-                videoCallTimer = null;
+            if (videoCallState.timer) {
+                clearInterval(videoCallState.timer);
+                videoCallState.timer = null;
             }
             
             // Get container and reset
@@ -16174,7 +16187,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
             
             // Calculate call duration
-            const duration = videoCallSeconds;
+            const duration = videoCallState.seconds;
             
             // Add call log to chat
             const callLogMessage = {
@@ -16182,8 +16195,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 sender: currentUser.name,
                 role: currentUser.role,
                 type: 'video_call_log',
-                text: `📹 Video call ended (${formatDuration(duration)}) - ${videoCallParticipants.length} participants`,
-                participants: [...videoCallParticipants],
+                text: `📹 Video call ended (${formatDuration(duration)}) - ${videoCallState.participants.length} participants`,
+                participants: [...videoCallState.participants],
                 duration: duration,
                 timestamp: new Date().toISOString()
             };
@@ -16210,11 +16223,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
             
             // Reset state
-            activeVideoCall = null;
-            videoCallSeconds = 0;
-            isVideoMuted = false;
-            isCameraOff = false;
-            videoCallParticipants = [];
+            videoCallState.activeCall = null;
+            videoCallState.seconds = 0;
+            videoCallState.isMuted = false;
+            videoCallState.isCameraOff = false;
+            videoCallState.participants = [];
             
             addNotification('Video call ended', 'info');
             broadcastCallEvent('video_call_ended', context);
