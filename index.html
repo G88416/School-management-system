@@ -15490,15 +15490,41 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         async function startRecording(controlsId, durationId) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                
+                // Try to use the best available audio codec
+                // webm with opus is widely supported and has good quality
+                const mimeTypes = [
+                    'audio/webm;codecs=opus',
+                    'audio/webm',
+                    'audio/ogg;codecs=opus',
+                    'audio/mp4',
+                    ''  // Fall back to browser default
+                ];
+                
+                let options = {};
+                for (const mimeType of mimeTypes) {
+                    if (mimeType === '' || MediaRecorder.isTypeSupported(mimeType)) {
+                        if (mimeType !== '') {
+                            options.mimeType = mimeType;
+                        }
+                        break;
+                    }
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, options);
                 audioChunks = [];
                 recordingSeconds = 0;
                 
                 mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
                 };
                 
-                mediaRecorder.start();
+                // Request data chunks every 250ms for smoother recording and smaller memory footprint
+                // This interval provides a good balance between audio quality and responsiveness
+                const DATA_CHUNK_INTERVAL_MS = 250;
+                mediaRecorder.start(DATA_CHUNK_INTERVAL_MS);
                 document.getElementById(controlsId).style.display = 'block';
                 
                 // Start timer
@@ -15536,44 +15562,61 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
             
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioUrl = URL.createObjectURL(audioBlob);
+                // Determine MIME type based on what MediaRecorder actually used
+                const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunks, { type: mimeType });
                 
-                // Create voice note message
-                const voiceNoteMessage = {
-                    id: Date.now(),
-                    sender: currentUser.name,
-                    role: currentUser.role,
-                    type: 'voice_note',
-                    audioUrl: audioUrl,
-                    duration: recordingSeconds,
-                    timestamp: new Date().toISOString()
+                // Convert blob to base64 data URL for persistent storage
+                // Blob URLs don't persist across page reloads, but data URLs do
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const audioDataUrl = reader.result; // This is a base64 data URL
+                    
+                    // Create voice note message with persistent audio data
+                    const voiceNoteMessage = {
+                        id: Date.now(),
+                        sender: currentUser.name,
+                        role: currentUser.role,
+                        type: 'voice_note',
+                        audioUrl: audioDataUrl,
+                        duration: recordingSeconds,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Add message based on context
+                    if (context === 'live') {
+                        liveChatMessages.push(voiceNoteMessage);
+                        localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+                        renderLiveChatMessages();
+                    } else if (context === 'teacher') {
+                        const chatMessage = {
+                            id: Date.now(),
+                            studentId: selectedChatStudent.id,
+                            senderId: 'teacher',
+                            senderName: currentUser.name,
+                            type: 'voice_note',
+                            message: '🎤 Voice Note (' + formatDuration(recordingSeconds) + ')',
+                            audioUrl: audioDataUrl,
+                            duration: recordingSeconds,
+                            timestamp: new Date().toISOString(),
+                            read: false
+                        };
+                        teacherChats.push(chatMessage);
+                        localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
+                        loadChatMessages();
+                    } else if (context === 'parent') {
+                        addVoiceNoteToParentChat(voiceNoteMessage);
+                    }
+                    
+                    addNotification('Voice note sent successfully!', 'success');
                 };
                 
-                // Add message based on context
-                if (context === 'live') {
-                    liveChatMessages.push(voiceNoteMessage);
-                    localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
-                    renderLiveChatMessages();
-                } else if (context === 'teacher') {
-                    const chatMessage = {
-                        id: Date.now(),
-                        studentId: selectedChatStudent.id,
-                        senderId: 'teacher',
-                        senderName: currentUser.name,
-                        type: 'voice_note',
-                        message: '🎤 Voice Note (' + formatDuration(recordingSeconds) + ')',
-                        audioUrl: audioUrl,
-                        duration: recordingSeconds,
-                        timestamp: new Date().toISOString(),
-                        read: false
-                    };
-                    teacherChats.push(chatMessage);
-                    localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
-                    loadChatMessages();
-                } else if (context === 'parent') {
-                    addVoiceNoteToParentChat(voiceNoteMessage);
-                }
+                reader.onerror = () => {
+                    console.error('Error converting audio to base64:', reader.error);
+                    addNotification('Error saving voice note. Please try again.', 'error');
+                };
+                
+                reader.readAsDataURL(audioBlob);
                 
                 // Clean up
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
@@ -15581,8 +15624,6 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 clearInterval(recordingTimer);
                 recordingSeconds = 0;
                 audioChunks = [];
-                
-                addNotification('Voice note sent successfully!', 'success');
             };
             
             mediaRecorder.stop();
@@ -15620,16 +15661,83 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         
+        // Store currently playing audio to allow pause/resume
+        let currentPlayingAudio = null;
+        let currentPlayingButton = null;
+        
         function playVoiceNote(audioUrl, button) {
-            const audio = new Audio(audioUrl);
             const icon = button.querySelector('i');
             
-            icon.className = 'fas fa-pause text-white';
-            audio.play();
+            // If there's a currently playing audio
+            if (currentPlayingAudio) {
+                // If clicking the same button, pause/resume
+                if (currentPlayingButton === button) {
+                    if (currentPlayingAudio.paused) {
+                        currentPlayingAudio.play().catch(handleAudioError);
+                        icon.className = 'fas fa-pause text-white';
+                    } else {
+                        currentPlayingAudio.pause();
+                        icon.className = 'fas fa-play text-white';
+                    }
+                    return;
+                } else {
+                    // Stop the previously playing audio
+                    currentPlayingAudio.pause();
+                    currentPlayingAudio.currentTime = 0;
+                    if (currentPlayingButton) {
+                        const prevIcon = currentPlayingButton.querySelector('i');
+                        if (prevIcon) prevIcon.className = 'fas fa-play text-white';
+                    }
+                }
+            }
+            
+            // Check if audioUrl is valid (handle null, undefined, empty string, and string versions)
+            if (!audioUrl || audioUrl === '' || String(audioUrl) === 'undefined' || String(audioUrl) === 'null') {
+                addNotification('Audio not available. The voice note may have been recorded in a previous session.', 'warning');
+                return;
+            }
+            
+            const audio = new Audio();
+            
+            // Set up event handlers before setting source
+            audio.onloadeddata = () => {
+                audio.play()
+                    .then(() => {
+                        // Only change icon to pause after audio successfully starts playing
+                        icon.className = 'fas fa-pause text-white';
+                    })
+                    .catch(handleAudioError);
+            };
             
             audio.onended = () => {
                 icon.className = 'fas fa-play text-white';
+                currentPlayingAudio = null;
+                currentPlayingButton = null;
             };
+            
+            audio.onerror = (e) => {
+                console.error('Audio playback error:', e);
+                icon.className = 'fas fa-play text-white';
+                addNotification('Unable to play voice note. Audio format may not be supported.', 'error');
+                currentPlayingAudio = null;
+                currentPlayingButton = null;
+            };
+            
+            // Set source and load
+            audio.src = audioUrl;
+            audio.load();
+            
+            currentPlayingAudio = audio;
+            currentPlayingButton = button;
+        }
+        
+        function handleAudioError(error) {
+            console.error('Audio play error:', error);
+            if (error.name === 'NotAllowedError') {
+                addNotification('Audio playback blocked. Please interact with the page first.', 'warning');
+            } else {
+                addNotification('Error playing audio: ' + error.message, 'error');
+            }
         }
         
         // ===== VOICE CALL FUNCTIONS =====
