@@ -7577,8 +7577,8 @@
                                     </div>
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Tip:</strong> Use the <a href="#" onclick="document.querySelector('[data-bs-dismiss=modal]').click(); showSection('media'); setTimeout(() => document.querySelector('[href=\\'#media-poster-creator\\']').click(), 100);">Poster Creator</a> or 
-                                        <a href="#" onclick="document.querySelector('[data-bs-dismiss=modal]').click(); showSection('media'); setTimeout(() => document.querySelector('[href=\\'#media-video-creator\\']').click(), 100);">Video Creator</a> 
+                                        <strong>Tip:</strong> Use the <a href="#" onclick="goToPosterCreator()">Poster Creator</a> or 
+                                        <a href="#" onclick="goToVideoCreator()">Video Creator</a> 
                                         in the Media section to create visual announcements!
                                     </div>
                                     <button class="btn btn-primary" onclick="createAnnouncement()">
@@ -7607,7 +7607,7 @@
                                     </div>
                                     <div class="alert alert-info">
                                         <i class="fas fa-video me-2"></i>
-                                        <strong>New!</strong> Use the <a href="#" onclick="document.querySelector('[data-bs-dismiss=modal]').click(); showSection('media'); setTimeout(() => document.querySelector('[href=\\'#media-video-creator\\']').click(), 100);">Advanced Video Creator</a> 
+                                        <strong>New!</strong> Use the <a href="#" onclick="goToVideoCreator()">Advanced Video Creator</a> 
                                         in the Media section to record and edit your own videos!
                                     </div>
                                     <button class="btn btn-info" onclick="uploadVideo()">
@@ -9696,7 +9696,7 @@
                 case 'teachers': renderTeachers(); break;
                 case 'exams': renderExams(); break;
                 case 'hr': renderHR(); break;
-                case 'media': renderMessages(); break;
+                case 'media': loadMediaCenter(); break;
                 case 'eventsManagement': loadEventsManagement(); break;
                 case 'content': renderContents(); break;
                 case 'reports': break;
@@ -15703,6 +15703,18 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         // ========================================
+        // MEDIA CENTER FUNCTIONS
+        // ========================================
+        
+        function loadMediaCenter() {
+            // Render messages in the communication tab
+            renderMessages();
+            
+            // Initialize poster canvas if needed
+            initMediaPosterCanvas();
+        }
+        
+        // ========================================
         // MEDIA POSTER CREATOR FUNCTIONS
         // ========================================
         
@@ -16345,6 +16357,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                     options.mimeType = 'video/webm';
                 }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/mp4';
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    addNotification('Your browser does not support video recording. Please try a different browser like Chrome or Firefox.', 'error');
+                    return;
+                }
                 
                 videoCreatorRecorder = new MediaRecorder(videoCreatorStream, options);
                 
@@ -16615,6 +16634,37 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 });
             }
         });
+        
+        // Navigation helper functions for announcements modal
+        function goToPosterCreator() {
+            try {
+                const closeBtn = document.querySelector('[data-bs-dismiss="modal"]');
+                if (closeBtn) closeBtn.click();
+                showSection('media');
+                setTimeout(() => {
+                    const posterTab = document.querySelector('[href="#media-poster-creator"]');
+                    if (posterTab) posterTab.click();
+                }, 150);
+            } catch (error) {
+                console.error('Error navigating to Poster Creator:', error);
+                addNotification('Could not navigate to Poster Creator. Please go to Media section manually.', 'warning');
+            }
+        }
+        
+        function goToVideoCreator() {
+            try {
+                const closeBtn = document.querySelector('[data-bs-dismiss="modal"]');
+                if (closeBtn) closeBtn.click();
+                showSection('media');
+                setTimeout(() => {
+                    const videoTab = document.querySelector('[href="#media-video-creator"]');
+                    if (videoTab) videoTab.click();
+                }, 150);
+            } catch (error) {
+                console.error('Error navigating to Video Creator:', error);
+                addNotification('Could not navigate to Video Creator. Please go to Media section manually.', 'warning');
+            }
+        }
         
         // Live Chat Functionality
         let liveChatMessages = JSON.parse(localStorage.getItem('liveChatMessages') || '[]');
