@@ -2810,7 +2810,7 @@
                 <li class="teacher-only non-student"><a href="#teachers" class="nav-link" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher me-2"></i><span class="nav-text">Advanced Teachers</span></a></li>
                 <li class="teacher-only non-student"><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Assessment</span></a></li>
                 <li class="admin-only non-student"><a href="#hr" class="nav-link" onclick="showSection('hr')"><i class="fas fa-user-tie me-2"></i><span class="nav-text">HR Management</span></a></li>
-                <li class="non-student"><a href="#communication" class="nav-link" onclick="showSection('communication')"><i class="fas fa-comments me-2"></i><span class="nav-text">Communication</span></a></li>
+                <li class="non-student"><a href="#media" class="nav-link" onclick="showSection('media')"><i class="fas fa-photo-video me-2"></i><span class="nav-text">Media</span></a></li>
                 <li class="admin-only non-student"><a href="#eventsManagement" class="nav-link" onclick="showSection('eventsManagement')"><i class="fas fa-calendar-check me-2"></i><span class="nav-text">Events Management</span></a></li>
                 <li class="admin-only non-student"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Reports</span></a></li>
                 <li class="admin-only non-student"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
@@ -4563,127 +4563,838 @@
                     </div>
                 </div>
             </section>
-            <!-- Communication -->
-            <section id="communication" class="section d-none non-student">
-                <h2>Communication</h2>
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <button class="btn btn-primary" onclick="showSendMessageModal()"><i class="fas fa-envelope me-2"></i>Send Message</button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-success" onclick="showAnnouncementsModal()"><i class="fas fa-bullhorn me-2"></i>View Announcements</button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-info" onclick="startLiveChat()"><i class="fas fa-comments me-2"></i>Live Chat</button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-danger" onclick="clearAllCommunications()"><i class="fas fa-trash me-2"></i>Clear All</button>
-                    </div>
-                </div>
-                <div id="messagesContainer"></div>
+            <!-- Media -->
+            <section id="media" class="section d-none non-student">
+                <h2><i class="fas fa-photo-video me-2"></i>Media Center</h2>
                 
-                <!-- Live Chat Section -->
-                <div id="liveChatContainer" class="d-none mt-4">
-                    <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
-                        <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h4><i class="fas fa-comments me-2"></i>Live Chat - All Students & Teachers</h4>
-                                <button class="btn btn-sm btn-danger" onclick="closeLiveChat()">
-                                    <i class="fas fa-times"></i> Close
-                                </button>
+                <!-- Media Tabs Navigation -->
+                <ul class="nav nav-tabs mb-4" id="mediaTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#media-communication">
+                            <i class="fas fa-comments me-2"></i>Communication
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#media-poster-creator">
+                            <i class="fas fa-palette me-2"></i>Poster Creator
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#media-video-creator">
+                            <i class="fas fa-video me-2"></i>Video Creator
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Media Tab Content -->
+                <div class="tab-content">
+                    <!-- Communication Tab -->
+                    <div class="tab-pane fade show active" id="media-communication">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <button class="btn btn-primary" onclick="showSendMessageModal()"><i class="fas fa-envelope me-2"></i>Send Message</button>
                             </div>
-                            <small class="text-muted">Real-time communication for students and teachers</small>
-                        </div>
-                        <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="liveChatMessages">
-                            <!-- Chat messages will appear here -->
-                        </div>
-                        <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
-                            <!-- Video Chat Container -->
-                            <div id="videoChatContainer" class="video-chat-container mb-3">
-                                <div class="video-call-status">
-                                    <span id="videoCallStatusText">Video Call Active</span>
-                                    <span class="call-timer" id="videoCallTimer">0:00</span>
-                                    <span id="videoParticipantCount" class="badge bg-info ms-2">0 participants</span>
-                                </div>
-                                <div class="video-grid" id="videoGrid">
-                                    <!-- Local video -->
-                                    <div class="video-participant local-video">
-                                        <video id="localVideo" autoplay muted playsinline></video>
-                                        <span class="participant-name">You</span>
-                                        <span class="muted-indicator" id="localMutedIndicator"><i class="fas fa-microphone-slash"></i> Muted</span>
-                                    </div>
-                                    <!-- Remote participants will be added here dynamically -->
-                                </div>
-                                <div class="video-controls">
-                                    <button class="btn btn-mute" id="videoMuteBtn" onclick="toggleVideoMute()" title="Toggle Microphone">
-                                        <i class="fas fa-microphone"></i>
-                                    </button>
-                                    <button class="btn btn-video" id="videoCameraBtn" onclick="toggleVideoCamera()" title="Toggle Camera">
-                                        <i class="fas fa-video"></i>
-                                    </button>
-                                    <button class="btn btn-end-call" onclick="endVideoCall()" title="End Video Call">
-                                        <i class="fas fa-phone-slash"></i>
-                                    </button>
-                                </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-success" onclick="showAnnouncementsModal()"><i class="fas fa-bullhorn me-2"></i>View Announcements</button>
                             </div>
-                            
-                            <!-- Voice Call Controls -->
-                            <div id="voiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-phone-volume text-success me-2"></i>
-                                        <span id="callStatusText">Conference Call Active</span>
-                                        <span id="callParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                            <div class="col-md-3">
+                                <button class="btn btn-info" onclick="startLiveChat()"><i class="fas fa-comments me-2"></i>Live Chat</button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-danger" onclick="clearAllCommunications()"><i class="fas fa-trash me-2"></i>Clear All</button>
+                            </div>
+                        </div>
+                        <div id="messagesContainer"></div>
+                        
+                        <!-- Live Chat Section -->
+                        <div id="liveChatContainer" class="d-none mt-4">
+                            <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
+                                <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4><i class="fas fa-comments me-2"></i>Live Chat - All Students & Teachers</h4>
+                                        <button class="btn btn-sm btn-danger" onclick="closeLiveChat()">
+                                            <i class="fas fa-times"></i> Close
+                                        </button>
                                     </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-warning me-2" id="muteCallBtn" onclick="toggleMuteCall()">
+                                    <small class="text-muted">Real-time communication for students and teachers</small>
+                                </div>
+                                <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="liveChatMessages">
+                                    <!-- Chat messages will appear here -->
+                                </div>
+                                <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
+                                    <!-- Video Chat Container -->
+                                    <div id="videoChatContainer" class="video-chat-container mb-3">
+                                        <div class="video-call-status">
+                                            <span id="videoCallStatusText">Video Call Active</span>
+                                            <span class="call-timer" id="videoCallTimer">0:00</span>
+                                            <span id="videoParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                        </div>
+                                        <div class="video-grid" id="videoGrid">
+                                            <!-- Local video -->
+                                            <div class="video-participant local-video">
+                                                <video id="localVideo" autoplay muted playsinline></video>
+                                                <span class="participant-name">You</span>
+                                                <span class="muted-indicator" id="localMutedIndicator"><i class="fas fa-microphone-slash"></i> Muted</span>
+                                            </div>
+                                            <!-- Remote participants will be added here dynamically -->
+                                        </div>
+                                        <div class="video-controls">
+                                            <button class="btn btn-mute" id="videoMuteBtn" onclick="toggleVideoMute()" title="Toggle Microphone">
+                                                <i class="fas fa-microphone"></i>
+                                            </button>
+                                            <button class="btn btn-video" id="videoCameraBtn" onclick="toggleVideoCamera()" title="Toggle Camera">
+                                                <i class="fas fa-video"></i>
+                                            </button>
+                                            <button class="btn btn-end-call" onclick="endVideoCall()" title="End Video Call">
+                                                <i class="fas fa-phone-slash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Voice Call Controls -->
+                                    <div id="voiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-phone-volume text-success me-2"></i>
+                                                <span id="callStatusText">Conference Call Active</span>
+                                                <span id="callParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-sm btn-warning me-2" id="muteCallBtn" onclick="toggleMuteCall()">
+                                                    <i class="fas fa-microphone"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="endVoiceCall()">
+                                                    <i class="fas fa-phone-slash me-1"></i>End Call
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Voice Note Recording Controls -->
+                                    <div id="voiceNoteControls" class="mb-2" style="display: none;">
+                                        <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(233, 69, 96, 0.2); border-radius: 8px;">
+                                            <div>
+                                                <i class="fas fa-circle text-danger me-2 recording-indicator"></i>
+                                                <span>Recording... <span id="recordingDuration">0:00</span></span>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-sm btn-danger me-2" onclick="cancelVoiceNote()">
+                                                    <i class="fas fa-times"></i> Cancel
+                                                </button>
+                                                <button class="btn btn-sm btn-success" onclick="sendVoiceNote()">
+                                                    <i class="fas fa-paper-plane"></i> Send
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="input-group">
+                                        <input type="text" id="liveChatInput" class="form-control" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendLiveChatMessage()">
+                                        <button class="btn btn-info" onclick="startVoiceNote()" title="Send Voice Note (VN)">
                                             <i class="fas fa-microphone"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger" onclick="endVoiceCall()">
-                                            <i class="fas fa-phone-slash me-1"></i>End Call
+                                        <button class="btn btn-success" onclick="startVoiceCall()" title="Start Conference Voice Call">
+                                            <i class="fas fa-phone"></i>
                                         </button>
+                                        <button class="btn btn-warning" onclick="startVideoCall()" title="Start Video Call">
+                                            <i class="fas fa-video"></i>
+                                        </button>
+                                        <button class="btn btn-primary" onclick="sendLiveChatMessage()">
+                                            <i class="fas fa-paper-plane me-2"></i>Send
+                                        </button>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">
+                                        <i class="fas fa-microphone me-1"></i>Voice Note | 
+                                        <i class="fas fa-phone me-1"></i>Voice Call | 
+                                        <i class="fas fa-video me-1"></i>Video Call
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Poster Creator Tab -->
+                    <div class="tab-pane fade" id="media-poster-creator">
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i><strong>Advanced Poster Creator</strong> - Design professional posters with drag-and-drop elements, custom fonts, shapes, and templates. Export as PNG or PDF.
+                        </div>
+                        
+                        <!-- Enhanced Poster Creator Container -->
+                        <style>
+                            #media-poster-container { 
+                                display: grid; 
+                                grid-template-columns: 280px 1fr 300px; 
+                                gap: 0;
+                                height: 85vh;
+                                min-height: 700px;
+                                background: #f8f9fa;
+                                border-radius: 20px;
+                                overflow: hidden;
+                                box-shadow: 0 15px 60px rgba(0,0,0,0.2);
+                            }
+                            #media-poster-left, #media-poster-right { 
+                                background: rgba(255, 255, 255, 0.98); 
+                                padding: 20px; 
+                                overflow-y: auto;
+                                scrollbar-width: thin;
+                            }
+                            #media-poster-left {
+                                border-right: 1px solid rgba(0,0,0,0.08);
+                            }
+                            #media-poster-right { 
+                                border-left: 1px solid rgba(0,0,0,0.08);
+                            }
+                            #media-poster-center {
+                                background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 40px;
+                                position: relative;
+                                overflow: auto;
+                            }
+                            #mediaPosterCanvas {
+                                background: white;
+                                border-radius: 12px;
+                                box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+                            }
+                            .media-poster-section { 
+                                margin-bottom: 20px; 
+                                padding: 15px;
+                                background: rgba(248,249,250,0.8);
+                                border-radius: 12px;
+                            }
+                            .media-poster-section h4 {
+                                margin: 0 0 12px 0;
+                                font-size: 14px;
+                                color: #333;
+                                font-weight: 600;
+                            }
+                            .media-poster-btn {
+                                width: 100%;
+                                padding: 10px 14px;
+                                margin: 6px 0;
+                                border-radius: 10px;
+                                border: none;
+                                background: linear-gradient(135deg, #667eea, #764ba2);
+                                color: #fff;
+                                font-size: 13px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            }
+                            .media-poster-btn:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 6px 16px rgba(102,126,234,0.4);
+                            }
+                            .media-poster-color-picker {
+                                height: 45px;
+                                width: 100%;
+                                border: 3px solid #e0e0e0;
+                                border-radius: 10px;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                            }
+                            .media-poster-color-picker:hover {
+                                border-color: #667eea;
+                            }
+                            #media-poster-layers { 
+                                list-style: none; 
+                                padding: 0; 
+                                margin: 0; 
+                            }
+                            #media-poster-layers li { 
+                                padding: 10px 12px; 
+                                background: #f8f9fa; 
+                                margin: 6px 0; 
+                                border-radius: 8px; 
+                                cursor: pointer; 
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: center;
+                                transition: all 0.25s;
+                                font-size: 12px;
+                                border: 1px solid transparent;
+                            }
+                            #media-poster-layers li:hover { 
+                                background: #e9ecef; 
+                                transform: translateX(3px);
+                                border-color: #667eea;
+                            }
+                            #media-poster-layers li.active { 
+                                background: linear-gradient(135deg, #667eea, #764ba2); 
+                                color: white; 
+                                font-weight: 600;
+                            }
+                            .media-template-thumb {
+                                height: 100px;
+                                background-size: cover;
+                                background-position: center;
+                                border-radius: 10px;
+                                margin: 8px 0;
+                                cursor: pointer;
+                                border: 3px solid #e0e0e0;
+                                transition: all 0.3s ease;
+                                position: relative;
+                                overflow: hidden;
+                            }
+                            .media-template-thumb:hover {
+                                border-color: #667eea;
+                                transform: scale(1.03);
+                                box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+                            }
+                            .media-template-thumb::after {
+                                content: '✨ Use Template';
+                                position: absolute;
+                                bottom: 0;
+                                left: 0;
+                                right: 0;
+                                background: rgba(0,0,0,0.85);
+                                color: #fff;
+                                padding: 8px;
+                                text-align: center;
+                                font-size: 11px;
+                                font-weight: 600;
+                                opacity: 0;
+                                transition: opacity 0.3s;
+                            }
+                            .media-template-thumb:hover::after { 
+                                opacity: 1; 
+                            }
+                            @media (max-width: 1200px) {
+                                #media-poster-container {
+                                    grid-template-columns: 240px 1fr 260px;
+                                }
+                            }
+                            @media (max-width: 1024px) {
+                                #media-poster-container {
+                                    grid-template-columns: 1fr;
+                                    grid-template-rows: auto 1fr auto;
+                                    height: auto;
+                                    min-height: 100vh;
+                                }
+                                #media-poster-left, #media-poster-right {
+                                    border: none;
+                                    border-bottom: 2px solid rgba(0,0,0,0.1);
+                                }
+                                #media-poster-center {
+                                    min-height: 500px;
+                                    padding: 20px;
+                                }
+                            }
+                            @media (max-width: 768px) {
+                                #media-poster-center {
+                                    min-height: 400px;
+                                    padding: 15px;
+                                }
+                                .media-poster-section { 
+                                    padding: 12px; 
+                                }
+                            }
+                        </style>
+                        
+                        <div id="media-poster-container">
+                            <!-- Left Panel - Tools -->
+                            <div id="media-poster-left">
+                                <h3 style="color: #333; font-weight: 700; margin-bottom: 20px; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                                    🎨 Poster Creator
+                                </h3>
+                                
+                                <div class="media-poster-section">
+                                    <h4>📝 Add Elements</h4>
+                                    <button class="media-poster-btn" onclick="addMediaPosterText()">
+                                        <i class="fas fa-heading me-2"></i>Add Heading
+                                    </button>
+                                    <button class="media-poster-btn" onclick="addMediaPosterText('Body text...', 28)">
+                                        <i class="fas fa-paragraph me-2"></i>Add Paragraph
+                                    </button>
+                                    <button class="media-poster-btn" onclick="uploadMediaPosterImage()">
+                                        <i class="fas fa-image me-2"></i>Upload Image
+                                    </button>
+                                    <input type="file" id="media-poster-image-upload" accept="image/*" style="display:none;" onchange="handleMediaPosterImageUpload(this)">
+                                </div>
+                                
+                                <div class="media-poster-section">
+                                    <h4>🔷 Shapes</h4>
+                                    <button class="media-poster-btn" onclick="addMediaPosterShape('rect')">
+                                        <i class="fas fa-square me-2"></i>Rectangle
+                                    </button>
+                                    <button class="media-poster-btn" onclick="addMediaPosterShape('circle')">
+                                        <i class="fas fa-circle me-2"></i>Circle
+                                    </button>
+                                    <button class="media-poster-btn" onclick="addMediaPosterShape('triangle')">
+                                        <i class="fas fa-play me-2"></i>Triangle
+                                    </button>
+                                    <button class="media-poster-btn" onclick="addMediaPosterShape('star')">
+                                        <i class="fas fa-star me-2"></i>Star
+                                    </button>
+                                    <button class="media-poster-btn" onclick="addMediaPosterShape('line')">
+                                        <i class="fas fa-minus me-2"></i>Line
+                                    </button>
+                                </div>
+                                
+                                <div class="media-poster-section">
+                                    <h4>🎨 Background</h4>
+                                    <input type="color" class="media-poster-color-picker" id="mediaPosterBgColor" value="#ffffff" onchange="setMediaPosterBgColor(this.value)">
+                                    <button class="media-poster-btn" onclick="setMediaPosterGradientBg()" style="margin-top: 8px;">
+                                        <i class="fas fa-paint-roller me-2"></i>Gradient Background
+                                    </button>
+                                    <button class="media-poster-btn" onclick="setMediaPosterRandomBg()">
+                                        <i class="fas fa-random me-2"></i>Random Background
+                                    </button>
+                                </div>
+                                
+                                <div class="media-poster-section">
+                                    <h4>📋 Templates</h4>
+                                    <div class="media-template-thumb" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="loadMediaPosterTemplate('event')"></div>
+                                    <div class="media-template-thumb" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="loadMediaPosterTemplate('sale')"></div>
+                                    <div class="media-template-thumb" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="loadMediaPosterTemplate('school')"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Center - Canvas -->
+                            <div id="media-poster-center">
+                                <canvas id="mediaPosterCanvas" width="1000" height="700"></canvas>
+                            </div>
+                            
+                            <!-- Right Panel - Properties -->
+                            <div id="media-poster-right">
+                                <h3 style="color: #333; font-weight: 700; margin-bottom: 20px; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                                    ⚙️ Properties
+                                </h3>
+                                
+                                <div id="media-poster-props" class="media-poster-section" style="display: none;">
+                                    <h4>Text Properties</h4>
+                                    <label style="font-size: 12px; color: #666;">Font Family</label>
+                                    <select id="mediaPosterFontFamily" class="form-control form-control-sm mb-2" onchange="setMediaPosterProp('fontFamily', this.value)">
+                                        <option value="Arial">Arial</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Verdana">Verdana</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                    </select>
+                                    
+                                    <label style="font-size: 12px; color: #666;">Font Size: <span id="mediaPosterFontSizeValue">50</span>px</label>
+                                    <input type="range" id="mediaPosterFontSize" min="12" max="200" value="50" class="form-range" oninput="document.getElementById('mediaPosterFontSizeValue').textContent=this.value" onchange="setMediaPosterProp('fontSize', parseInt(this.value))">
+                                    
+                                    <label style="font-size: 12px; color: #666;">Fill Color</label>
+                                    <input type="color" class="media-poster-color-picker" id="mediaPosterFillColor" value="#000000" onchange="setMediaPosterProp('fill', this.value)">
+                                    
+                                    <div class="d-flex gap-2 mt-3">
+                                        <button class="media-poster-btn" onclick="toggleMediaPosterProp('fontWeight', 'bold')" style="flex: 1;">Bold</button>
+                                        <button class="media-poster-btn" onclick="toggleMediaPosterProp('fontStyle', 'italic')" style="flex: 1;">Italic</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="media-poster-section">
+                                    <h4>📚 Layers</h4>
+                                    <ul id="media-poster-layers"></ul>
+                                </div>
+                                
+                                <div class="media-poster-section">
+                                    <h4>🎬 Actions</h4>
+                                    <button class="media-poster-btn" onclick="bringMediaPosterToFront()">
+                                        <i class="fas fa-layer-group me-2"></i>Bring to Front
+                                    </button>
+                                    <button class="media-poster-btn" onclick="sendMediaPosterToBack()">
+                                        <i class="fas fa-layer-group me-2"></i>Send to Back
+                                    </button>
+                                    <button class="media-poster-btn" onclick="duplicateMediaPosterObject()">
+                                        <i class="fas fa-clone me-2"></i>Duplicate
+                                    </button>
+                                    <button class="media-poster-btn" onclick="deleteMediaPosterActive()" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                        <i class="fas fa-trash me-2"></i>Delete Selected
+                                    </button>
+                                </div>
+                                
+                                <div class="media-poster-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    <h4 style="color: #10b981;">💾 Export</h4>
+                                    <button class="media-poster-btn" onclick="downloadMediaPoster()" style="background: linear-gradient(135deg, #10b981, #22c55e);">
+                                        <i class="fas fa-download me-2"></i>Download PNG
+                                    </button>
+                                    <button class="media-poster-btn" onclick="exportMediaPosterPDF()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                                        <i class="fas fa-file-pdf me-2"></i>Export PDF
+                                    </button>
+                                    <button class="media-poster-btn" onclick="sendMediaPosterAsAnnouncement()" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                        <i class="fas fa-bullhorn me-2"></i>Send as Announcement
+                                    </button>
+                                    <button class="media-poster-btn" onclick="clearMediaPosterCanvas()" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                        <i class="fas fa-broom me-2"></i>Clear Canvas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Creator Tab -->
+                    <div class="tab-pane fade" id="media-video-creator">
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i><strong>Advanced Video Creator</strong> - Record yourself using your camera, edit the video, add text overlays, and send as an announcement.
+                        </div>
+                        
+                        <!-- Video Creator Styles -->
+                        <style>
+                            #video-creator-container {
+                                display: grid;
+                                grid-template-columns: 300px 1fr 280px;
+                                gap: 0;
+                                height: 80vh;
+                                min-height: 600px;
+                                background: #1a1a2e;
+                                border-radius: 20px;
+                                overflow: hidden;
+                                box-shadow: 0 15px 60px rgba(0,0,0,0.3);
+                            }
+                            .video-creator-panel {
+                                background: rgba(255, 255, 255, 0.05);
+                                padding: 20px;
+                                overflow-y: auto;
+                                scrollbar-width: thin;
+                            }
+                            .video-creator-panel-left {
+                                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                            }
+                            .video-creator-panel-right {
+                                border-left: 1px solid rgba(255, 255, 255, 0.1);
+                            }
+                            #video-creator-preview {
+                                background: #000;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 20px;
+                                position: relative;
+                            }
+                            #videoCreatorPreview {
+                                width: 100%;
+                                max-height: 70%;
+                                border-radius: 12px;
+                                background: #111;
+                                object-fit: contain;
+                            }
+                            #videoCreatorRecording {
+                                width: 100%;
+                                max-height: 70%;
+                                border-radius: 12px;
+                                background: #111;
+                                display: none;
+                            }
+                            .video-creator-section {
+                                margin-bottom: 20px;
+                                padding: 15px;
+                                background: rgba(255, 255, 255, 0.08);
+                                border-radius: 12px;
+                            }
+                            .video-creator-section h4 {
+                                color: #fff;
+                                font-size: 14px;
+                                font-weight: 600;
+                                margin: 0 0 12px 0;
+                            }
+                            .video-creator-btn {
+                                width: 100%;
+                                padding: 12px 14px;
+                                margin: 6px 0;
+                                border-radius: 10px;
+                                border: none;
+                                background: linear-gradient(135deg, #e94560, #ff6b6b);
+                                color: #fff;
+                                font-size: 13px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            }
+                            .video-creator-btn:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+                            }
+                            .video-creator-btn:disabled {
+                                opacity: 0.5;
+                                cursor: not-allowed;
+                                transform: none;
+                            }
+                            .video-creator-btn.recording {
+                                background: linear-gradient(135deg, #ef4444, #dc2626);
+                                animation: pulse-record 1s infinite;
+                            }
+                            @keyframes pulse-record {
+                                0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+                                50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+                            }
+                            .video-controls-bar {
+                                display: flex;
+                                gap: 10px;
+                                justify-content: center;
+                                margin-top: 20px;
+                                flex-wrap: wrap;
+                            }
+                            .video-control-btn {
+                                width: 50px;
+                                height: 50px;
+                                border-radius: 50%;
+                                border: none;
+                                background: rgba(255, 255, 255, 0.2);
+                                color: #fff;
+                                font-size: 18px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .video-control-btn:hover {
+                                background: rgba(255, 255, 255, 0.3);
+                                transform: scale(1.1);
+                            }
+                            .video-control-btn.record-btn {
+                                background: linear-gradient(135deg, #ef4444, #dc2626);
+                                width: 70px;
+                                height: 70px;
+                                font-size: 24px;
+                            }
+                            .video-control-btn.record-btn.recording {
+                                animation: pulse-record 1s infinite;
+                            }
+                            .video-control-btn.record-btn.recording i::before {
+                                content: "\\f04d";
+                            }
+                            .video-timeline {
+                                width: 100%;
+                                margin-top: 15px;
+                                padding: 10px 0;
+                            }
+                            .video-timeline-bar {
+                                height: 8px;
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 4px;
+                                position: relative;
+                                cursor: pointer;
+                            }
+                            .video-timeline-progress {
+                                height: 100%;
+                                background: linear-gradient(90deg, #e94560, #ff6b6b);
+                                border-radius: 4px;
+                                width: 0%;
+                                transition: width 0.1s linear;
+                            }
+                            .video-time-display {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-top: 5px;
+                                font-size: 12px;
+                                color: rgba(255, 255, 255, 0.7);
+                            }
+                            .video-overlay-text {
+                                position: absolute;
+                                padding: 10px 20px;
+                                background: rgba(0, 0, 0, 0.7);
+                                color: #fff;
+                                font-size: 24px;
+                                font-weight: bold;
+                                border-radius: 8px;
+                                cursor: move;
+                                user-select: none;
+                            }
+                            .recorded-videos-list {
+                                max-height: 200px;
+                                overflow-y: auto;
+                            }
+                            .recorded-video-item {
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                padding: 10px;
+                                background: rgba(255, 255, 255, 0.1);
+                                border-radius: 8px;
+                                margin-bottom: 8px;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                            }
+                            .recorded-video-item:hover {
+                                background: rgba(255, 255, 255, 0.2);
+                            }
+                            .recorded-video-item img {
+                                width: 60px;
+                                height: 40px;
+                                object-fit: cover;
+                                border-radius: 4px;
+                            }
+                            .recorded-video-item .video-info {
+                                flex: 1;
+                                color: #fff;
+                            }
+                            .recorded-video-item .video-info h6 {
+                                margin: 0;
+                                font-size: 13px;
+                            }
+                            .recorded-video-item .video-info small {
+                                color: rgba(255, 255, 255, 0.6);
+                            }
+                            @media (max-width: 1024px) {
+                                #video-creator-container {
+                                    grid-template-columns: 1fr;
+                                    grid-template-rows: auto 1fr auto;
+                                    height: auto;
+                                    min-height: 100vh;
+                                }
+                                .video-creator-panel-left, .video-creator-panel-right {
+                                    border: none;
+                                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                                }
+                            }
+                        </style>
+                        
+                        <div id="video-creator-container">
+                            <!-- Left Panel - Recording Controls -->
+                            <div class="video-creator-panel video-creator-panel-left">
+                                <h3 style="color: #fff; font-weight: 700; margin-bottom: 20px; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #e94560;">
+                                    🎬 Video Creator
+                                </h3>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-video me-2"></i>Camera Settings</h4>
+                                    <select id="videoCreatorCameraSelect" class="form-control form-control-sm mb-2" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                        <option value="">Select Camera...</option>
+                                    </select>
+                                    <select id="videoCreatorMicSelect" class="form-control form-control-sm" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                        <option value="">Select Microphone...</option>
+                                    </select>
+                                    <button class="video-creator-btn" onclick="initVideoCreatorCamera()" style="margin-top: 10px;">
+                                        <i class="fas fa-camera me-2"></i>Start Camera
+                                    </button>
+                                </div>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-sliders-h me-2"></i>Recording Quality</h4>
+                                    <select id="videoCreatorQuality" class="form-control form-control-sm" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                        <option value="1080">1080p HD</option>
+                                        <option value="720" selected>720p HD</option>
+                                        <option value="480">480p SD</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-clock me-2"></i>Recording Timer</h4>
+                                    <div style="text-align: center; font-size: 36px; font-weight: bold; color: #e94560; font-family: monospace;" id="videoRecordingTimer">
+                                        00:00
+                                    </div>
+                                    <div style="text-align: center; color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 5px;">
+                                        Max: 10 minutes
+                                    </div>
+                                </div>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-film me-2"></i>Recorded Videos</h4>
+                                    <div class="recorded-videos-list" id="recordedVideosList">
+                                        <p style="color: rgba(255,255,255,0.5); text-align: center; font-size: 12px;">No videos recorded yet</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Voice Note Recording Controls -->
-                            <div id="voiceNoteControls" class="mb-2" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(233, 69, 96, 0.2); border-radius: 8px;">
-                                    <div>
-                                        <i class="fas fa-circle text-danger me-2 recording-indicator"></i>
-                                        <span>Recording... <span id="recordingDuration">0:00</span></span>
+                            <!-- Center - Video Preview -->
+                            <div id="video-creator-preview">
+                                <video id="videoCreatorPreview" autoplay muted playsinline></video>
+                                <video id="videoCreatorRecording" controls></video>
+                                
+                                <!-- Recording indicator -->
+                                <div id="recordingIndicator" style="display: none; position: absolute; top: 30px; left: 30px; background: rgba(239, 68, 68, 0.9); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                                    <i class="fas fa-circle me-2" style="animation: blink 1s infinite;"></i>REC
+                                </div>
+                                
+                                <style>
+                                    @keyframes blink {
+                                        0%, 100% { opacity: 1; }
+                                        50% { opacity: 0.3; }
+                                    }
+                                </style>
+                                
+                                <!-- Video Controls -->
+                                <div class="video-controls-bar">
+                                    <button class="video-control-btn" onclick="toggleVideoCreatorMute()" id="videoCreatorMuteBtn" title="Mute/Unmute">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <button class="video-control-btn record-btn" onclick="toggleVideoRecording()" id="videoRecordBtn" title="Start/Stop Recording">
+                                        <i class="fas fa-circle"></i>
+                                    </button>
+                                    <button class="video-control-btn" onclick="toggleVideoCreatorCamera()" id="videoCreatorCameraBtn" title="Toggle Camera">
+                                        <i class="fas fa-video"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Timeline (shown when reviewing recorded video) -->
+                                <div class="video-timeline" id="videoTimeline" style="display: none;">
+                                    <div class="video-timeline-bar" onclick="seekVideo(event)">
+                                        <div class="video-timeline-progress" id="videoTimelineProgress"></div>
                                     </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-danger me-2" onclick="cancelVoiceNote()">
-                                            <i class="fas fa-times"></i> Cancel
-                                        </button>
-                                        <button class="btn btn-sm btn-success" onclick="sendVoiceNote()">
-                                            <i class="fas fa-paper-plane"></i> Send
-                                        </button>
+                                    <div class="video-time-display">
+                                        <span id="videoCurrentTime">0:00</span>
+                                        <span id="videoDuration">0:00</span>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="input-group">
-                                <input type="text" id="liveChatInput" class="form-control" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendLiveChatMessage()">
-                                <button class="btn btn-info" onclick="startVoiceNote()" title="Send Voice Note (VN)">
-                                    <i class="fas fa-microphone"></i>
-                                </button>
-                                <button class="btn btn-success" onclick="startVoiceCall()" title="Start Conference Voice Call">
-                                    <i class="fas fa-phone"></i>
-                                </button>
-                                <button class="btn btn-warning" onclick="startVideoCall()" title="Start Video Call">
-                                    <i class="fas fa-video"></i>
-                                </button>
-                                <button class="btn btn-primary" onclick="sendLiveChatMessage()">
-                                    <i class="fas fa-paper-plane me-2"></i>Send
-                                </button>
+                            <!-- Right Panel - Editing & Export -->
+                            <div class="video-creator-panel video-creator-panel-right">
+                                <h3 style="color: #fff; font-weight: 700; margin-bottom: 20px; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #e94560;">
+                                    ✂️ Edit & Export
+                                </h3>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-font me-2"></i>Add Text Overlay</h4>
+                                    <input type="text" id="videoOverlayText" class="form-control form-control-sm mb-2" placeholder="Enter text..." style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                    <div class="d-flex gap-2 mb-2">
+                                        <input type="color" id="videoOverlayColor" value="#ffffff" style="width: 50px; height: 35px; border-radius: 5px; border: none;">
+                                        <select id="videoOverlaySize" class="form-control form-control-sm" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                            <option value="24">Small</option>
+                                            <option value="36" selected>Medium</option>
+                                            <option value="48">Large</option>
+                                            <option value="72">Extra Large</option>
+                                        </select>
+                                    </div>
+                                    <button class="video-creator-btn" onclick="addVideoOverlayText()">
+                                        <i class="fas fa-plus me-2"></i>Add Text
+                                    </button>
+                                </div>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-cut me-2"></i>Trim Video</h4>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 11px; color: rgba(255,255,255,0.6);">Start</label>
+                                            <input type="text" id="videoTrimStart" class="form-control form-control-sm" value="0:00" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <label style="font-size: 11px; color: rgba(255,255,255,0.6);">End</label>
+                                            <input type="text" id="videoTrimEnd" class="form-control form-control-sm" value="0:00" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                        </div>
+                                    </div>
+                                    <button class="video-creator-btn" onclick="trimVideoRecording()" disabled id="trimVideoBtn">
+                                        <i class="fas fa-cut me-2"></i>Apply Trim
+                                    </button>
+                                </div>
+                                
+                                <div class="video-creator-section">
+                                    <h4><i class="fas fa-heading me-2"></i>Video Details</h4>
+                                    <input type="text" id="videoCreatorTitle" class="form-control form-control-sm mb-2" placeholder="Video Title" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                                    <textarea id="videoCreatorDescription" class="form-control form-control-sm" rows="2" placeholder="Description..." style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);"></textarea>
+                                </div>
+                                
+                                <div class="video-creator-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    <h4 style="color: #10b981;"><i class="fas fa-share me-2"></i>Export & Share</h4>
+                                    <button class="video-creator-btn" onclick="downloadVideoRecording()" id="downloadVideoBtn" disabled style="background: linear-gradient(135deg, #10b981, #22c55e);">
+                                        <i class="fas fa-download me-2"></i>Download Video
+                                    </button>
+                                    <button class="video-creator-btn" onclick="sendVideoAsAnnouncement()" id="sendVideoAnnouncementBtn" disabled style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                        <i class="fas fa-bullhorn me-2"></i>Send as Announcement
+                                    </button>
+                                    <button class="video-creator-btn" onclick="clearVideoRecording()" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                        <i class="fas fa-trash me-2"></i>Discard Recording
+                                    </button>
+                                </div>
                             </div>
-                            <small class="text-muted mt-2 d-block">
-                                <i class="fas fa-microphone me-1"></i>Voice Note | 
-                                <i class="fas fa-phone me-1"></i>Voice Call | 
-                                <i class="fas fa-video me-1"></i>Video Call
-                            </small>
                         </div>
                     </div>
                 </div>
@@ -6812,7 +7523,7 @@
             </div>
             <!-- Enhanced Announcements Modal -->
             <div class="modal fade" id="announcementsModal">
-                <div class="modal-dialog modal-xl">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Announcements Center</h5>
@@ -6825,9 +7536,6 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="tab" href="#create-announcement">Create Announcement</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="tab" href="#create-poster">Create Poster</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="tab" href="#upload-video">Upload Video</a>
@@ -6867,331 +7575,15 @@
                                             <option value="Teachers">Teachers</option>
                                         </select>
                                     </div>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Tip:</strong> Use the <a href="#" onclick="goToPosterCreator()">Poster Creator</a> or 
+                                        <a href="#" onclick="goToVideoCreator()">Video Creator</a> 
+                                        in the Media section to create visual announcements!
+                                    </div>
                                     <button class="btn btn-primary" onclick="createAnnouncement()">
                                         <i class="fas fa-paper-plane me-2"></i>Publish Announcement
                                     </button>
-                                </div>
-                                <div class="tab-pane fade" id="create-poster">
-                                    <!-- Spectacular Poster Creator – Canva-Level Beauty (100% Free & Offline) -->
-                                    <!-- Fabric.js v6 (latest 2025) -->
-                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/6.4.4/fabric.min.js"></script>
-                                    
-                                    <!-- Google Fonts (most popular for posters) -->
-                                    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Oswald:wght@700&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-                                    
-                                    <style>
-                                        #poster-creator-container { 
-                                            margin:0; 
-                                            font-family:'Montserrat',sans-serif; 
-                                            background:#f8f9fa; 
-                                            display:grid; 
-                                            grid-template-columns:260px 1fr 300px; 
-                                            height:85vh; 
-                                            overflow:hidden; 
-                                            border-radius:20px;
-                                            box-shadow:0 10px 50px rgba(0,0,0,0.15);
-                                        }
-                                        #poster-left, #poster-right { 
-                                            background:rgba(255, 255, 255, 0.98); 
-                                            border-right:1px solid rgba(0,0,0,0.08); 
-                                            padding:20px; 
-                                            overflow-y:auto; 
-                                            box-shadow:0 4px 20px rgba(0,0,0,0.08); 
-                                            backdrop-filter: blur(15px);
-                                            scrollbar-width: thin;
-                                        }
-                                        #poster-right { border-left:1px solid rgba(0,0,0,0.08); border-right:none; }
-                                        #poster-creator-container h2 { 
-                                            margin:0 0 20px; 
-                                            font-size:20px; 
-                                            color:#1a1a1a; 
-                                            font-weight:700;
-                                            text-align:center;
-                                            padding-bottom:10px;
-                                            border-bottom:2px solid #007bff;
-                                        }
-                                        #poster-creator-container h3 { 
-                                            margin:0 0 12px; 
-                                            font-size:15px; 
-                                            color:#444; 
-                                            font-weight:600;
-                                        }
-                                        #poster-creator-container button, 
-                                        #poster-creator-container select, 
-                                        #poster-creator-container input:not([type="color"]):not([type="range"]) { 
-                                            width:100%; 
-                                            padding:12px 14px; 
-                                            margin:8px 0; 
-                                            border-radius:10px; 
-                                            border:1px solid #e0e0e0; 
-                                            background:#fff; 
-                                            cursor:pointer; 
-                                            transition:all 0.3s ease;
-                                            font-size:14px;
-                                            font-weight:500;
-                                        }
-                                        #poster-creator-container button { 
-                                            background:linear-gradient(135deg, #667eea, #764ba2);
-                                            color:#fff;
-                                            border:none;
-                                            box-shadow:0 2px 8px rgba(102,126,234,0.3);
-                                        }
-                                        #poster-creator-container button:hover { 
-                                            transform:translateY(-3px); 
-                                            box-shadow:0 6px 16px rgba(102,126,234,0.4);
-                                        }
-                                        #poster-creator-container button:active { 
-                                            transform:translateY(-1px); 
-                                            box-shadow:0 3px 10px rgba(102,126,234,0.3);
-                                        }
-                                        .poster-section { 
-                                            margin-bottom:28px; 
-                                            padding:15px;
-                                            background:rgba(248,249,250,0.6);
-                                            border-radius:12px;
-                                        }
-                                        .poster-color-picker { 
-                                            height:50px; 
-                                            width:100%; 
-                                            border:3px solid #e0e0e0; 
-                                            border-radius:10px; 
-                                            cursor:pointer;
-                                            transition:all 0.3s;
-                                        }
-                                        .poster-color-picker:hover {
-                                            border-color:#007bff;
-                                            transform:scale(1.02);
-                                        }
-                                        #poster-canvas-wrapper { 
-                                            background:linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%); 
-                                            display:flex; 
-                                            align-items:center; 
-                                            justify-content:center; 
-                                            overflow:auto; 
-                                            padding:40px;
-                                            position:relative;
-                                            min-height:700px;
-                                        }
-                                        #poster-canvas { 
-                                            box-shadow:0 25px 80px rgba(0,0,0,0.5); 
-                                            background:white; 
-                                            border-radius:12px;
-                                            max-width:100%;
-                                            max-height:100%;
-                                            transition: all 0.3s ease;
-                                        }
-                                        #poster-layers { list-style:none; padding:0; margin:0; }
-                                        #poster-layers li { 
-                                            padding:12px 14px; 
-                                            background:#f8f9fa; 
-                                            margin:8px 0; 
-                                            border-radius:8px; 
-                                            cursor:pointer; 
-                                            display:flex; 
-                                            justify-content:space-between; 
-                                            align-items:center;
-                                            transition:all 0.25s;
-                                            font-size:13px;
-                                            border:1px solid transparent;
-                                        }
-                                        #poster-layers li:hover { 
-                                            background:#e9ecef; 
-                                            transform:translateX(5px);
-                                            border-color:#007bff;
-                                        }
-                                        #poster-layers li.active { 
-                                            background:linear-gradient(135deg, #007bff, #0056b3); 
-                                            color:white; 
-                                            font-weight:600;
-                                            box-shadow:0 4px 12px rgba(0,123,255,0.3);
-                                        }
-                                        .poster-template-thumb { 
-                                            height:130px; 
-                                            background-size:cover; 
-                                            background-position:center; 
-                                            border-radius:12px; 
-                                            margin:12px 0; 
-                                            cursor:pointer; 
-                                            border:3px solid #e0e0e0; 
-                                            transition:all 0.3s ease;
-                                            position:relative;
-                                            overflow:hidden;
-                                        }
-                                        .poster-template-thumb:hover { 
-                                            border-color:#007bff; 
-                                            transform:scale(1.06) translateY(-2px); 
-                                            box-shadow:0 10px 30px rgba(0,123,255,0.35);
-                                        }
-                                        .poster-template-thumb::after {
-                                            content:'✨ Click to Use Template';
-                                            position:absolute;
-                                            bottom:0;
-                                            left:0;
-                                            right:0;
-                                            background:rgba(0,0,0,0.85);
-                                            color:#fff;
-                                            padding:10px;
-                                            text-align:center;
-                                            font-size:12px;
-                                            font-weight:600;
-                                            opacity:0;
-                                            transition:opacity 0.3s;
-                                        }
-                                        .poster-template-thumb:hover::after { opacity:1; }
-                                        
-                                        /* Responsive Design for Mobile */
-                                        @media (max-width: 1200px) {
-                                            #poster-creator-container {
-                                                grid-template-columns:240px 1fr 280px;
-                                            }
-                                        }
-                                        @media (max-width: 1024px) {
-                                            #poster-creator-container {
-                                                grid-template-columns:1fr;
-                                                grid-template-rows:auto 1fr auto;
-                                                height:auto;
-                                                min-height:95vh;
-                                            }
-                                            #poster-left, #poster-right {
-                                                border:none;
-                                                border-bottom:2px solid rgba(0,0,0,0.1);
-                                            }
-                                            #poster-canvas-wrapper {
-                                                min-height:550px;
-                                                padding:20px;
-                                            }
-                                            .poster-template-thumb { height:90px; }
-                                            #poster-creator-container h2 { font-size:18px; }
-                                        }
-                                        @media (max-width: 768px) {
-                                            #poster-creator-container { 
-                                                height:auto;
-                                                border-radius:15px;
-                                            }
-                                            #poster-canvas-wrapper { 
-                                                padding:15px; 
-                                                min-height:450px;
-                                            }
-                                            #poster-canvas { 
-                                                max-width:calc(100vw - 30px);
-                                                height:auto;
-                                            }
-                                            #poster-left, #poster-right {
-                                                padding:15px;
-                                            }
-                                            .poster-section { padding:12px; margin-bottom:20px; }
-                                            #poster-creator-container button {
-                                                padding:10px 12px;
-                                                font-size:13px;
-                                            }
-                                            .poster-template-thumb { height:70px; }
-                                        }
-                                        @media (max-width: 480px) {
-                                            #poster-creator-container {
-                                                border-radius:10px;
-                                            }
-                                            #poster-canvas-wrapper {
-                                                min-height:350px;
-                                                padding:10px;
-                                            }
-                                            #poster-canvas {
-                                                max-width:100%;
-                                            }
-                                            .poster-template-thumb { height:60px; }
-                                        }
-                                    </style>
-                                    
-                                    <div id="poster-creator-container">
-                                        <!-- LEFT SIDEBAR -->
-                                        <div id="poster-left">
-                                            <h2>🎨 Advanced Poster Creator</h2>
-                                            <div class="poster-section">
-                                                <h3>Add Elements</h3>
-                                                <button onclick="addPosterText()">📝 Add Heading</button>
-                                                <button onclick="addPosterText('Body text here...',40)">📄 Add Paragraph</button>
-                                                <button onclick="uploadPosterImage()">🖼️ Upload Image</button>
-                                                <input type="file" id="poster-image-upload" accept="image/*" style="display:none;" onchange="handlePosterImageUpload(this)">
-                                                <button onclick="addImageFromUrl()">🔗 Add from URL</button>
-                                            </div>
-                                            <div class="poster-section">
-                                                <h3>Shapes</h3>
-                                                <button onclick="addPosterShape('rect')">⬜ Rectangle</button>
-                                                <button onclick="addPosterShape('circle')">⭕ Circle</button>
-                                                <button onclick="addPosterShape('triangle')">🔺 Triangle</button>
-                                                <button onclick="addPosterShape('line')">➖ Line</button>
-                                                <button onclick="addPosterShape('star')">⭐ Star</button>
-                                            </div>
-                                            <div class="poster-section">
-                                                <h3>Background</h3>
-                                                <input type="color" class="poster-color-picker" onchange="setPosterBgColor(this.value)" value="#ffffff">
-                                                <button onclick="unsplashPosterBg()">🌄 Random Unsplash Background</button>
-                                                <button onclick="setGradientBackground()">🌈 Gradient Background</button>
-                                            </div>
-                                            <div class="poster-section">
-                                                <h3>Quick Templates</h3>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?event')" onclick="loadPosterTemplate('event')"></div>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?sale')" onclick="loadPosterTemplate('sale')"></div>
-                                                <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?motivation')" onclick="loadPosterTemplate('motivation')"></div>
-                                            </div>
-                                            <div class="poster-section" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3);">
-                                                <h3 style="color: #10b981;">💾 Save & Export</h3>
-                                                <button onclick="downloadPoster()" style="background: linear-gradient(135deg, #10b981, #22c55e);">📥 Download PNG</button>
-                                                <button onclick="exportPosterPDF()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">📄 Export PDF</button>
-                                                <button onclick="savePosterToGallery()" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">💾 Save to Gallery</button>
-                                                <button onclick="clearPosterCanvas()" style="background: linear-gradient(135deg, #ef4444, #f87171);">🗑️ Clear Canvas</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- CENTER CANVAS - Bigger and Smarter -->
-                                        <div id="poster-canvas-wrapper">
-                                            <canvas id="poster-canvas" width="900" height="650"></canvas>
-                                        </div>
-                                        
-                                        <!-- RIGHT SIDEBAR – Properties & Layers -->
-                                        <div id="poster-right">
-                                            <h2>Properties</h2>
-                                            <div id="poster-props" style="display:none">
-                                                <label style="color:#333;font-size:12px;font-weight:600;">Font Family</label>
-                                                <select id="posterFontFamily" onchange="setPosterProp('fontFamily',this.value)">
-                                                    <option value="Arial">Arial</option>
-                                                    <option value="Helvetica">Helvetica</option>
-                                                    <option value="Times New Roman">Times New Roman</option>
-                                                    <option value="Georgia">Georgia</option>
-                                                    <option value="Courier New">Courier New</option>
-                                                    <option value="Bebas Neue">Bebas Neue</option>
-                                                    <option value="Montserrat">Montserrat</option>
-                                                    <option value="Playfair Display">Playfair Display</option>
-                                                    <option value="Oswald">Oswald</option>
-                                                    <option value="Dancing Script">Dancing Script</option>
-                                                    <option value="Roboto">Roboto</option>
-                                                </select>
-                                                <label style="color:#333;font-size:12px;font-weight:600;">Font Size: <span id="fontSizeValue">80</span>px</label>
-                                                <input type="range" id="posterFontSize" min="10" max="300" value="80" oninput="document.getElementById('fontSizeValue').textContent=this.value" onchange="setPosterProp('fontSize',this.value)">
-                                                <label style="color:#333;font-size:12px;font-weight:600;">Fill Color</label>
-                                                <input type="color" class="poster-color-picker" id="posterFill" value="#000000" onchange="setPosterProp('fill',this.value)">
-                                                <label style="color:#333;font-size:12px;font-weight:600;">Text Styling</label>
-                                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                                                    <button onclick="togglePosterProp('fontWeight','bold')" style="flex:1;">Bold</button>
-                                                    <button onclick="togglePosterProp('fontStyle','italic')" style="flex:1;">Italic</button>
-                                                    <button onclick="togglePosterProp('underline',true)" style="flex:1;">Underline</button>
-                                                </div>
-                                                <label style="color:#333;font-size:12px;font-weight:600;margin-top:10px;">Text Align</label>
-                                                <div style="display:flex;gap:5px;">
-                                                    <button onclick="setPosterProp('textAlign','left')" style="flex:1;">Left</button>
-                                                    <button onclick="setPosterProp('textAlign','center')" style="flex:1;">Center</button>
-                                                    <button onclick="setPosterProp('textAlign','right')" style="flex:1;">Right</button>
-                                                </div>
-                                                <label style="color:#333;font-size:12px;font-weight:600;margin-top:10px;">Actions</label>
-                                                <button onclick="bringToFront()">Bring to Front</button>
-                                                <button onclick="sendToBack()">Send to Back</button>
-                                                <button onclick="duplicatePosterObject()">Duplicate</button>
-                                                <button onclick="deletePosterActive()" style="background:linear-gradient(135deg, #ef4444, #f87171);">Delete Selected</button>
-                                            </div>
-                                            <h2>Layers</h2>
-                                            <ul id="poster-layers"></ul>
-                                        </div>
-                                    </div>
-                                    
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
                                     <h6>Upload Video Announcement</h6>
@@ -7212,6 +7604,11 @@
                                         <label class="form-label">Or Video URL</label>
                                         <input type="url" id="videoURL" class="form-control" placeholder="https://youtube.com/watch?v=...">
                                         <small class="text-muted">Paste YouTube, Vimeo, or other video link</small>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-video me-2"></i>
+                                        <strong>New!</strong> Use the <a href="#" onclick="goToVideoCreator()">Advanced Video Creator</a> 
+                                        in the Media section to record and edit your own videos!
                                     </div>
                                     <button class="btn btn-info" onclick="uploadVideo()">
                                         <i class="fas fa-upload me-2"></i>Upload Video
@@ -9299,7 +9696,7 @@
                 case 'teachers': renderTeachers(); break;
                 case 'exams': renderExams(); break;
                 case 'hr': renderHR(); break;
-                case 'communication': renderMessages(); break;
+                case 'media': loadMediaCenter(); break;
                 case 'eventsManagement': loadEventsManagement(); break;
                 case 'content': renderContents(); break;
                 case 'reports': break;
@@ -15305,6 +15702,984 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
         }
         
+        // ========================================
+        // MEDIA CENTER FUNCTIONS
+        // ========================================
+        
+        function loadMediaCenter() {
+            // Render messages in the communication tab
+            renderMessages();
+            
+            // Initialize poster canvas if needed
+            initMediaPosterCanvas();
+        }
+        
+        // ========================================
+        // MEDIA POSTER CREATOR FUNCTIONS
+        // ========================================
+        
+        // Constants for Media Center
+        const CANVAS_INIT_DELAY = 500;
+        
+        let mediaPosterCanvas = null;
+        let mediaPosterActiveObject = null;
+        
+        // Initialize Media Poster Canvas when tab is shown
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize when poster tab is clicked
+            const posterTab = document.querySelector('[href="#media-poster-creator"]');
+            if (posterTab) {
+                posterTab.addEventListener('click', function() {
+                    setTimeout(initMediaPosterCanvas, 100);
+                });
+            }
+        });
+        
+        function initMediaPosterCanvas() {
+            if (mediaPosterCanvas) return; // Already initialized
+            
+            const canvasElement = document.getElementById('mediaPosterCanvas');
+            if (!canvasElement) return;
+            
+            // Check if fabric is loaded
+            if (typeof fabric === 'undefined') {
+                // Load Fabric.js dynamically
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
+                script.onload = function() {
+                    createMediaPosterCanvas();
+                };
+                document.head.appendChild(script);
+            } else {
+                createMediaPosterCanvas();
+            }
+        }
+        
+        function createMediaPosterCanvas() {
+            const canvasElement = document.getElementById('mediaPosterCanvas');
+            if (!canvasElement) return;
+            
+            mediaPosterCanvas = new fabric.Canvas('mediaPosterCanvas', {
+                backgroundColor: '#ffffff',
+                selection: true
+            });
+            
+            // Event listeners
+            mediaPosterCanvas.on('selection:created', updateMediaPosterProps);
+            mediaPosterCanvas.on('selection:updated', updateMediaPosterProps);
+            mediaPosterCanvas.on('selection:cleared', function() {
+                mediaPosterActiveObject = null;
+                document.getElementById('media-poster-props').style.display = 'none';
+            });
+            
+            // Add welcome text
+            const welcomeText = new fabric.Textbox('Welcome to\nPoster Creator', {
+                left: 300,
+                top: 250,
+                width: 400,
+                fontSize: 60,
+                fontFamily: 'Arial',
+                fill: '#333333',
+                textAlign: 'center',
+                fontWeight: 'bold'
+            });
+            mediaPosterCanvas.add(welcomeText);
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+            
+            addNotification('Poster Creator initialized!', 'success');
+        }
+        
+        function updateMediaPosterProps() {
+            mediaPosterActiveObject = mediaPosterCanvas.getActiveObject();
+            if (mediaPosterActiveObject) {
+                document.getElementById('media-poster-props').style.display = 'block';
+                // Update property values
+                if (mediaPosterActiveObject.fontSize) {
+                    document.getElementById('mediaPosterFontSize').value = mediaPosterActiveObject.fontSize;
+                    document.getElementById('mediaPosterFontSizeValue').textContent = mediaPosterActiveObject.fontSize;
+                }
+                if (mediaPosterActiveObject.fontFamily) {
+                    document.getElementById('mediaPosterFontFamily').value = mediaPosterActiveObject.fontFamily;
+                }
+                if (mediaPosterActiveObject.fill) {
+                    document.getElementById('mediaPosterFillColor').value = mediaPosterActiveObject.fill;
+                }
+            }
+        }
+        
+        function updateMediaPosterLayers() {
+            if (!mediaPosterCanvas) return;
+            const layersList = document.getElementById('media-poster-layers');
+            if (!layersList) return;
+            
+            const objects = mediaPosterCanvas.getObjects();
+            if (objects.length === 0) {
+                layersList.innerHTML = '<li style="color: #999; text-align: center;">No layers yet</li>';
+                return;
+            }
+            
+            layersList.innerHTML = objects.map((obj, i) => {
+                const type = obj.type === 'textbox' ? '📝 Text' : 
+                            obj.type === 'rect' ? '⬜ Rectangle' : 
+                            obj.type === 'circle' ? '⭕ Circle' :
+                            obj.type === 'triangle' ? '🔺 Triangle' :
+                            obj.type === 'image' ? '🖼️ Image' : '📦 Object';
+                const isActive = mediaPosterCanvas.getActiveObject() === obj;
+                return `<li class="${isActive ? 'active' : ''}" onclick="selectMediaPosterLayer(${i})">${type} ${i + 1}</li>`;
+            }).reverse().join('');
+        }
+        
+        function selectMediaPosterLayer(index) {
+            if (!mediaPosterCanvas) return;
+            const objects = mediaPosterCanvas.getObjects();
+            if (objects[index]) {
+                mediaPosterCanvas.setActiveObject(objects[index]);
+                mediaPosterCanvas.renderAll();
+                updateMediaPosterProps();
+                updateMediaPosterLayers();
+            }
+        }
+        
+        function addMediaPosterText(text = 'Your Text Here', size = 50) {
+            if (!mediaPosterCanvas) {
+                initMediaPosterCanvas();
+                setTimeout(() => addMediaPosterText(text, size), CANVAS_INIT_DELAY);
+                return;
+            }
+            
+            const textbox = new fabric.Textbox(text, {
+                left: 150,
+                top: 150,
+                width: 400,
+                fontSize: size,
+                fontFamily: 'Arial',
+                fill: '#333333',
+                textAlign: 'center',
+                fontWeight: size > 40 ? 'bold' : 'normal',
+                editable: true
+            });
+            mediaPosterCanvas.add(textbox);
+            mediaPosterCanvas.setActiveObject(textbox);
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+        }
+        
+        function addMediaPosterShape(type) {
+            if (!mediaPosterCanvas) {
+                initMediaPosterCanvas();
+                setTimeout(() => addMediaPosterShape(type), CANVAS_INIT_DELAY);
+                return;
+            }
+            
+            let shape;
+            const colors = ['#e94560', '#667eea', '#10b981', '#f59e0b', '#8b5cf6'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            switch(type) {
+                case 'rect':
+                    shape = new fabric.Rect({
+                        width: 200,
+                        height: 150,
+                        fill: randomColor,
+                        rx: 10,
+                        ry: 10
+                    });
+                    break;
+                case 'circle':
+                    shape = new fabric.Circle({
+                        radius: 80,
+                        fill: randomColor
+                    });
+                    break;
+                case 'triangle':
+                    shape = new fabric.Triangle({
+                        width: 150,
+                        height: 130,
+                        fill: randomColor
+                    });
+                    break;
+                case 'star':
+                    // Create a star using polygon
+                    const points = [];
+                    const numPoints = 5;
+                    const outerRadius = 60;
+                    const innerRadius = 30;
+                    for (let i = 0; i < numPoints * 2; i++) {
+                        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                        const angle = (Math.PI / numPoints) * i - Math.PI / 2;
+                        points.push({
+                            x: radius * Math.cos(angle),
+                            y: radius * Math.sin(angle)
+                        });
+                    }
+                    shape = new fabric.Polygon(points, {
+                        fill: randomColor
+                    });
+                    break;
+                case 'line':
+                    shape = new fabric.Line([0, 0, 200, 0], {
+                        stroke: randomColor,
+                        strokeWidth: 4
+                    });
+                    break;
+            }
+            
+            if (shape) {
+                shape.set({
+                    left: 200,
+                    top: 200,
+                    shadow: 'rgba(0,0,0,0.2) 5px 5px 15px'
+                });
+                mediaPosterCanvas.add(shape);
+                mediaPosterCanvas.setActiveObject(shape);
+                mediaPosterCanvas.renderAll();
+                updateMediaPosterLayers();
+            }
+        }
+        
+        function uploadMediaPosterImage() {
+            document.getElementById('media-poster-image-upload').click();
+        }
+        
+        function handleMediaPosterImageUpload(input) {
+            if (!mediaPosterCanvas) {
+                initMediaPosterCanvas();
+                return;
+            }
+            
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fabric.Image.fromURL(e.target.result, function(img) {
+                    // Scale image to fit canvas
+                    const maxWidth = mediaPosterCanvas.width * 0.5;
+                    const maxHeight = mediaPosterCanvas.height * 0.5;
+                    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                    
+                    img.scale(scale);
+                    img.set({
+                        left: 100,
+                        top: 100
+                    });
+                    mediaPosterCanvas.add(img);
+                    mediaPosterCanvas.setActiveObject(img);
+                    mediaPosterCanvas.renderAll();
+                    updateMediaPosterLayers();
+                    addNotification('Image added to canvas!', 'success');
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function setMediaPosterBgColor(color) {
+            if (!mediaPosterCanvas) return;
+            mediaPosterCanvas.backgroundColor = color;
+            mediaPosterCanvas.renderAll();
+        }
+        
+        function setMediaPosterGradientBg() {
+            if (!mediaPosterCanvas) return;
+            
+            const gradients = [
+                ['#667eea', '#764ba2'],
+                ['#f093fb', '#f5576c'],
+                ['#4facfe', '#00f2fe'],
+                ['#43e97b', '#38f9d7'],
+                ['#fa709a', '#fee140'],
+                ['#a8edea', '#fed6e3']
+            ];
+            
+            const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+            
+            const gradient = new fabric.Gradient({
+                type: 'linear',
+                coords: { x1: 0, y1: 0, x2: mediaPosterCanvas.width, y2: mediaPosterCanvas.height },
+                colorStops: [
+                    { offset: 0, color: randomGradient[0] },
+                    { offset: 1, color: randomGradient[1] }
+                ]
+            });
+            
+            // Create a rectangle with gradient as background
+            const bgRect = new fabric.Rect({
+                width: mediaPosterCanvas.width,
+                height: mediaPosterCanvas.height,
+                fill: gradient,
+                selectable: false,
+                evented: false
+            });
+            
+            // Remove any existing background rectangle
+            const objects = mediaPosterCanvas.getObjects();
+            objects.forEach(obj => {
+                if (obj.isBackgroundRect) {
+                    mediaPosterCanvas.remove(obj);
+                }
+            });
+            
+            bgRect.isBackgroundRect = true;
+            mediaPosterCanvas.add(bgRect);
+            mediaPosterCanvas.sendToBack(bgRect);
+            mediaPosterCanvas.renderAll();
+            addNotification('Gradient background applied!', 'success');
+        }
+        
+        function setMediaPosterRandomBg() {
+            if (!mediaPosterCanvas) return;
+            
+            const colors = ['#f0f4f8', '#e0e5ec', '#ffecd2', '#fcb69f', '#a1c4fd', '#c2e9fb', '#d4fc79', '#96e6a1'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            mediaPosterCanvas.backgroundColor = randomColor;
+            mediaPosterCanvas.renderAll();
+            addNotification('Random background applied!', 'success');
+        }
+        
+        function loadMediaPosterTemplate(type) {
+            if (!mediaPosterCanvas) {
+                initMediaPosterCanvas();
+                setTimeout(() => loadMediaPosterTemplate(type), CANVAS_INIT_DELAY);
+                return;
+            }
+            
+            mediaPosterCanvas.clear();
+            
+            switch(type) {
+                case 'event':
+                    mediaPosterCanvas.backgroundColor = '#1a1a2e';
+                    addMediaPosterText('SCHOOL EVENT', 70);
+                    setTimeout(() => {
+                        const dateText = new fabric.Textbox('December 2025\nJoin us for an exciting event!', {
+                            left: 150,
+                            top: 350,
+                            width: 400,
+                            fontSize: 30,
+                            fontFamily: 'Arial',
+                            fill: '#ffffff',
+                            textAlign: 'center'
+                        });
+                        mediaPosterCanvas.add(dateText);
+                        mediaPosterCanvas.renderAll();
+                        updateMediaPosterLayers();
+                    }, 100);
+                    break;
+                case 'sale':
+                    mediaPosterCanvas.backgroundColor = '#f5576c';
+                    addMediaPosterText('BIG SALE!', 80);
+                    setTimeout(() => {
+                        const discountText = new fabric.Textbox('Up to 50% OFF\nLimited Time Only', {
+                            left: 150,
+                            top: 350,
+                            width: 400,
+                            fontSize: 35,
+                            fontFamily: 'Arial',
+                            fill: '#ffffff',
+                            textAlign: 'center',
+                            fontWeight: 'bold'
+                        });
+                        mediaPosterCanvas.add(discountText);
+                        mediaPosterCanvas.renderAll();
+                        updateMediaPosterLayers();
+                    }, 100);
+                    break;
+                case 'school':
+                    setMediaPosterGradientBg();
+                    setTimeout(() => {
+                        addMediaPosterText('Bophelong\nIndependent School', 50);
+                    }, 100);
+                    break;
+            }
+            
+            mediaPosterCanvas.renderAll();
+            addNotification('Template loaded!', 'success');
+        }
+        
+        function setMediaPosterProp(prop, value) {
+            if (!mediaPosterActiveObject) return;
+            mediaPosterActiveObject.set(prop, value);
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+        }
+        
+        function toggleMediaPosterProp(prop, value) {
+            if (!mediaPosterActiveObject) return;
+            const current = mediaPosterActiveObject.get(prop);
+            mediaPosterActiveObject.set(prop, current === value ? 'normal' : value);
+            mediaPosterCanvas.renderAll();
+        }
+        
+        function bringMediaPosterToFront() {
+            if (!mediaPosterActiveObject) return;
+            mediaPosterCanvas.bringToFront(mediaPosterActiveObject);
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+        }
+        
+        function sendMediaPosterToBack() {
+            if (!mediaPosterActiveObject) return;
+            mediaPosterCanvas.sendToBack(mediaPosterActiveObject);
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+        }
+        
+        function duplicateMediaPosterObject() {
+            if (!mediaPosterActiveObject) return;
+            
+            mediaPosterActiveObject.clone(function(cloned) {
+                cloned.set({
+                    left: cloned.left + 20,
+                    top: cloned.top + 20
+                });
+                mediaPosterCanvas.add(cloned);
+                mediaPosterCanvas.setActiveObject(cloned);
+                mediaPosterCanvas.renderAll();
+                updateMediaPosterLayers();
+            });
+        }
+        
+        function deleteMediaPosterActive() {
+            if (!mediaPosterActiveObject) {
+                addNotification('Please select an object to delete', 'warning');
+                return;
+            }
+            mediaPosterCanvas.remove(mediaPosterActiveObject);
+            mediaPosterActiveObject = null;
+            mediaPosterCanvas.renderAll();
+            updateMediaPosterLayers();
+            document.getElementById('media-poster-props').style.display = 'none';
+        }
+        
+        function downloadMediaPoster() {
+            if (!mediaPosterCanvas) {
+                addNotification('Please create a poster first', 'warning');
+                return;
+            }
+            
+            try {
+                const dataURL = mediaPosterCanvas.toDataURL({
+                    format: 'png',
+                    multiplier: 2
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'poster-' + Date.now() + '.png';
+                link.href = dataURL;
+                link.click();
+                
+                addNotification('Poster downloaded successfully!', 'success');
+            } catch (error) {
+                addNotification('Error downloading poster: ' + error.message, 'error');
+            }
+        }
+        
+        function exportMediaPosterPDF() {
+            if (!mediaPosterCanvas) {
+                addNotification('Please create a poster first', 'warning');
+                return;
+            }
+            
+            if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
+                addNotification('PDF library not loaded. Please try again.', 'warning');
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                
+                const imgData = mediaPosterCanvas.toDataURL({
+                    format: 'png',
+                    multiplier: 2
+                });
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, 277, 190);
+                pdf.save('poster-' + Date.now() + '.pdf');
+                
+                addNotification('PDF exported successfully!', 'success');
+            } catch (error) {
+                addNotification('Error exporting PDF: ' + error.message, 'error');
+            }
+        }
+        
+        function sendMediaPosterAsAnnouncement() {
+            if (!mediaPosterCanvas) {
+                addNotification('Please create a poster first', 'warning');
+                return;
+            }
+            
+            const title = prompt('Enter announcement title:', 'New Poster Announcement');
+            if (!title) return;
+            
+            try {
+                const posterImage = mediaPosterCanvas.toDataURL({
+                    format: 'png',
+                    multiplier: 1
+                });
+                
+                const announcement = {
+                    id: Date.now(),
+                    title: title,
+                    content: '<img src="' + posterImage + '" alt="Poster" style="max-width: 100%; border-radius: 10px;">',
+                    isPoster: true,
+                    posterImage: posterImage,
+                    priority: 'Medium',
+                    audience: 'All',
+                    createdAt: new Date().toISOString(),
+                    author: currentUser.name
+                };
+                
+                announcements.push(announcement);
+                localStorage.setItem('announcements', JSON.stringify(announcements));
+                
+                addNotification('Poster sent as announcement!', 'success');
+                logAudit('Poster Announcement', 'Created poster announcement: ' + title, 'Medium');
+            } catch (error) {
+                addNotification('Error sending poster: ' + error.message, 'error');
+            }
+        }
+        
+        function clearMediaPosterCanvas() {
+            if (!mediaPosterCanvas) return;
+            
+            if (confirm('Are you sure you want to clear the canvas? This cannot be undone.')) {
+                mediaPosterCanvas.clear();
+                mediaPosterCanvas.backgroundColor = '#ffffff';
+                mediaPosterCanvas.renderAll();
+                updateMediaPosterLayers();
+                addNotification('Canvas cleared!', 'info');
+            }
+        }
+        
+        // ========================================
+        // VIDEO CREATOR FUNCTIONS
+        // ========================================
+        
+        // Constants for Video Creator
+        const MAX_RECORDING_SECONDS = 10 * 60; // 10 minutes
+        
+        let videoCreatorStream = null;
+        let videoCreatorRecorder = null;
+        let videoCreatorChunks = [];
+        let videoCreatorRecordedBlob = null;
+        let videoRecordingTimer = null;
+        let videoRecordingSeconds = 0;
+        let isVideoRecording = false;
+        let recordedVideos = [];
+        
+        // Initialize camera devices
+        async function initVideoCreatorDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                
+                const cameraSelect = document.getElementById('videoCreatorCameraSelect');
+                const micSelect = document.getElementById('videoCreatorMicSelect');
+                
+                // Clear existing options except first
+                while (cameraSelect.options.length > 1) cameraSelect.remove(1);
+                while (micSelect.options.length > 1) micSelect.remove(1);
+                
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    
+                    if (device.kind === 'videoinput') {
+                        option.textContent = device.label || 'Camera ' + (cameraSelect.options.length);
+                        cameraSelect.appendChild(option);
+                    } else if (device.kind === 'audioinput') {
+                        option.textContent = device.label || 'Microphone ' + (micSelect.options.length);
+                        micSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error enumerating devices:', error);
+            }
+        }
+        
+        async function initVideoCreatorCamera() {
+            try {
+                const cameraId = document.getElementById('videoCreatorCameraSelect').value;
+                const micId = document.getElementById('videoCreatorMicSelect').value;
+                const quality = document.getElementById('videoCreatorQuality').value;
+                
+                const constraints = {
+                    video: {
+                        width: { ideal: quality === '1080' ? 1920 : quality === '720' ? 1280 : 854 },
+                        height: { ideal: quality === '1080' ? 1080 : quality === '720' ? 720 : 480 }
+                    },
+                    audio: true
+                };
+                
+                if (cameraId) constraints.video.deviceId = { exact: cameraId };
+                if (micId) constraints.audio = { deviceId: { exact: micId } };
+                
+                // Stop existing stream
+                if (videoCreatorStream) {
+                    videoCreatorStream.getTracks().forEach(track => track.stop());
+                }
+                
+                videoCreatorStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                const preview = document.getElementById('videoCreatorPreview');
+                preview.srcObject = videoCreatorStream;
+                preview.style.display = 'block';
+                
+                document.getElementById('videoCreatorRecording').style.display = 'none';
+                document.getElementById('videoTimeline').style.display = 'none';
+                
+                // Enumerate devices again to get labels
+                await initVideoCreatorDevices();
+                
+                addNotification('Camera started successfully!', 'success');
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                addNotification('Error accessing camera: ' + error.message, 'error');
+            }
+        }
+        
+        function toggleVideoRecording() {
+            if (isVideoRecording) {
+                stopVideoRecording();
+            } else {
+                startVideoRecording();
+            }
+        }
+        
+        async function startVideoRecording() {
+            if (!videoCreatorStream) {
+                addNotification('Please start the camera first', 'warning');
+                return;
+            }
+            
+            try {
+                videoCreatorChunks = [];
+                
+                const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp8,opus';
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm';
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/mp4';
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    addNotification('Your browser does not support video recording. Please try a different browser like Chrome or Firefox.', 'error');
+                    return;
+                }
+                
+                videoCreatorRecorder = new MediaRecorder(videoCreatorStream, options);
+                
+                videoCreatorRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        videoCreatorChunks.push(event.data);
+                    }
+                };
+                
+                videoCreatorRecorder.onstop = () => {
+                    videoCreatorRecordedBlob = new Blob(videoCreatorChunks, { type: 'video/webm' });
+                    const videoURL = URL.createObjectURL(videoCreatorRecordedBlob);
+                    
+                    const recordingVideo = document.getElementById('videoCreatorRecording');
+                    recordingVideo.src = videoURL;
+                    recordingVideo.style.display = 'block';
+                    
+                    document.getElementById('videoCreatorPreview').style.display = 'none';
+                    document.getElementById('videoTimeline').style.display = 'block';
+                    
+                    // Enable export buttons
+                    document.getElementById('downloadVideoBtn').disabled = false;
+                    document.getElementById('sendVideoAnnouncementBtn').disabled = false;
+                    document.getElementById('trimVideoBtn').disabled = false;
+                    
+                    // Add to recorded videos list
+                    addToRecordedVideosList(videoURL);
+                    
+                    addNotification('Recording saved! You can now edit and export.', 'success');
+                };
+                
+                videoCreatorRecorder.start(1000); // Collect data every second
+                isVideoRecording = true;
+                
+                // Update UI
+                document.getElementById('videoRecordBtn').classList.add('recording');
+                document.getElementById('recordingIndicator').style.display = 'block';
+                
+                // Start timer
+                videoRecordingSeconds = 0;
+                updateRecordingTimer();
+                videoRecordingTimer = setInterval(updateRecordingTimer, 1000);
+                
+                addNotification('Recording started!', 'info');
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                addNotification('Error starting recording: ' + error.message, 'error');
+            }
+        }
+        
+        function stopVideoRecording() {
+            if (videoCreatorRecorder && videoCreatorRecorder.state !== 'inactive') {
+                videoCreatorRecorder.stop();
+            }
+            
+            isVideoRecording = false;
+            
+            // Update UI
+            document.getElementById('videoRecordBtn').classList.remove('recording');
+            document.getElementById('recordingIndicator').style.display = 'none';
+            
+            // Stop timer
+            if (videoRecordingTimer) {
+                clearInterval(videoRecordingTimer);
+                videoRecordingTimer = null;
+            }
+        }
+        
+        function updateRecordingTimer() {
+            videoRecordingSeconds++;
+            const minutes = Math.floor(videoRecordingSeconds / 60);
+            const seconds = videoRecordingSeconds % 60;
+            document.getElementById('videoRecordingTimer').textContent = 
+                String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+            
+            // Auto-stop after max recording time
+            if (videoRecordingSeconds >= MAX_RECORDING_SECONDS) {
+                stopVideoRecording();
+                addNotification('Recording stopped - maximum 10 minutes reached', 'warning');
+            }
+        }
+        
+        function addToRecordedVideosList(videoURL) {
+            const videoInfo = {
+                id: Date.now(),
+                url: videoURL,
+                duration: formatDuration(videoRecordingSeconds),
+                timestamp: new Date().toLocaleString()
+            };
+            
+            recordedVideos.push(videoInfo);
+            renderRecordedVideosList();
+        }
+        
+        function renderRecordedVideosList() {
+            const list = document.getElementById('recordedVideosList');
+            
+            if (recordedVideos.length === 0) {
+                list.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center; font-size: 12px;">No videos recorded yet</p>';
+                return;
+            }
+            
+            list.innerHTML = recordedVideos.map(video => `
+                <div class="recorded-video-item" onclick="loadRecordedVideo('${video.url}')">
+                    <div style="width: 60px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-video" style="color: #e94560;"></i>
+                    </div>
+                    <div class="video-info">
+                        <h6>Recording ${recordedVideos.indexOf(video) + 1}</h6>
+                        <small>${video.duration} • ${video.timestamp}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadRecordedVideo(url) {
+            const recordingVideo = document.getElementById('videoCreatorRecording');
+            recordingVideo.src = url;
+            recordingVideo.style.display = 'block';
+            document.getElementById('videoCreatorPreview').style.display = 'none';
+            document.getElementById('videoTimeline').style.display = 'block';
+        }
+        
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins + ':' + String(secs).padStart(2, '0');
+        }
+        
+        function toggleVideoCreatorMute() {
+            if (!videoCreatorStream) return;
+            
+            const audioTrack = videoCreatorStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const btn = document.getElementById('videoCreatorMuteBtn');
+                if (audioTrack.enabled) {
+                    btn.innerHTML = '<i class="fas fa-microphone"></i>';
+                    btn.style.background = 'rgba(255, 255, 255, 0.2)';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                    btn.style.background = 'rgba(239, 68, 68, 0.6)';
+                }
+            }
+        }
+        
+        function toggleVideoCreatorCamera() {
+            if (!videoCreatorStream) return;
+            
+            const videoTrack = videoCreatorStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                const btn = document.getElementById('videoCreatorCameraBtn');
+                if (videoTrack.enabled) {
+                    btn.innerHTML = '<i class="fas fa-video"></i>';
+                    btn.style.background = 'rgba(255, 255, 255, 0.2)';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-video-slash"></i>';
+                    btn.style.background = 'rgba(239, 68, 68, 0.6)';
+                }
+            }
+        }
+        
+        function addVideoOverlayText() {
+            const text = document.getElementById('videoOverlayText').value.trim();
+            if (!text) {
+                addNotification('Please enter text for the overlay', 'warning');
+                return;
+            }
+            
+            const color = document.getElementById('videoOverlayColor').value;
+            const size = document.getElementById('videoOverlaySize').value;
+            
+            // This would require more advanced video editing capabilities
+            // For now, show a message about the feature
+            addNotification('Text overlay "' + text + '" will be added to the video when exported.', 'info');
+        }
+        
+        function trimVideoRecording() {
+            const startTime = document.getElementById('videoTrimStart').value;
+            const endTime = document.getElementById('videoTrimEnd').value;
+            
+            // This would require more advanced video editing
+            addNotification('Trim applied from ' + startTime + ' to ' + endTime, 'info');
+        }
+        
+        function downloadVideoRecording() {
+            if (!videoCreatorRecordedBlob) {
+                addNotification('No video to download. Please record a video first.', 'warning');
+                return;
+            }
+            
+            const title = document.getElementById('videoCreatorTitle').value.trim() || 'video-recording';
+            const sanitizedTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+            
+            const url = URL.createObjectURL(videoCreatorRecordedBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = sanitizedTitle + '-' + Date.now() + '.webm';
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            addNotification('Video downloaded successfully!', 'success');
+        }
+        
+        function sendVideoAsAnnouncement() {
+            if (!videoCreatorRecordedBlob) {
+                addNotification('No video to send. Please record a video first.', 'warning');
+                return;
+            }
+            
+            const title = document.getElementById('videoCreatorTitle').value.trim() || 'Video Announcement';
+            const description = document.getElementById('videoCreatorDescription').value.trim() || '';
+            
+            // Convert blob to base64 for storage (note: this is for demo purposes)
+            const reader = new FileReader();
+            reader.onload = function() {
+                const videoData = reader.result;
+                
+                const announcement = {
+                    id: Date.now(),
+                    title: title,
+                    content: description + '\n\n<video controls style="max-width: 100%; border-radius: 10px;"><source src="' + videoData + '" type="video/webm"></video>',
+                    isVideo: true,
+                    videoData: videoData,
+                    priority: 'High',
+                    audience: 'All',
+                    createdAt: new Date().toISOString(),
+                    author: currentUser.name
+                };
+                
+                announcements.push(announcement);
+                localStorage.setItem('announcements', JSON.stringify(announcements));
+                
+                addNotification('Video announcement published!', 'success');
+                logAudit('Video Announcement', 'Created video announcement: ' + title, 'High');
+            };
+            reader.readAsDataURL(videoCreatorRecordedBlob);
+        }
+        
+        function clearVideoRecording() {
+            if (confirm('Are you sure you want to discard the current recording?')) {
+                videoCreatorRecordedBlob = null;
+                videoCreatorChunks = [];
+                
+                document.getElementById('videoCreatorRecording').src = '';
+                document.getElementById('videoCreatorRecording').style.display = 'none';
+                document.getElementById('videoCreatorPreview').style.display = 'block';
+                document.getElementById('videoTimeline').style.display = 'none';
+                
+                document.getElementById('downloadVideoBtn').disabled = true;
+                document.getElementById('sendVideoAnnouncementBtn').disabled = true;
+                document.getElementById('trimVideoBtn').disabled = true;
+                
+                document.getElementById('videoRecordingTimer').textContent = '00:00';
+                videoRecordingSeconds = 0;
+                
+                addNotification('Recording discarded', 'info');
+            }
+        }
+        
+        // Initialize video creator when tab is shown
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoTab = document.querySelector('[href="#media-video-creator"]');
+            if (videoTab) {
+                videoTab.addEventListener('click', function() {
+                    setTimeout(initVideoCreatorDevices, 100);
+                });
+            }
+        });
+        
+        // Navigation helper functions for announcements modal
+        function goToPosterCreator() {
+            try {
+                // Use Bootstrap modal API to properly hide the modal
+                const modal = document.getElementById('announcementsModal');
+                if (modal) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                }
+                showSection('media');
+                setTimeout(() => {
+                    const posterTab = document.querySelector('[href="#media-poster-creator"]');
+                    if (posterTab) posterTab.click();
+                }, 150);
+            } catch (error) {
+                console.error('Error navigating to Poster Creator:', error);
+                addNotification('Could not navigate to Poster Creator. Please go to Media section manually.', 'warning');
+            }
+        }
+        
+        function goToVideoCreator() {
+            try {
+                // Use Bootstrap modal API to properly hide the modal
+                const modal = document.getElementById('announcementsModal');
+                if (modal) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                }
+                showSection('media');
+                setTimeout(() => {
+                    const videoTab = document.querySelector('[href="#media-video-creator"]');
+                    if (videoTab) videoTab.click();
+                }, 150);
+            } catch (error) {
+                console.error('Error navigating to Video Creator:', error);
+                addNotification('Could not navigate to Video Creator. Please go to Media section manually.', 'warning');
+            }
+        }
+        
         // Live Chat Functionality
         let liveChatMessages = JSON.parse(localStorage.getItem('liveChatMessages') || '[]');
         let liveChatInterval = null;
@@ -21135,7 +22510,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
             
             messageRefreshInterval = setInterval(function() {
-                // Only refresh if we're in the communication or teacher chat sections
+                // Only refresh if we're in the media or teacher chat sections
                 const currentSection = document.querySelector('.section:not(.d-none)');
                 if (!currentSection) return;
                 
@@ -21724,9 +23099,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 <i class="fas fa-clipboard-check"></i>
                 <span>Attendance</span>
             </a>
-            <a href="#communication" class="nav-item non-student" onclick="showSection('communication')">
-                <i class="fas fa-comments"></i>
-                <span>Messages</span>
+            <a href="#media" class="nav-item non-student" onclick="showSection('media')">
+                <i class="fas fa-photo-video"></i>
+                <span>Media</span>
             </a>
             <a href="#settings" class="nav-item" onclick="showSection('settings')">
                 <i class="fas fa-user-circle"></i>
