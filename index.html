@@ -15718,6 +15718,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // MEDIA POSTER CREATOR FUNCTIONS
         // ========================================
         
+        // Constants for Media Center
+        const CANVAS_INIT_DELAY = 500;
+        
         let mediaPosterCanvas = null;
         let mediaPosterActiveObject = null;
         
@@ -15841,7 +15844,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         function addMediaPosterText(text = 'Your Text Here', size = 50) {
             if (!mediaPosterCanvas) {
                 initMediaPosterCanvas();
-                setTimeout(() => addMediaPosterText(text, size), 500);
+                setTimeout(() => addMediaPosterText(text, size), CANVAS_INIT_DELAY);
                 return;
             }
             
@@ -15865,7 +15868,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         function addMediaPosterShape(type) {
             if (!mediaPosterCanvas) {
                 initMediaPosterCanvas();
-                setTimeout(() => addMediaPosterShape(type), 500);
+                setTimeout(() => addMediaPosterShape(type), CANVAS_INIT_DELAY);
                 return;
             }
             
@@ -16038,7 +16041,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         function loadMediaPosterTemplate(type) {
             if (!mediaPosterCanvas) {
                 initMediaPosterCanvas();
-                setTimeout(() => loadMediaPosterTemplate(type), 500);
+                setTimeout(() => loadMediaPosterTemplate(type), CANVAS_INIT_DELAY);
                 return;
             }
             
@@ -16254,6 +16257,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // VIDEO CREATOR FUNCTIONS
         // ========================================
         
+        // Constants for Video Creator
+        const MAX_RECORDING_SECONDS = 10 * 60; // 10 minutes
+        
         let videoCreatorStream = null;
         let videoCreatorRecorder = null;
         let videoCreatorChunks = [];
@@ -16439,8 +16445,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             document.getElementById('videoRecordingTimer').textContent = 
                 String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
             
-            // Auto-stop after 10 minutes
-            if (videoRecordingSeconds >= 600) {
+            // Auto-stop after max recording time
+            if (videoRecordingSeconds >= MAX_RECORDING_SECONDS) {
                 stopVideoRecording();
                 addNotification('Recording stopped - maximum 10 minutes reached', 'warning');
             }
@@ -16638,8 +16644,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Navigation helper functions for announcements modal
         function goToPosterCreator() {
             try {
-                const closeBtn = document.querySelector('[data-bs-dismiss="modal"]');
-                if (closeBtn) closeBtn.click();
+                // Use Bootstrap modal API to properly hide the modal
+                const modal = document.getElementById('announcementsModal');
+                if (modal) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                }
                 showSection('media');
                 setTimeout(() => {
                     const posterTab = document.querySelector('[href="#media-poster-creator"]');
@@ -16653,8 +16663,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         function goToVideoCreator() {
             try {
-                const closeBtn = document.querySelector('[data-bs-dismiss="modal"]');
-                if (closeBtn) closeBtn.click();
+                // Use Bootstrap modal API to properly hide the modal
+                const modal = document.getElementById('announcementsModal');
+                if (modal) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                }
                 showSection('media');
                 setTimeout(() => {
                     const videoTab = document.querySelector('[href="#media-video-creator"]');
