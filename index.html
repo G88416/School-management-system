@@ -1163,6 +1163,43 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text-color);
         }
+        
+        /* Inline Editable Cells */
+        .editable-cell {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .editable-cell:hover {
+            background: rgba(233, 69, 96, 0.2);
+            box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
+        }
+        .editable-cell i {
+            transition: opacity 0.2s ease;
+        }
+        .editable-cell:hover i {
+            opacity: 1 !important;
+        }
+        
+        /* Save Changes Button Pulse Animation */
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 4px 25px rgba(16, 185, 129, 0.6); }
+            100% { box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        }
+        .pulse-animation {
+            animation: pulseBtn 1.5s infinite;
+        }
+        #saveAllChangesBtn {
+            transition: all 0.3s ease;
+        }
+        #saveAllChangesBtn:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+        
         #settingsTabs .nav-link {
             border-radius: 8px 8px 0 0;
         }
@@ -6463,8 +6500,17 @@
                             </table>
                         </div>
                         
-                        <!-- Quick Actions -->
+                        <!-- Save Changes Button -->
                         <div class="row mt-4">
+                            <div class="col-12 d-flex justify-content-end">
+                                <button class="btn btn-success btn-lg" id="saveAllChangesBtn" onclick="saveAllUserChanges()" style="display: none;">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="row mt-3">
                             <div class="col-12">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle me-2"></i>
@@ -6474,6 +6520,7 @@
                                         <li>Use the role filter to quickly find specific user types</li>
                                         <li>HOD users have Head of Department privileges</li>
                                         <li>Use the magic wand button when creating users to generate secure passwords</li>
+                                        <li><strong>NEW:</strong> Click on name or username to edit directly in the table</li>
                                     </ul>
                                 </div>
                             </div>
@@ -18576,8 +18623,26 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 return `<tr>
                     <td>${originalIndex + 1}</td>
-                    <td><strong>${escapeHtml(user.name || 'N/A')}</strong></td>
-                    <td><code>${escapeHtml(user.username || 'N/A')}</code></td>
+                    <td>
+                        <span class="editable-cell" id="name-display-${originalIndex}" onclick="startInlineEdit(${originalIndex}, 'name')" title="Click to edit">
+                            <strong>${escapeHtml(user.name || 'N/A')}</strong> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>
+                        </span>
+                        <input type="text" class="form-control form-control-sm d-none" id="name-input-${originalIndex}" 
+                            value="${escapeHtml(user.name || '')}" 
+                            onblur="saveInlineEdit(${originalIndex}, 'name')" 
+                            onkeydown="handleInlineEditKeydown(event, ${originalIndex}, 'name')"
+                            style="max-width:150px;">
+                    </td>
+                    <td>
+                        <span class="editable-cell" id="username-display-${originalIndex}" onclick="startInlineEdit(${originalIndex}, 'username')" title="Click to edit">
+                            <code>${escapeHtml(user.username || 'N/A')}</code> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>
+                        </span>
+                        <input type="text" class="form-control form-control-sm d-none" id="username-input-${originalIndex}" 
+                            value="${escapeHtml(user.username || '')}" 
+                            onblur="saveInlineEdit(${originalIndex}, 'username')" 
+                            onkeydown="handleInlineEditKeydown(event, ${originalIndex}, 'username')"
+                            style="max-width:120px;">
+                    </td>
                     <td>
                         <span id="pwd-${originalIndex}">${maskedPassword}</span>
                         <button class="btn btn-sm btn-outline-secondary ms-1" onclick="toggleUserPasswordView(${originalIndex})" title="Show/Hide Password">
@@ -18996,6 +19061,166 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             renderUsersList();
             
             addNotification(`User ${name} updated successfully!`, 'success');
+        }
+        
+        // Track pending inline edits
+        let pendingUserEdits = {};
+        
+        // Start inline editing for a field
+        function startInlineEdit(userIndex, field) {
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            const inputField = document.getElementById(`${field}-input-${userIndex}`);
+            
+            if (!displaySpan || !inputField) return;
+            
+            // Hide display, show input
+            displaySpan.classList.add('d-none');
+            inputField.classList.remove('d-none');
+            inputField.focus();
+            inputField.select();
+        }
+        
+        // Handle keydown events for inline edit inputs
+        function handleInlineEditKeydown(event, userIndex, field) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveInlineEdit(userIndex, field);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelInlineEdit(userIndex, field);
+            }
+        }
+        
+        // Save inline edit for a field
+        function saveInlineEdit(userIndex, field) {
+            const inputField = document.getElementById(`${field}-input-${userIndex}`);
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            
+            if (!inputField || !displaySpan || !users[userIndex]) return;
+            
+            const newValue = inputField.value.trim();
+            const oldValue = users[userIndex][field] || '';
+            
+            // Validation
+            if (!newValue) {
+                addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty`, 'warning');
+                inputField.value = oldValue;
+                displaySpan.classList.remove('d-none');
+                inputField.classList.add('d-none');
+                return;
+            }
+            
+            // Check for duplicate username
+            if (field === 'username') {
+                const duplicateUser = users.find((u, i) => i !== userIndex && u.username.toLowerCase() === newValue.toLowerCase());
+                if (duplicateUser) {
+                    addNotification('Username already exists. Please choose a different username.', 'danger');
+                    inputField.value = oldValue;
+                    displaySpan.classList.remove('d-none');
+                    inputField.classList.add('d-none');
+                    return;
+                }
+            }
+            
+            // Update the display immediately for live feedback
+            if (field === 'name') {
+                displaySpan.innerHTML = `<strong>${escapeHtml(newValue)}</strong> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>`;
+            } else if (field === 'username') {
+                displaySpan.innerHTML = `<code>${escapeHtml(newValue)}</code> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>`;
+            }
+            
+            // Hide input, show display
+            displaySpan.classList.remove('d-none');
+            inputField.classList.add('d-none');
+            
+            // Only track if value changed
+            if (newValue !== oldValue) {
+                // Track the pending edit
+                if (!pendingUserEdits[userIndex]) {
+                    pendingUserEdits[userIndex] = {};
+                }
+                pendingUserEdits[userIndex][field] = newValue;
+                
+                // Update the user data immediately for fast live update
+                users[userIndex][field] = newValue;
+                users[userIndex].updatedAt = new Date().toISOString();
+                users[userIndex].updatedBy = currentUser ? currentUser.name : 'System';
+                
+                // Save to localStorage immediately for persistence
+                saveData();
+                
+                // Show the save changes button
+                showSaveChangesButton();
+                
+                // Show success feedback
+                addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} updated: "${newValue}"`, 'success');
+                
+                // Log activity
+                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name} (${users[userIndex].username})`);
+                
+                // Update statistics
+                updateUserStatistics();
+            }
+        }
+        
+        // Cancel inline edit
+        function cancelInlineEdit(userIndex, field) {
+            const inputField = document.getElementById(`${field}-input-${userIndex}`);
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            
+            if (!inputField || !displaySpan || !users[userIndex]) return;
+            
+            // Reset input to original value
+            inputField.value = users[userIndex][field] || '';
+            
+            // Hide input, show display
+            displaySpan.classList.remove('d-none');
+            inputField.classList.add('d-none');
+        }
+        
+        // Show the save changes button
+        function showSaveChangesButton() {
+            const saveBtn = document.getElementById('saveAllChangesBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'inline-block';
+                saveBtn.classList.add('pulse-animation');
+            }
+        }
+        
+        // Hide the save changes button
+        function hideSaveChangesButton() {
+            const saveBtn = document.getElementById('saveAllChangesBtn');
+            if (saveBtn) {
+                saveBtn.style.display = 'none';
+                saveBtn.classList.remove('pulse-animation');
+            }
+        }
+        
+        // Save all pending user changes
+        function saveAllUserChanges() {
+            const editCount = Object.keys(pendingUserEdits).length;
+            
+            if (editCount === 0) {
+                addNotification('No pending changes to save', 'info');
+                return;
+            }
+            
+            // Data is already saved via saveInlineEdit, this is just confirmation
+            saveData();
+            
+            // Log activity
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Bulk Save', `Saved changes for ${editCount} user(s)`);
+            
+            // Clear pending edits
+            pendingUserEdits = {};
+            
+            // Hide save button
+            hideSaveChangesButton();
+            
+            // Refresh the list
+            renderUsersList();
+            
+            addNotification(`All changes saved successfully! (${editCount} user(s) updated)`, 'success');
         }
         
         // Delete user
