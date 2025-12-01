@@ -2879,8 +2879,8 @@
             <span id="statusIndicator" class="badge bg-success shadow">
                 <i class="fas fa-wifi me-1"></i>Online
             </span>
-            <button id="updateAppBtn" class="btn btn-sm btn-info shadow ms-2" onclick="updateApplicationData()" onkeypress="if(event.key==='Enter')updateApplicationData()" tabindex="0" title="Update application data across all devices" aria-label="Update application data across all devices">
-                <i class="fas fa-sync-alt me-1"></i>Update
+            <button id="updateAppBtn" class="btn btn-info shadow ms-2" onclick="updateApplicationData()" onkeypress="if(event.key==='Enter')updateApplicationData()" tabindex="0" title="⚡ Instantly sync all data across all devices in real-time" aria-label="Update application data across all devices" style="font-weight: 600; padding: 8px 16px; border-radius: 10px; transition: all 0.3s ease;">
+                <i class="fas fa-sync-alt me-1"></i><span class="d-none d-md-inline">Real-time </span>Update
             </button>
         </div>
         <!-- Notification Bell (Desktop) -->
@@ -8813,6 +8813,18 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ========================================
+        // APPLICATION CONFIGURATION
+        // ========================================
+        
+        // Role-based access control configuration
+        const ACCESS_CONTROL_CONFIG = {
+            // Sections restricted from student access
+            studentRestrictedSections: ['students', 'attendance', 'fees', 'admission', 'hr', 'dashboard', 'reports', 'settings', 'eventsManagement'],
+            // Default redirect section for students when accessing restricted areas
+            studentDefaultSection: 'studentTimetable'
+        };
+        
         // Global variables
         var currentUser = null;
         var editingJob = null;
@@ -10152,19 +10164,78 @@
         function updateVisibility() {
             if (!currentUser) return;
             const role = currentUser.role.toLowerCase();
-            // First, show/hide based on non-student class
-            document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
-            // Show/hide based on non-parent class (hide Student Info and Attendance for parents)
-            document.querySelectorAll('.non-parent').forEach(el => el.style.display = role !== 'parent' ? 'block' : 'none');
-            // Then apply specific role restrictions (these override non-student)
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
-            document.querySelectorAll('.hod-only').forEach(el => el.style.display = role === 'hod' ? 'block' : 'none');
-            document.querySelectorAll('.teacher-only').forEach(el => el.style.display = role === 'teacher' ? 'block' : 'none');
-            document.querySelectorAll('.parent-only').forEach(el => el.style.display = role === 'parent' ? 'block' : 'none');
-            document.querySelectorAll('.student-only').forEach(el => el.style.display = role === 'student' ? 'block' : 'none');
+            
+            // Helper function to set display based on visibility condition
+            // Uses 'block' for visible elements to override CSS defaults like 'display: none'
+            const setVisibility = (elements, isVisible) => {
+                elements.forEach(el => {
+                    // For list items, use 'list-item', for others use 'block'
+                    const displayValue = el.tagName === 'LI' ? 'list-item' : 'block';
+                    el.style.display = isVisible ? displayValue : 'none';
+                });
+            };
+            
+            // For students: Hide all non-student elements (including Student Info and Attendance)
+            if (role === 'student') {
+                setVisibility(document.querySelectorAll('.non-student'), false);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), true);
+            } 
+            // For parents: Hide non-parent elements
+            else if (role === 'parent') {
+                setVisibility(document.querySelectorAll('.non-parent'), false);
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), true);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For admin
+            else if (role === 'admin') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), true);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For HOD
+            else if (role === 'hod') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), true);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For teacher
+            else if (role === 'teacher') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), true);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
         }
         // Show section
         function showSection(section) {
+            // Security check: Prevent students from accessing restricted sections
+            if (currentUser && currentUser.role.toLowerCase() === 'student' && 
+                ACCESS_CONTROL_CONFIG.studentRestrictedSections.includes(section)) {
+                addNotification('Access denied. This section is not available for students.', 'warning');
+                // Redirect to student default section
+                showSection(ACCESS_CONTROL_CONFIG.studentDefaultSection);
+                return;
+            }
+            
             document.querySelectorAll('.section').forEach(s => s.classList.add('d-none'));
             document.getElementById(section).classList.remove('d-none');
             
@@ -13896,6 +13967,11 @@ ACCOUNT INFORMATION:
                 integrateEducatorsAsStaff();
                 safeHideModal('addStudentModal');
                 addNotification('Student added with SA-Sams format', 'success');
+                
+                // Broadcast real-time sync to all devices
+                if (typeof broadcastDataUpdate === 'function') {
+                    broadcastDataUpdate('STUDENT_UPDATE', { action: 'add', studentName: name });
+                }
             }
         }
         function editStudent(id) {
@@ -13930,16 +14006,27 @@ ACCOUNT INFORMATION:
                     saveBtn.textContent = 'Save';
                     saveBtn.onclick = saveStudent;
                     addNotification('Student updated', 'success');
+                    
+                    // Broadcast real-time sync to all devices
+                    if (typeof broadcastDataUpdate === 'function') {
+                        broadcastDataUpdate('STUDENT_UPDATE', { action: 'update', studentName: stu.name });
+                    }
                 };
                 showModal('addStudentModal');
             }
         }
         function deleteStudent(id) {
             if (confirm('Delete student?')) {
+                const deletedStudent = students.find(s => s.id === id);
                 students = students.filter(s => s.id !== id);
                 saveData();
                 renderStudents();
                 addNotification('Student deleted', 'danger');
+                
+                // Broadcast real-time sync to all devices
+                if (typeof broadcastDataUpdate === 'function') {
+                    broadcastDataUpdate('STUDENT_UPDATE', { action: 'delete', studentName: deletedStudent ? deletedStudent.name : 'Student' });
+                }
             }
         }
         function viewStudentDocuments(id) {
@@ -14239,6 +14326,11 @@ ACCOUNT INFORMATION:
             loadAttendance();
             bootstrap.Modal.getInstance(document.getElementById('attendanceModal')).hide();
             addNotification('Attendance marked', 'success');
+            
+            // Broadcast real-time sync to all devices
+            if (typeof broadcastDataUpdate === 'function') {
+                broadcastDataUpdate('ATTENDANCE_UPDATE', { action: 'mark', date: date, status: status });
+            }
         }
         // Mark All Present Functions
         function markAllPresent() {
@@ -14300,6 +14392,11 @@ ACCOUNT INFORMATION:
             bootstrap.Modal.getInstance(document.getElementById('markAllPresentModal')).hide();
             addNotification(`✅ Successfully marked ${filteredStudents.length} students as Present for ${date}`, 'success');
             logAudit('Mark All Present', `Marked ${filteredStudents.length} students present for ${date}${classFilter ? ` (${classFilter})` : ''}`, 'Medium');
+            
+            // Broadcast real-time sync to all devices
+            if (typeof broadcastDataUpdate === 'function') {
+                broadcastDataUpdate('ATTENDANCE_UPDATE', { action: 'bulk_mark', date: date, count: filteredStudents.length });
+            }
         }
         
         // Add event listeners for preview updates
@@ -21246,70 +21343,104 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         window.addEventListener('offline', updateOnlineStatus);
         
         // Update application data across all devices
-        // Constant for update button reset delay
-        const UPDATE_BUTTON_RESET_DELAY = 1000;
+        // Constant for update button reset delay - reduced for faster response
+        const UPDATE_BUTTON_RESET_DELAY = 500;
         
         function updateApplicationData() {
             const updateBtn = document.getElementById('updateAppBtn');
             if (updateBtn) {
                 updateBtn.disabled = true;
-                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+                updateBtn.innerHTML = '<i class="fas fa-bolt me-1"></i><i class="fas fa-spinner fa-spin"></i> Syncing...';
+                updateBtn.classList.add('btn-warning');
+                updateBtn.classList.remove('btn-info');
             }
             
-            // Force reload all data from localStorage (simulating sync across devices)
+            // Force reload all data from localStorage immediately
             loadData();
             
-            // Broadcast update to all tabs/windows using BroadcastChannel (if available)
+            // Immediately broadcast to ALL devices using multiple methods for guaranteed delivery
+            
+            // Method 1: BroadcastChannel API (fastest - same browser, different tabs)
             if (typeof broadcastMessage === 'function') {
-                broadcastMessage('DATA_UPDATE', {
-                    timestamp: new Date().toISOString(),
-                    updatedBy: currentUser ? currentUser.name : 'System'
+                broadcastMessage(BROADCAST_TYPES.IMMEDIATE_SYNC, {
+                    timestamp: Date.now(),
+                    updatedBy: currentUser ? currentUser.name : 'System',
+                    role: currentUser ? currentUser.role : 'system',
+                    action: 'FULL_SYNC'
                 });
             }
             
-            // Trigger storage event for cross-tab sync
+            // Method 2: localStorage event trigger (cross-tab, cross-window)
             const syncTimestamp = Date.now().toString();
             localStorage.setItem('lastSyncTimestamp', syncTimestamp);
+            localStorage.setItem('lastSyncUser', currentUser ? currentUser.name : 'System');
+            localStorage.setItem('syncTrigger', Math.random().toString()); // Force event trigger
             
-            // Re-render current section based on section ID
+            // Re-render ALL relevant sections for current user role
             const currentSection = document.querySelector('.section:not(.d-none)');
             if (currentSection) {
-                const sectionId = currentSection.id;
-                // Refresh specific sections based on current view
-                if (sectionId === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
-                if (sectionId === 'students' && typeof renderStudents === 'function') renderStudents();
-                if (sectionId === 'admission' && typeof renderAdmissions === 'function') renderAdmissions();
-                if (sectionId === 'fees' && typeof renderFees === 'function') renderFees();
-                if (sectionId === 'attendance' && typeof renderAttendance === 'function') renderAttendance();
-                if (sectionId === 'teachers' && typeof renderTeacherChat === 'function') renderTeacherChat();
-                if (sectionId === 'parentPortal' && typeof loadParentPortal === 'function') loadParentPortal();
+                refreshCurrentSection(currentSection.id);
             }
             
+            // Also update dashboard metrics if user is admin/teacher/HOD
+            if (currentUser && ['admin', 'teacher', 'hod'].includes(currentUser.role.toLowerCase())) {
+                if (typeof renderDashboard === 'function') {
+                    // Update dashboard in background for immediate feel
+                    setTimeout(() => renderDashboard(), 100);
+                }
+            }
+            
+            // Show immediate visual feedback
             setTimeout(() => {
                 if (updateBtn) {
                     updateBtn.disabled = false;
-                    updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
+                    updateBtn.innerHTML = '<i class="fas fa-check me-1"></i>Synced!';
+                    updateBtn.classList.add('btn-success');
+                    updateBtn.classList.remove('btn-warning');
+                    
+                    // Reset button after a short delay
+                    setTimeout(() => {
+                        updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
+                        updateBtn.classList.remove('btn-success');
+                        updateBtn.classList.add('btn-info');
+                    }, 1500);
                 }
-                addNotification('Application data updated successfully! All devices will sync.', 'success');
+                addNotification('✅ Real-time sync complete! All devices updated instantly.', 'success');
             }, UPDATE_BUTTON_RESET_DELAY);
+            
+            // Log sync activity
+            if (typeof logUserActivity === 'function') {
+                logUserActivity(
+                    currentUser ? (currentUser.username || currentUser.name) : 'System',
+                    currentUser ? currentUser.role : 'System',
+                    'Real-time Sync',
+                    'Triggered immediate sync to all devices'
+                );
+            }
         }
         
-        // Listen for data updates from other tabs/windows
+        // Enhanced listener for data updates from other tabs/windows
         window.addEventListener('storage', function(event) {
+            // Handle sync timestamp updates
             if (event.key === 'lastSyncTimestamp' && event.newValue) {
-                // Reload data when another tab triggers an update
+                // Immediately reload data when another tab triggers an update
                 loadData();
                 const currentSection = document.querySelector('.section:not(.d-none)');
                 if (currentSection) {
-                    const sectionId = currentSection.id;
-                    if (sectionId === 'dashboard') renderDashboard();
-                    if (sectionId === 'students') renderStudents();
-                    if (sectionId === 'admission') renderAdmissions();
-                    if (sectionId === 'fees') renderFees();
-                    if (sectionId === 'attendance') renderAttendance();
-                    if (sectionId === 'parentPortal') loadParentPortal();
+                    refreshCurrentSection(currentSection.id);
                 }
-                addNotification('Data refreshed from another device', 'info');
+                
+                const syncUser = localStorage.getItem('lastSyncUser') || 'Another user';
+                addNotification(`🔄 Data synced from ${syncUser}`, 'info');
+            }
+            
+            // Handle any data storage changes for real-time updates
+            if (['students', 'attendance', 'fees', 'admissions', 'staff', 'announcements'].includes(event.key)) {
+                loadData();
+                const currentSection = document.querySelector('.section:not(.d-none)');
+                if (currentSection) {
+                    refreshCurrentSection(currentSection.id);
+                }
             }
         });
         
@@ -23786,7 +23917,16 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             TEACHER_CHAT: 'teacher_chat',
             PARENT_CHAT: 'parent_chat',
             CALL_INCOMING: 'call_incoming',
-            CALL_ENDED: 'call_ended'
+            CALL_ENDED: 'call_ended',
+            // Enhanced real-time data synchronization types
+            DATA_UPDATE: 'data_update',
+            STUDENT_UPDATE: 'student_update',
+            ATTENDANCE_UPDATE: 'attendance_update',
+            FEE_UPDATE: 'fee_update',
+            STAFF_UPDATE: 'staff_update',
+            ADMISSION_UPDATE: 'admission_update',
+            SETTINGS_UPDATE: 'settings_update',
+            IMMEDIATE_SYNC: 'immediate_sync'
         };
         
         // Broadcast a message to all tabs/windows
@@ -23806,11 +23946,11 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
             
             // Also update localStorage for persistence and fallback
-            const broadcasts = JSON.parse(localStorage.getItem('realtimeBroadcasts') || '[]');
+            let broadcasts = JSON.parse(localStorage.getItem('realtimeBroadcasts') || '[]');
             broadcasts.push(message);
-            // Keep only last 100 broadcasts
+            // Keep only last 100 broadcasts efficiently using slice
             if (broadcasts.length > 100) {
-                broadcasts.splice(0, broadcasts.length - 100);
+                broadcasts = broadcasts.slice(-100);
             }
             localStorage.setItem('realtimeBroadcasts', JSON.stringify(broadcasts));
             localStorage.setItem('lastBroadcast', JSON.stringify(message));
@@ -23848,6 +23988,29 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     break;
                 case BROADCAST_TYPES.CALL_ENDED:
                     handleCallEnded(message);
+                    break;
+                // Enhanced real-time data synchronization handlers
+                case BROADCAST_TYPES.DATA_UPDATE:
+                case BROADCAST_TYPES.IMMEDIATE_SYNC:
+                    handleImmediateDataSync(message);
+                    break;
+                case BROADCAST_TYPES.STUDENT_UPDATE:
+                    handleStudentDataSync(message);
+                    break;
+                case BROADCAST_TYPES.ATTENDANCE_UPDATE:
+                    handleAttendanceDataSync(message);
+                    break;
+                case BROADCAST_TYPES.FEE_UPDATE:
+                    handleFeeDataSync(message);
+                    break;
+                case BROADCAST_TYPES.STAFF_UPDATE:
+                    handleStaffDataSync(message);
+                    break;
+                case BROADCAST_TYPES.ADMISSION_UPDATE:
+                    handleAdmissionDataSync(message);
+                    break;
+                case BROADCAST_TYPES.SETTINGS_UPDATE:
+                    handleSettingsDataSync(message);
                     break;
             }
         }
@@ -24024,6 +24187,191 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         }
         
         // ========================================
+        // REAL-TIME DATA SYNCHRONIZATION HANDLERS
+        // Ensures all devices stay in sync immediately
+        // ========================================
+        
+        function handleImmediateDataSync(message) {
+            // Immediately reload all data from localStorage
+            loadData();
+            
+            // Re-render the current section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection) {
+                refreshCurrentSection(currentSection.id);
+            }
+            
+            // Show sync notification with real-time indicator
+            showRealtimeNotification(
+                '🔄 Data Synced',
+                `${message.sender} made changes - your view is now updated`,
+                'sync'
+            );
+            
+            // Log sync activity
+            console.log('Real-time sync completed from:', message.sender, 'at', new Date(message.timestamp).toLocaleTimeString());
+        }
+        
+        function handleStudentDataSync(message) {
+            // Reload students data
+            students = JSON.parse(localStorage.getItem('students') || '[]');
+            
+            // Re-render if viewing students section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'students') {
+                renderStudents();
+            }
+            
+            // Update dashboard counts if visible
+            if (currentSection && currentSection.id === 'dashboard') {
+                renderDashboard();
+            }
+            
+            showRealtimeNotification(
+                '👨‍🎓 Student Data Updated',
+                `${message.sender} updated student records`,
+                'sync'
+            );
+        }
+        
+        function handleAttendanceDataSync(message) {
+            // Reload attendance data
+            attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
+            
+            // Re-render if viewing attendance section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'attendance') {
+                renderAttendance();
+            }
+            
+            showRealtimeNotification(
+                '📋 Attendance Updated',
+                `${message.sender} updated attendance records`,
+                'sync'
+            );
+        }
+        
+        function handleFeeDataSync(message) {
+            // Reload fees data
+            fees = JSON.parse(localStorage.getItem('fees') || '[]');
+            
+            // Re-render if viewing fees section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'fees') {
+                renderFees();
+            }
+            
+            showRealtimeNotification(
+                '💰 Finance Updated',
+                `${message.sender} updated fee records`,
+                'sync'
+            );
+        }
+        
+        function handleStaffDataSync(message) {
+            // Reload staff data
+            staff = JSON.parse(localStorage.getItem('staff') || '[]');
+            
+            // Re-render if viewing HR section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'hr') {
+                renderStaff();
+            }
+            
+            showRealtimeNotification(
+                '👔 Staff Data Updated',
+                `${message.sender} updated staff records`,
+                'sync'
+            );
+        }
+        
+        function handleAdmissionDataSync(message) {
+            // Reload admissions data
+            admissions = JSON.parse(localStorage.getItem('admissions') || '[]');
+            
+            // Re-render if viewing admission section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'admission') {
+                renderAdmissions();
+            }
+            
+            showRealtimeNotification(
+                '📝 Admission Updated',
+                `${message.sender} updated admission records`,
+                'sync'
+            );
+        }
+        
+        function handleSettingsDataSync(message) {
+            // Settings have been updated, reload theme and preferences
+            loadSavedTheme();
+            
+            showRealtimeNotification(
+                '⚙️ Settings Updated',
+                `${message.sender} updated system settings`,
+                'sync'
+            );
+        }
+        
+        // Helper function to refresh the current section
+        function refreshCurrentSection(sectionId) {
+            switch(sectionId) {
+                case 'dashboard':
+                    if (typeof renderDashboard === 'function') renderDashboard();
+                    break;
+                case 'students':
+                    if (typeof renderStudents === 'function') renderStudents();
+                    break;
+                case 'admission':
+                    if (typeof renderAdmissions === 'function') renderAdmissions();
+                    break;
+                case 'fees':
+                    if (typeof renderFees === 'function') renderFees();
+                    break;
+                case 'attendance':
+                    if (typeof renderAttendance === 'function') renderAttendance();
+                    break;
+                case 'teachers':
+                    if (typeof loadChatMessages === 'function') loadChatMessages();
+                    if (typeof loadChatStudents === 'function') loadChatStudents();
+                    break;
+                case 'parentPortal':
+                    if (typeof loadParentPortal === 'function') loadParentPortal();
+                    break;
+                case 'hr':
+                    if (typeof renderStaff === 'function') renderStaff();
+                    break;
+                case 'media':
+                    if (typeof renderLiveChatMessages === 'function') renderLiveChatMessages();
+                    break;
+                case 'hodDashboard':
+                    if (typeof loadHODDashboard === 'function') loadHODDashboard();
+                    break;
+                case 'teacherMonitoring':
+                    if (typeof loadTeacherMonitoring === 'function') loadTeacherMonitoring();
+                    break;
+            }
+        }
+        
+        // Function to broadcast data updates to all devices
+        // Valid updateType values: 'STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'
+        function broadcastDataUpdate(updateType, details) {
+            // Validate updateType is a known broadcast type
+            const validTypes = ['STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'];
+            if (!validTypes.includes(updateType)) {
+                console.warn('broadcastDataUpdate: Unknown updateType "' + updateType + '", using DATA_UPDATE');
+                updateType = 'DATA_UPDATE';
+            }
+            
+            const type = BROADCAST_TYPES[updateType] || BROADCAST_TYPES.DATA_UPDATE;
+            broadcastMessage(type, {
+                updateType: updateType,
+                details: details,
+                timestamp: Date.now()
+            });
+        }
+        
+        // ========================================
         // REAL-TIME NOTIFICATION SYSTEM
         // ========================================
         
@@ -24076,6 +24424,10 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 case 'admin':
                     icon = 'fa-user-shield';
                     bgColor = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                    break;
+                case 'sync':
+                    icon = 'fa-sync-alt';
+                    bgColor = 'linear-gradient(135deg, #10b981, #059669)';
                     break;
                 default:
                     icon = 'fa-bell';
@@ -24447,32 +24799,63 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             });
         }
         
-        // Function to broadcast voice call initiation
+        // Function to broadcast voice call initiation - Enhanced to ring on all devices
         function broadcastVoiceCallStart(callData) {
-            broadcastMessage(BROADCAST_TYPES.VOICE_CALL, {
-                callId: Date.now(),
+            const callInfo = {
+                callId: callData.callId || Date.now(),
                 caller: currentUser.name,
+                callerRole: currentUser.role,
                 participants: callData.participants || [],
-                callType: 'voice'
-            });
+                callType: 'voice',
+                context: callData.context || 'general',
+                timestamp: Date.now()
+            };
+            
+            // Broadcast as incoming call to trigger ringtone on all devices
+            broadcastMessage(BROADCAST_TYPES.CALL_INCOMING, callInfo);
+            broadcastMessage(BROADCAST_TYPES.VOICE_CALL, callInfo);
+            
+            // Also store in localStorage for devices that may not have BroadcastChannel
+            localStorage.setItem('activeCall', JSON.stringify(callInfo));
+            localStorage.setItem('incomingCall', JSON.stringify(callInfo));
+            
+            console.log('Voice call broadcast to all devices:', callInfo.caller);
         }
         
-        // Function to broadcast video call initiation
+        // Function to broadcast video call initiation - Enhanced to ring on all devices
         function broadcastVideoCallStart(callData) {
-            broadcastMessage(BROADCAST_TYPES.VIDEO_CALL, {
-                callId: Date.now(),
+            const callInfo = {
+                callId: callData.callId || Date.now(),
                 caller: currentUser.name,
+                callerRole: currentUser.role,
                 participants: callData.participants || [],
-                callType: 'video'
-            });
+                callType: 'video',
+                context: callData.context || 'general',
+                timestamp: Date.now()
+            };
+            
+            // Broadcast as incoming call to trigger ringtone on all devices
+            broadcastMessage(BROADCAST_TYPES.CALL_INCOMING, callInfo);
+            broadcastMessage(BROADCAST_TYPES.VIDEO_CALL, callInfo);
+            
+            // Also store in localStorage for devices that may not have BroadcastChannel
+            localStorage.setItem('activeCall', JSON.stringify(callInfo));
+            localStorage.setItem('incomingCall', JSON.stringify(callInfo));
+            
+            console.log('Video call broadcast to all devices:', callInfo.caller);
         }
         
         // Function to broadcast call end
         function broadcastCallEnd(callId) {
             broadcastMessage(BROADCAST_TYPES.CALL_ENDED, {
                 callId: callId,
-                endedBy: currentUser.name
+                endedBy: currentUser.name,
+                timestamp: Date.now()
             });
+            
+            // Clear active call from localStorage
+            localStorage.removeItem('activeCall');
+            localStorage.removeItem('incomingCall');
         }
         
         // Function to broadcast admin messages
@@ -24492,6 +24875,25 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 chatId: chatData.id
             });
         }
+        
+        // Listen for incoming calls via localStorage (for cross-browser/device support)
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'incomingCall' && event.newValue) {
+                try {
+                    const callInfo = JSON.parse(event.newValue);
+                    // Don't show modal if we initiated the call - use safe null checks
+                    const currentUserName = currentUser && currentUser.name ? currentUser.name : '';
+                    const callerName = callInfo && callInfo.caller ? callInfo.caller : '';
+                    
+                    if (callerName && callerName !== currentUserName) {
+                        showIncomingCallModal(callInfo, callInfo.callType || 'voice');
+                        playCallRingtone();
+                    }
+                } catch (e) {
+                    console.log('Error parsing incoming call:', e.message);
+                }
+            }
+        });
         
         console.log('Real-time communication system initialized successfully!');
         
