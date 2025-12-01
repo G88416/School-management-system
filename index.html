@@ -6468,7 +6468,7 @@
                                         <li>Click the <i class="fas fa-eye"></i> button to view/copy passwords</li>
                                         <li>Use the role filter to quickly find specific user types</li>
                                         <li>HOD users have Head of Department privileges</li>
-                                        <li>Default password pattern: username + role (e.g., teacher123)</li>
+                                        <li>Use the magic wand button when creating users to generate secure passwords</li>
                                     </ul>
                                 </div>
                             </div>
@@ -6624,7 +6624,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="createUserModalLabel"><i class="fas fa-user-plus me-2"></i>Create New User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('createUserModal')"></button>
+                            <button type="button" class="btn-close" aria-label="Close" onclick="hideModal('createUserModal')"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
@@ -6778,7 +6778,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('createUserModal')">Cancel</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideModal('createUserModal')">Cancel</button>
                             <button type="button" class="btn btn-primary" onclick="createNewUser()">
                                 <i class="fas fa-user-plus me-2"></i>Create User
                             </button>
@@ -6793,7 +6793,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="editUserModalLabel"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('editUserModal')"></button>
+                            <button type="button" class="btn-close" aria-label="Close" onclick="hideModal('editUserModal')"></button>
                         </div>
                         <div class="modal-body">
                             <input type="hidden" id="editUserIndex">
@@ -6838,7 +6838,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('editUserModal')">Cancel</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideModal('editUserModal')">Cancel</button>
                             <button type="button" class="btn btn-primary" onclick="updateUser()">
                                 <i class="fas fa-save me-2"></i>Save Changes
                             </button>
@@ -6853,7 +6853,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="viewUserModalLabel"><i class="fas fa-user me-2"></i>User Details</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('viewUserModal')"></button>
+                            <button type="button" class="btn-close" aria-label="Close" onclick="hideModal('viewUserModal')"></button>
                         </div>
                         <div class="modal-body">
                             <div id="viewUserContent">
@@ -6864,7 +6864,7 @@
                             <button type="button" class="btn btn-info" onclick="copyUserCredentials()">
                                 <i class="fas fa-copy me-2"></i>Copy Credentials
                             </button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('viewUserModal')">Close</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideModal('viewUserModal')">Close</button>
                         </div>
                     </div>
                 </div>
@@ -18622,17 +18622,47 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
         }
         
-        // Generate random password
+        // Generate random password using cryptographically secure method
         function generateRandomPassword() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const special = '!@#$%&*';
+            const allChars = uppercase + lowercase + numbers + special;
+            
+            // Ensure at least one of each type for password strength
             let password = '';
-            for (let i = 0; i < 10; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            
+            // Use crypto.getRandomValues for better randomness if available
+            if (window.crypto && window.crypto.getRandomValues) {
+                const randomArray = new Uint32Array(12);
+                window.crypto.getRandomValues(randomArray);
+                
+                // Add one of each required type
+                password += uppercase[randomArray[0] % uppercase.length];
+                password += lowercase[randomArray[1] % lowercase.length];
+                password += numbers[randomArray[2] % numbers.length];
+                password += special[randomArray[3] % special.length];
+                
+                // Fill rest with random chars
+                for (let i = 4; i < 12; i++) {
+                    password += allChars[randomArray[i] % allChars.length];
+                }
+                
+                // Shuffle the password
+                password = password.split('').sort(() => 0.5 - Math.random()).join('');
+            } else {
+                // Fallback for older browsers
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+                for (let i = 0; i < 12; i++) {
+                    password += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
             }
+            
             document.getElementById('newUserPassword').value = password;
             document.getElementById('newUserPassword').type = 'text';
             
-            addNotification('Random password generated!', 'success');
+            addNotification('Secure random password generated!', 'success');
         }
         
         // Create new user
@@ -18893,13 +18923,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
             
             // Create CSV content
-            const headers = ['Name', 'Username', 'Password', 'Role', 'Email', 'Phone', 'Status', 'Created At'];
+            const headers = ['Name', 'Username', 'Role', 'Email', 'Phone', 'Status', 'Created At'];
             const csvContent = [
                 headers.join(','),
                 ...users.map(user => [
                     `"${(user.name || '').replace(/"/g, '""')}"`,
                     `"${(user.username || '').replace(/"/g, '""')}"`,
-                    `"${(user.password || '').replace(/"/g, '""')}"`,
                     `"${(user.role || '').replace(/"/g, '""')}"`,
                     `"${(user.email || '').replace(/"/g, '""')}"`,
                     `"${(user.phone || '').replace(/"/g, '""')}"`,
@@ -18915,10 +18944,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             link.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
             
-            addNotification(`Exported ${users.length} users to CSV file!`, 'success');
+            addNotification(`Exported ${users.length} users to CSV file (passwords excluded for security)!`, 'success');
             
             // Log activity
-            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Users Export', `Exported ${users.length} users to CSV`);
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Users Export', `Exported ${users.length} users to CSV (passwords excluded)`);
         }
         
         // Settings tabs handler - load user list when switching to User Management tab
