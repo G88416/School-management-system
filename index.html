@@ -19066,12 +19066,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Track pending inline edits
         let pendingUserEdits = {};
         
+        // Helper function to generate editable cell display HTML
+        function getEditableCellDisplayHtml(field, value) {
+            const escapedValue = escapeHtml(value);
+            const pencilIcon = '<i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>';
+            if (field === 'name') {
+                return `<strong>${escapedValue}</strong> ${pencilIcon}`;
+            } else if (field === 'username') {
+                return `<code>${escapedValue}</code> ${pencilIcon}`;
+            }
+            return `${escapedValue} ${pencilIcon}`;
+        }
+        
         // Start inline editing for a field
         function startInlineEdit(userIndex, field) {
             const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
             const inputField = document.getElementById(`${field}-input-${userIndex}`);
             
-            if (!displaySpan || !inputField) return;
+            if (!displaySpan || !inputField) {
+                console.warn(`Inline edit elements not found for user ${userIndex}, field ${field}`);
+                return;
+            }
             
             // Hide display, show input
             displaySpan.classList.add('d-none');
@@ -19096,7 +19111,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const inputField = document.getElementById(`${field}-input-${userIndex}`);
             const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
             
-            if (!inputField || !displaySpan || !users[userIndex]) return;
+            if (!inputField || !displaySpan) {
+                console.warn(`Inline edit elements not found for user ${userIndex}, field ${field}`);
+                return;
+            }
+            
+            if (!users[userIndex]) {
+                addNotification('User not found. Please refresh the page.', 'danger');
+                return;
+            }
             
             const newValue = inputField.value.trim();
             const oldValue = users[userIndex][field] || '';
@@ -19122,12 +19145,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 }
             }
             
-            // Update the display immediately for live feedback
-            if (field === 'name') {
-                displaySpan.innerHTML = `<strong>${escapeHtml(newValue)}</strong> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>`;
-            } else if (field === 'username') {
-                displaySpan.innerHTML = `<code>${escapeHtml(newValue)}</code> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>`;
-            }
+            // Update the display immediately for live feedback using helper function
+            displaySpan.innerHTML = getEditableCellDisplayHtml(field, newValue);
             
             // Hide input, show display
             displaySpan.classList.remove('d-none');
@@ -19135,9 +19154,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             // Only track if value changed
             if (newValue !== oldValue) {
-                // Track the pending edit
+                // Track the pending edit for the Save Changes button summary
                 if (!pendingUserEdits[userIndex]) {
-                    pendingUserEdits[userIndex] = {};
+                    pendingUserEdits[userIndex] = { originalValues: {} };
+                }
+                if (!pendingUserEdits[userIndex].originalValues[field]) {
+                    pendingUserEdits[userIndex].originalValues[field] = oldValue;
                 }
                 pendingUserEdits[userIndex][field] = newValue;
                 
@@ -19168,7 +19190,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const inputField = document.getElementById(`${field}-input-${userIndex}`);
             const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
             
-            if (!inputField || !displaySpan || !users[userIndex]) return;
+            if (!inputField || !displaySpan) {
+                console.warn(`Inline edit elements not found for user ${userIndex}, field ${field}`);
+                return;
+            }
+            
+            if (!users[userIndex]) return;
             
             // Reset input to original value
             inputField.value = users[userIndex][field] || '';
@@ -19196,7 +19223,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
         }
         
-        // Save all pending user changes
+        // Save all pending user changes - confirms and clears the pending edits summary
         function saveAllUserChanges() {
             const editCount = Object.keys(pendingUserEdits).length;
             
@@ -19205,11 +19232,22 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
-            // Data is already saved via saveInlineEdit, this is just confirmation
+            // Build a summary of changes made
+            let changesSummary = [];
+            for (const userIndex in pendingUserEdits) {
+                const userEdits = pendingUserEdits[userIndex];
+                const userName = users[userIndex]?.name || 'Unknown';
+                const fields = Object.keys(userEdits).filter(k => k !== 'originalValues');
+                if (fields.length > 0) {
+                    changesSummary.push(`${userName}: ${fields.join(', ')}`);
+                }
+            }
+            
+            // Data is already persisted via saveInlineEdit - this confirms completion
             saveData();
             
-            // Log activity
-            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Bulk Save', `Saved changes for ${editCount} user(s)`);
+            // Log activity with details
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Changes Confirmed', `Confirmed ${editCount} user edit(s): ${changesSummary.join('; ')}`);
             
             // Clear pending edits
             pendingUserEdits = {};
@@ -19220,7 +19258,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             // Refresh the list
             renderUsersList();
             
-            addNotification(`All changes saved successfully! (${editCount} user(s) updated)`, 'success');
+            addNotification(`All changes confirmed and saved! (${editCount} user(s) updated)`, 'success');
         }
         
         // Delete user
