@@ -2879,7 +2879,7 @@
             <span id="statusIndicator" class="badge bg-success shadow">
                 <i class="fas fa-wifi me-1"></i>Online
             </span>
-            <button id="updateAppBtn" class="btn btn-sm btn-info shadow ms-2" onclick="updateApplicationData()" title="Update application data across all devices">
+            <button id="updateAppBtn" class="btn btn-sm btn-info shadow ms-2" onclick="updateApplicationData()" onkeypress="if(event.key==='Enter')updateApplicationData()" tabindex="0" title="Update application data across all devices" aria-label="Update application data across all devices">
                 <i class="fas fa-sync-alt me-1"></i>Update
             </button>
         </div>
@@ -21246,6 +21246,9 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         window.addEventListener('offline', updateOnlineStatus);
         
         // Update application data across all devices
+        // Constant for update button reset delay
+        const UPDATE_BUTTON_RESET_DELAY = 1000;
+        
         function updateApplicationData() {
             const updateBtn = document.getElementById('updateAppBtn');
             if (updateBtn) {
@@ -21256,7 +21259,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             // Force reload all data from localStorage (simulating sync across devices)
             loadData();
             
-            // Broadcast update to all tabs/windows using BroadcastChannel
+            // Broadcast update to all tabs/windows using BroadcastChannel (if available)
             if (typeof broadcastMessage === 'function') {
                 broadcastMessage('DATA_UPDATE', {
                     timestamp: new Date().toISOString(),
@@ -21268,21 +21271,18 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             const syncTimestamp = Date.now().toString();
             localStorage.setItem('lastSyncTimestamp', syncTimestamp);
             
-            // Re-render current section
+            // Re-render current section based on section ID
             const currentSection = document.querySelector('.section:not(.d-none)');
             if (currentSection) {
                 const sectionId = currentSection.id;
-                if (typeof renderCurrentSection === 'function') {
-                    renderCurrentSection(sectionId);
-                }
-                // Refresh specific sections
-                if (sectionId === 'dashboard') renderDashboard();
-                if (sectionId === 'students') renderStudents();
-                if (sectionId === 'admission') renderAdmissions();
-                if (sectionId === 'fees') renderFees();
-                if (sectionId === 'attendance') renderAttendance();
-                if (sectionId === 'teachers') renderTeacherChat();
-                if (sectionId === 'parentPortal') loadParentPortal();
+                // Refresh specific sections based on current view
+                if (sectionId === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
+                if (sectionId === 'students' && typeof renderStudents === 'function') renderStudents();
+                if (sectionId === 'admission' && typeof renderAdmissions === 'function') renderAdmissions();
+                if (sectionId === 'fees' && typeof renderFees === 'function') renderFees();
+                if (sectionId === 'attendance' && typeof renderAttendance === 'function') renderAttendance();
+                if (sectionId === 'teachers' && typeof renderTeacherChat === 'function') renderTeacherChat();
+                if (sectionId === 'parentPortal' && typeof loadParentPortal === 'function') loadParentPortal();
             }
             
             setTimeout(() => {
@@ -21291,7 +21291,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
                 }
                 addNotification('Application data updated successfully! All devices will sync.', 'success');
-            }, 1000);
+            }, UPDATE_BUTTON_RESET_DELAY);
         }
         
         // Listen for data updates from other tabs/windows
