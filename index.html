@@ -660,6 +660,7 @@
         .parent-only { display: none; }
         .student-only { display: none; }
         .non-student { display: block; }
+        .non-parent { display: block; }
         .dark-mode { filter: brightness(0.8); }
         
         /* Enhanced Login Page */
@@ -2878,6 +2879,9 @@
             <span id="statusIndicator" class="badge bg-success shadow">
                 <i class="fas fa-wifi me-1"></i>Online
             </span>
+            <button id="updateAppBtn" class="btn btn-sm btn-info shadow ms-2" onclick="updateApplicationData()" onkeypress="if(event.key==='Enter')updateApplicationData()" tabindex="0" title="Update application data across all devices" aria-label="Update application data across all devices">
+                <i class="fas fa-sync-alt me-1"></i>Update
+            </button>
         </div>
         <!-- Notification Bell (Desktop) -->
         <div id="notificationBell" class="desktop-only">
@@ -2899,8 +2903,8 @@
                 <li class="hod-only non-student"><a href="#teacherPortalView" class="nav-link" onclick="showSection('teacherPortalView')"><i class="fas fa-eye me-2"></i><span class="nav-text">Teacher Portal View</span></a></li>
                 <li class="hod-only non-student"><a href="#departmentReports" class="nav-link" onclick="showSection('departmentReports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Department Reports</span></a></li>
                 <li class="admin-only non-student"><a href="#admission" class="nav-link" onclick="showSection('admission')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Admission</span></a></li>
-                <li class="non-student"><a href="#students" class="nav-link" onclick="showSection('students')"><i class="fas fa-users me-2"></i><span class="nav-text">Student Info</span></a></li>
-                <li class="non-student"><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
+                <li class="non-student non-parent"><a href="#students" class="nav-link" onclick="showSection('students')"><i class="fas fa-users me-2"></i><span class="nav-text">Student Info</span></a></li>
+                <li class="non-student non-parent"><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
                 <li class="admin-only non-student"><a href="#fees" class="nav-link" onclick="showSection('fees')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">Finance Management</span></a></li>
                 <li class="teacher-only non-student"><a href="#timetable" class="nav-link" onclick="showSection('timetable')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Timetable</span></a></li>
                 <li class="teacher-only non-student"><a href="#teachers" class="nav-link" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher me-2"></i><span class="nav-text">Advanced Teachers</span></a></li>
@@ -2917,6 +2921,7 @@
                 <li class="student-only"><a href="#mathGame" class="nav-link" onclick="showSection('mathGame')"><i class="fas fa-calculator me-2"></i><span class="nav-text">Math Game</span></a></li>
                 <li class="student-only"><a href="#aiResearch" class="nav-link" onclick="showSection('aiResearch')"><i class="fas fa-robot me-2"></i><span class="nav-text">AI Research</span></a></li>
                 <li class="parent-only"><a href="#parentPortal" class="nav-link" onclick="showSection('parentPortal')"><i class="fas fa-home me-2"></i><span class="nav-text">Parent Portal</span></a></li>
+                <li class="parent-only"><a href="#parentPortal" class="nav-link" onclick="showSection('parentPortal'); switchToParentTimetableTab()"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Time Table</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
         </div>
@@ -10149,6 +10154,8 @@
             const role = currentUser.role.toLowerCase();
             // First, show/hide based on non-student class
             document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
+            // Show/hide based on non-parent class (hide Student Info and Attendance for parents)
+            document.querySelectorAll('.non-parent').forEach(el => el.style.display = role !== 'parent' ? 'block' : 'none');
             // Then apply specific role restrictions (these override non-student)
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
             document.querySelectorAll('.hod-only').forEach(el => el.style.display = role === 'hod' ? 'block' : 'none');
@@ -19503,9 +19510,6 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 </div>
             `;
             
-            // Load attendance
-            loadParentAttendanceInfo(studentId);
-            
             // Load fees
             const childFees = fees.filter(f => f.studentId === studentId);
             document.getElementById('parentFees').innerHTML = childFees.length > 0 ? 
@@ -19761,30 +19765,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
         }
         
-        function loadParentAttendanceInfo(studentId) {
-            const studentAttendance = attendance.filter(a => a.studentId === studentId);
-            const totalDays = studentAttendance.length;
-            const presentDays = studentAttendance.filter(a => a.status === 'Present').length;
-            const absentDays = totalDays - presentDays;
-            
-            document.getElementById('parentTotalDays').textContent = totalDays;
-            document.getElementById('parentPresentDays').textContent = presentDays;
-            document.getElementById('parentAbsentDays').textContent = absentDays;
-            
-            const attendanceHtml = studentAttendance.slice(-20).reverse().map(a => {
-                const statusBadge = a.status === 'Present' ? 'bg-success' : 'bg-danger';
-                return `
-                    <tr>
-                        <td>${a.date || 'N/A'}</td>
-                        <td><span class="badge ${statusBadge}">${a.status}</span></td>
-                        <td>${a.remarks || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-            document.getElementById('parentAttendanceTable').innerHTML = attendanceHtml || 
-                '<tr><td colspan="3" class="text-center text-muted">No attendance records</td></tr>';
-        }
+        // Parent attendance info module removed - attendance is no longer shown in parent portal
         
         function sendParentMessage() {
             const message = document.getElementById('parentChatInput').value.trim();
@@ -21263,6 +21244,102 @@ Include relevant examples, explanations, and suggest further areas of study.`;
         // Listen for online/offline events
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
+        
+        // Update application data across all devices
+        // Constant for update button reset delay
+        const UPDATE_BUTTON_RESET_DELAY = 1000;
+        
+        function updateApplicationData() {
+            const updateBtn = document.getElementById('updateAppBtn');
+            if (updateBtn) {
+                updateBtn.disabled = true;
+                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+            }
+            
+            // Force reload all data from localStorage (simulating sync across devices)
+            loadData();
+            
+            // Broadcast update to all tabs/windows using BroadcastChannel (if available)
+            if (typeof broadcastMessage === 'function') {
+                broadcastMessage('DATA_UPDATE', {
+                    timestamp: new Date().toISOString(),
+                    updatedBy: currentUser ? currentUser.name : 'System'
+                });
+            }
+            
+            // Trigger storage event for cross-tab sync
+            const syncTimestamp = Date.now().toString();
+            localStorage.setItem('lastSyncTimestamp', syncTimestamp);
+            
+            // Re-render current section based on section ID
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection) {
+                const sectionId = currentSection.id;
+                // Refresh specific sections based on current view
+                if (sectionId === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
+                if (sectionId === 'students' && typeof renderStudents === 'function') renderStudents();
+                if (sectionId === 'admission' && typeof renderAdmissions === 'function') renderAdmissions();
+                if (sectionId === 'fees' && typeof renderFees === 'function') renderFees();
+                if (sectionId === 'attendance' && typeof renderAttendance === 'function') renderAttendance();
+                if (sectionId === 'teachers' && typeof renderTeacherChat === 'function') renderTeacherChat();
+                if (sectionId === 'parentPortal' && typeof loadParentPortal === 'function') loadParentPortal();
+            }
+            
+            setTimeout(() => {
+                if (updateBtn) {
+                    updateBtn.disabled = false;
+                    updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
+                }
+                addNotification('Application data updated successfully! All devices will sync.', 'success');
+            }, UPDATE_BUTTON_RESET_DELAY);
+        }
+        
+        // Listen for data updates from other tabs/windows
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'lastSyncTimestamp' && event.newValue) {
+                // Reload data when another tab triggers an update
+                loadData();
+                const currentSection = document.querySelector('.section:not(.d-none)');
+                if (currentSection) {
+                    const sectionId = currentSection.id;
+                    if (sectionId === 'dashboard') renderDashboard();
+                    if (sectionId === 'students') renderStudents();
+                    if (sectionId === 'admission') renderAdmissions();
+                    if (sectionId === 'fees') renderFees();
+                    if (sectionId === 'attendance') renderAttendance();
+                    if (sectionId === 'parentPortal') loadParentPortal();
+                }
+                addNotification('Data refreshed from another device', 'info');
+            }
+        });
+        
+        // Switch to parent timetable tab
+        function switchToParentTimetableTab() {
+            setTimeout(() => {
+                // Activate the timetable tab
+                const timetableTab = document.querySelector('a[href="#parent-timetable"]');
+                if (timetableTab) {
+                    // Remove active from all tabs
+                    document.querySelectorAll('#parentTabs .nav-link').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    // Hide all tab panes
+                    document.querySelectorAll('#parentPortal .tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    // Activate timetable tab
+                    timetableTab.classList.add('active');
+                    const timetablePane = document.getElementById('parent-timetable');
+                    if (timetablePane) {
+                        timetablePane.classList.add('show', 'active');
+                    }
+                    // Load timetable data
+                    if (typeof loadParentChildTimetable === 'function') {
+                        loadParentChildTimetable();
+                    }
+                }
+            }, 100);
+        }
         
         // ========================================
         // TEACHER CHAT FUNCTIONALITY
