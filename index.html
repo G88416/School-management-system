@@ -21279,7 +21279,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             
             // Broadcast parent chat to all users immediately
             if (typeof broadcastMessage === 'function') {
-                broadcastMessage('parent_chat', {
+                broadcastMessage(BROADCAST_TYPES.PARENT_CHAT, {
                     id: chatMessage.id,
                     message: message,
                     from: currentUser.name
@@ -22696,11 +22696,14 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Initialize BroadcastChannel for real-time messaging
         let schoolBroadcastChannel = null;
         
+        // Generate a unique session ID for this browser tab/window
+        const broadcastSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
         try {
             schoolBroadcastChannel = new BroadcastChannel('school-management-channel');
             console.log('BroadcastChannel initialized for real-time communication');
         } catch (e) {
-            console.log('BroadcastChannel not supported, using localStorage fallback');
+            console.log('BroadcastChannel not supported:', e.message, '- using localStorage fallback');
         }
         
         // Broadcast types for different communication events
@@ -22712,6 +22715,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             ANNOUNCEMENT: 'announcement',
             ADMIN_MESSAGE: 'admin_message',
             TEACHER_CHAT: 'teacher_chat',
+            PARENT_CHAT: 'parent_chat',
             CALL_INCOMING: 'call_incoming',
             CALL_ENDED: 'call_ended'
         };
@@ -22722,6 +22726,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 type: type,
                 data: data,
                 timestamp: Date.now(),
+                sessionId: broadcastSessionId,
                 sender: currentUser ? currentUser.name : 'System',
                 senderRole: currentUser ? currentUser.role : 'system'
             };
@@ -22744,9 +22749,8 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         
         // Handle incoming broadcast messages
         function handleBroadcastMessage(message) {
-            // Don't process our own messages
-            if (message.sender === (currentUser ? currentUser.name : null) && 
-                message.timestamp && (Date.now() - message.timestamp < 1000)) {
+            // Don't process our own messages using session ID (more reliable than name/timestamp)
+            if (message.sessionId === broadcastSessionId) {
                 return;
             }
             
@@ -22793,7 +22797,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     const message = JSON.parse(event.newValue);
                     handleBroadcastMessage(message);
                 } catch (e) {
-                    console.log('Error parsing broadcast message:', e);
+                    console.log('Error parsing broadcast message:', e.message, '- Raw value length:', event.newValue ? event.newValue.length : 0);
                 }
             }
         });
@@ -23188,9 +23192,30 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // AUDIO NOTIFICATION SOUNDS
         // ========================================
         
+        // Shared AudioContext instance for better performance
+        let sharedAudioContext = null;
+        
+        function getAudioContext() {
+            if (!sharedAudioContext) {
+                try {
+                    sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('AudioContext not available:', e.message);
+                }
+            }
+            return sharedAudioContext;
+        }
+        
         function playNotificationSound() {
             try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioContext = getAudioContext();
+                if (!audioContext) return;
+                
+                // Resume context if suspended (required by some browsers)
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
                 
@@ -23205,7 +23230,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
                 oscillator.stop(audioContext.currentTime + 0.2);
             } catch (e) {
-                console.log('Could not play notification sound');
+                console.log('Could not play notification sound:', e.message);
             }
         }
         
@@ -23213,7 +23238,13 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             try {
                 stopCallRingtone(); // Stop any existing ringtone
                 
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioContext = getAudioContext();
+                if (!audioContext) return;
+                
+                // Resume context if suspended
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
                 
                 function playRingTone() {
                     const oscillator = audioContext.createOscillator();
@@ -23240,7 +23271,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 playRingTone();
                 incomingCallRingtone = setInterval(playRingTone, 2000);
             } catch (e) {
-                console.log('Could not play ringtone');
+                console.log('Could not play ringtone:', e.message);
             }
         }
         
