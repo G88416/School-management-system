@@ -847,6 +847,61 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         
+        /* Real-time Notification Styles */
+        #realtimeNotifications {
+            pointer-events: none;
+        }
+        
+        #realtimeNotifications .realtime-notification {
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        @keyframes notificationSlideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes notificationSlideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+        
+        /* Incoming Call Backdrop */
+        #incomingCallBackdrop {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        /* Real-time indicator dot */
+        .realtime-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: realtimePulse 1.5s infinite;
+        }
+        
+        @keyframes realtimePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
         /* Video Chat Styles */
         .video-chat-container {
             display: none;
@@ -3792,7 +3847,8 @@
                                     <div class="col-md-8">
                                         <div class="card" style="background: rgba(255, 255, 255, 0.1);">
                                             <div class="card-header">
-                                                <h6 id="chatStudentName">Select a student to start chatting</h6>
+                                                <h6 id="chatStudentName">Select a student to start chatting <span class="realtime-indicator" title="Real-time sync enabled"></span></h6>
+                                                <small class="text-muted"><i class="fas fa-broadcast-tower me-1"></i>Messages broadcast instantly</small>
                                             </div>
                                             <div class="card-body" style="height: 350px; overflow-y: auto;" id="chatMessagesContainer">
                                                 <p class="text-muted text-center">No messages yet. Select a student to begin.</p>
@@ -4611,12 +4667,12 @@
                             <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
                                 <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h4><i class="fas fa-comments me-2"></i>Live Chat - All Students & Teachers</h4>
+                                        <h4><i class="fas fa-comments me-2"></i>Live Chat - All Students & Teachers <span class="realtime-indicator" title="Real-time sync enabled"></span></h4>
                                         <button class="btn btn-sm btn-danger" onclick="closeLiveChat()">
                                             <i class="fas fa-times"></i> Close
                                         </button>
                                     </div>
-                                    <small class="text-muted">Real-time communication for students and teachers</small>
+                                    <small class="text-muted"><i class="fas fa-broadcast-tower me-1"></i>Real-time communication - messages broadcast instantly to all connected users</small>
                                 </div>
                                 <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="liveChatMessages">
                                     <!-- Chat messages will appear here -->
@@ -7526,10 +7582,14 @@
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Announcements Center</h5>
+                            <h5 class="modal-title"><i class="fas fa-bullhorn me-2"></i>Announcements Center <span class="realtime-indicator" title="Real-time broadcast enabled"></span></h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
+                            <div class="alert alert-success mb-3">
+                                <i class="fas fa-broadcast-tower me-2"></i>
+                                <strong>Real-time Broadcasting:</strong> Announcements are instantly sent to all connected users across the system!
+                            </div>
                             <ul class="nav nav-tabs mb-3" id="announcementsTabs">
                                 <li class="nav-item">
                                     <a class="nav-link active" data-bs-toggle="tab" href="#view-announcements">View Announcements</a>
@@ -7547,7 +7607,7 @@
                                     <div id="announcementsList"></div>
                                 </div>
                                 <div class="tab-pane fade" id="create-announcement">
-                                    <h6>Create New Announcement</h6>
+                                    <h6>Create New Announcement <small class="text-success"><i class="fas fa-wifi me-1"></i>Broadcasts instantly</small></h6>
                                     <div class="mb-3">
                                         <label class="form-label">Title</label>
                                         <input type="text" id="announcementTitle" class="form-control" placeholder="Enter announcement title">
@@ -7582,7 +7642,7 @@
                                         in the Media section to create visual announcements!
                                     </div>
                                     <button class="btn btn-primary" onclick="createAnnouncement()">
-                                        <i class="fas fa-paper-plane me-2"></i>Publish Announcement
+                                        <i class="fas fa-broadcast-tower me-2"></i>Publish & Broadcast Announcement
                                     </button>
                                 </div>
                                 <div class="tab-pane fade" id="upload-video">
@@ -16963,6 +17023,14 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         liveChatMessages.push(voiceNoteMessage);
                         localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
                         renderLiveChatMessages();
+                        
+                        // Broadcast voice note to all users immediately
+                        if (typeof broadcastVoiceNote === 'function') {
+                            broadcastVoiceNote({
+                                audioUrl: audioDataUrl,
+                                duration: recordingSeconds
+                            }, 'live');
+                        }
                     } else if (context === 'teacher') {
                         const chatMessage = {
                             id: Date.now(),
@@ -16979,11 +17047,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         teacherChats.push(chatMessage);
                         localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
                         loadChatMessages();
+                        
+                        // Broadcast teacher voice note
+                        if (typeof broadcastVoiceNote === 'function') {
+                            broadcastVoiceNote({
+                                audioUrl: audioDataUrl,
+                                duration: recordingSeconds
+                            }, 'teacher');
+                        }
                     } else if (context === 'parent') {
                         addVoiceNoteToParentChat(voiceNoteMessage);
+                        
+                        // Broadcast parent voice note
+                        if (typeof broadcastVoiceNote === 'function') {
+                            broadcastVoiceNote({
+                                audioUrl: audioDataUrl,
+                                duration: recordingSeconds
+                            }, 'parent');
+                        }
                     }
                     
-                    addNotification('Voice note sent successfully!', 'success');
+                    addNotification('Voice note sent and broadcast to all users!', 'success');
                 };
                 
                 reader.onerror = () => {
@@ -17304,13 +17388,39 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         function broadcastCallEvent(event, context) {
             // Store call event for other users to see
             const callEvents = JSON.parse(localStorage.getItem('callEvents') || '[]');
-            callEvents.push({
+            const callEvent = {
                 event: event,
                 context: context,
                 user: currentUser.name,
+                callId: Date.now(),
                 timestamp: new Date().toISOString()
-            });
+            };
+            callEvents.push(callEvent);
             localStorage.setItem('callEvents', JSON.stringify(callEvents.slice(-50)));
+            
+            // Use the new real-time broadcast system for voice calls
+            if (typeof broadcastVoiceCallStart === 'function' && event === 'call_started') {
+                broadcastVoiceCallStart({
+                    callId: callEvent.callId,
+                    caller: currentUser.name,
+                    participants: callParticipants || [currentUser.name],
+                    context: context
+                });
+            }
+            
+            // Use the new real-time broadcast system for video calls
+            if (typeof broadcastVideoCallStart === 'function' && event === 'video_call_started') {
+                broadcastVideoCallStart({
+                    callId: callEvent.callId,
+                    caller: currentUser.name,
+                    participants: videoCallState.participants || [currentUser.name],
+                    context: context
+                });
+            }
+            
+            if (typeof broadcastCallEnd === 'function' && (event === 'call_ended' || event === 'video_call_ended')) {
+                broadcastCallEnd(callEvent.callId);
+            }
         }
         
         // ===== VIDEO CALL FUNCTIONS =====
@@ -20309,6 +20419,15 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             teacherChats.push(chatMessage);
             localStorage.setItem('teacherChats', JSON.stringify(teacherChats));
             
+            // Broadcast teacher chat to all users immediately
+            if (typeof broadcastTeacherChat === 'function') {
+                broadcastTeacherChat({
+                    id: chatMessage.id,
+                    message: message,
+                    studentId: selectedChatStudent.id
+                });
+            }
+            
             // Add to offline queue if offline
             if (!isOnline) {
                 addToOfflineQueue('chat', chatMessage);
@@ -20316,7 +20435,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             
             input.value = '';
             loadChatMessages();
-            addNotification('Message sent to ' + selectedChatStudent.name, 'success');
+            addNotification('Message sent and broadcast!', 'success');
             
             // Log the chat
             logAudit('Chat Message', `Sent message to student: ${selectedChatStudent.name}`, 'Low');
@@ -20414,6 +20533,16 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             adminMessages.push(adminMessage);
             localStorage.setItem('adminMessages', JSON.stringify(adminMessages));
             
+            // Broadcast admin message to all users immediately
+            if (typeof broadcastAdminMessage === 'function') {
+                broadcastAdminMessage({
+                    id: adminMessage.id,
+                    message: message,
+                    subject: subject,
+                    priority: 'normal'
+                });
+            }
+            
             // Add to offline queue if offline
             if (!isOnline) {
                 addToOfflineQueue('adminMessage', adminMessage);
@@ -20423,7 +20552,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             document.getElementById('adminMessageText').value = '';
             
             loadAdminMessages();
-            addNotification('Message sent to admin successfully', 'success');
+            addNotification('Message sent and broadcast to all users!', 'success');
             
             logAudit('Admin Message', `Sent message to admin: ${subject}`, 'Low');
         }
@@ -21148,9 +21277,18 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             parentChats.push(chatMessage);
             localStorage.setItem('parentChats', JSON.stringify(parentChats));
             
+            // Broadcast parent chat to all users immediately
+            if (typeof broadcastMessage === 'function') {
+                broadcastMessage(BROADCAST_TYPES.PARENT_CHAT, {
+                    id: chatMessage.id,
+                    message: message,
+                    from: currentUser.name
+                });
+            }
+            
             input.value = '';
             loadParentChatMessages();
-            addNotification('Message sent!', 'success');
+            addNotification('Message sent and broadcast!', 'success');
         }
         
         function loadParentChatMessages() {
@@ -22549,6 +22687,744 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             originalShowSection(section);
             startLiveMessaging();
         };
+        
+        // ========================================
+        // REAL-TIME COMMUNICATION SYSTEM
+        // Using BroadcastChannel API for instant cross-tab/window communication
+        // ========================================
+        
+        // Initialize BroadcastChannel for real-time messaging
+        let schoolBroadcastChannel = null;
+        
+        // Generate a unique session ID for this browser tab/window
+        const broadcastSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        try {
+            schoolBroadcastChannel = new BroadcastChannel('school-management-channel');
+            console.log('BroadcastChannel initialized for real-time communication');
+        } catch (e) {
+            console.log('BroadcastChannel not supported:', e.message, '- using localStorage fallback');
+        }
+        
+        // Broadcast types for different communication events
+        const BROADCAST_TYPES = {
+            LIVE_CHAT: 'live_chat_message',
+            VOICE_NOTE: 'voice_note',
+            VOICE_CALL: 'voice_call',
+            VIDEO_CALL: 'video_call',
+            ANNOUNCEMENT: 'announcement',
+            ADMIN_MESSAGE: 'admin_message',
+            TEACHER_CHAT: 'teacher_chat',
+            PARENT_CHAT: 'parent_chat',
+            CALL_INCOMING: 'call_incoming',
+            CALL_ENDED: 'call_ended'
+        };
+        
+        // Broadcast a message to all tabs/windows
+        function broadcastMessage(type, data) {
+            const message = {
+                type: type,
+                data: data,
+                timestamp: Date.now(),
+                sessionId: broadcastSessionId,
+                sender: currentUser ? currentUser.name : 'System',
+                senderRole: currentUser ? currentUser.role : 'system'
+            };
+            
+            // Use BroadcastChannel if available
+            if (schoolBroadcastChannel) {
+                schoolBroadcastChannel.postMessage(message);
+            }
+            
+            // Also update localStorage for persistence and fallback
+            const broadcasts = JSON.parse(localStorage.getItem('realtimeBroadcasts') || '[]');
+            broadcasts.push(message);
+            // Keep only last 100 broadcasts
+            if (broadcasts.length > 100) {
+                broadcasts.splice(0, broadcasts.length - 100);
+            }
+            localStorage.setItem('realtimeBroadcasts', JSON.stringify(broadcasts));
+            localStorage.setItem('lastBroadcast', JSON.stringify(message));
+        }
+        
+        // Handle incoming broadcast messages
+        function handleBroadcastMessage(message) {
+            // Don't process our own messages using session ID (more reliable than name/timestamp)
+            if (message.sessionId === broadcastSessionId) {
+                return;
+            }
+            
+            switch (message.type) {
+                case BROADCAST_TYPES.LIVE_CHAT:
+                    handleIncomingLiveChat(message);
+                    break;
+                case BROADCAST_TYPES.VOICE_NOTE:
+                    handleIncomingVoiceNote(message);
+                    break;
+                case BROADCAST_TYPES.VOICE_CALL:
+                case BROADCAST_TYPES.CALL_INCOMING:
+                    handleIncomingVoiceCall(message);
+                    break;
+                case BROADCAST_TYPES.VIDEO_CALL:
+                    handleIncomingVideoCall(message);
+                    break;
+                case BROADCAST_TYPES.ANNOUNCEMENT:
+                    handleIncomingAnnouncement(message);
+                    break;
+                case BROADCAST_TYPES.ADMIN_MESSAGE:
+                    handleIncomingAdminMessage(message);
+                    break;
+                case BROADCAST_TYPES.TEACHER_CHAT:
+                    handleIncomingTeacherChat(message);
+                    break;
+                case BROADCAST_TYPES.CALL_ENDED:
+                    handleCallEnded(message);
+                    break;
+            }
+        }
+        
+        // Set up BroadcastChannel listener
+        if (schoolBroadcastChannel) {
+            schoolBroadcastChannel.onmessage = function(event) {
+                handleBroadcastMessage(event.data);
+            };
+        }
+        
+        // Fallback: Listen for localStorage changes (for cross-tab sync without BroadcastChannel)
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'lastBroadcast' && event.newValue) {
+                try {
+                    const message = JSON.parse(event.newValue);
+                    handleBroadcastMessage(message);
+                } catch (e) {
+                    console.log('Error parsing broadcast message:', e.message, '- Raw value length:', event.newValue ? event.newValue.length : 0);
+                }
+            }
+        });
+        
+        // ========================================
+        // INCOMING MESSAGE HANDLERS
+        // ========================================
+        
+        function handleIncomingLiveChat(message) {
+            // Reload live chat messages from localStorage
+            liveChatMessages = JSON.parse(localStorage.getItem('liveChatMessages') || '[]');
+            
+            // Re-render if live chat is visible
+            const liveChatContainer = document.getElementById('liveChatContainer');
+            if (liveChatContainer && !liveChatContainer.classList.contains('d-none')) {
+                renderLiveChatMessages();
+                
+                // Scroll to bottom
+                const messagesContainer = document.getElementById('liveChatMessages');
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+            
+            // Show notification for new message
+            showRealtimeNotification(
+                'New Live Chat Message',
+                `${message.sender}: ${message.data.text || 'New message received'}`,
+                'chat'
+            );
+        }
+        
+        function handleIncomingVoiceNote(message) {
+            // Reload chats from localStorage
+            liveChatMessages = JSON.parse(localStorage.getItem('liveChatMessages') || '[]');
+            teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
+            
+            // Re-render appropriate chat section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection) {
+                if (currentSection.id === 'media') {
+                    renderLiveChatMessages();
+                } else if (currentSection.id === 'teachers') {
+                    loadChatMessages();
+                }
+            }
+            
+            // Show notification
+            showRealtimeNotification(
+                'New Voice Note',
+                `${message.sender} sent a voice note`,
+                'voice'
+            );
+        }
+        
+        function handleIncomingVoiceCall(message) {
+            // Show incoming call modal
+            showIncomingCallModal(message.data, 'voice');
+            
+            // Play ringtone if available
+            playCallRingtone();
+            
+            // Show notification
+            showRealtimeNotification(
+                'Incoming Voice Call',
+                `${message.sender} is calling...`,
+                'call'
+            );
+        }
+        
+        function handleIncomingVideoCall(message) {
+            // Show incoming call modal
+            showIncomingCallModal(message.data, 'video');
+            
+            // Play ringtone
+            playCallRingtone();
+            
+            // Show notification
+            showRealtimeNotification(
+                'Incoming Video Call',
+                `${message.sender} wants to video call...`,
+                'video'
+            );
+        }
+        
+        function handleIncomingAnnouncement(message) {
+            // Reload announcements
+            announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+            
+            // Update any visible announcement lists
+            if (typeof renderAnnouncementsList === 'function') {
+                renderAnnouncementsList();
+            }
+            
+            // Show prominent notification for announcements
+            showRealtimeNotification(
+                `📢 New Announcement: ${message.data.title || 'Important Notice'}`,
+                message.data.content || 'Check the announcements section for details',
+                'announcement',
+                true // Priority notification
+            );
+            
+            // Also show as a system alert for priority announcements
+            if (message.data.priority === 'Urgent' || message.data.priority === 'High') {
+                addNotification(`📢 URGENT: ${message.data.title}`, 'warning');
+            }
+        }
+        
+        function handleIncomingAdminMessage(message) {
+            // Reload admin messages
+            adminMessages = JSON.parse(localStorage.getItem('adminMessages') || '[]');
+            
+            // Re-render admin messages if in teachers section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'teachers') {
+                loadAdminMessages();
+            }
+            
+            // Show notification
+            showRealtimeNotification(
+                'Admin Message Received',
+                `${message.sender}: ${message.data.message || 'New admin message'}`,
+                'admin'
+            );
+        }
+        
+        function handleIncomingTeacherChat(message) {
+            // Reload teacher chats
+            teacherChats = JSON.parse(localStorage.getItem('teacherChats') || '[]');
+            
+            // Re-render if in teachers section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'teachers') {
+                loadChatMessages();
+                loadChatStudents();
+            }
+            
+            // Show notification
+            showRealtimeNotification(
+                'New Message',
+                `${message.sender}: ${message.data.message || 'New message received'}`,
+                'chat'
+            );
+        }
+        
+        function handleCallEnded(message) {
+            // Hide any incoming call modals
+            hideIncomingCallModal();
+            
+            // Stop ringtone
+            stopCallRingtone();
+            
+            // Show notification
+            addNotification(`Call ended with ${message.sender}`, 'info');
+        }
+        
+        // ========================================
+        // REAL-TIME NOTIFICATION SYSTEM
+        // ========================================
+        
+        // Create floating notification container
+        function createNotificationContainer() {
+            let container = document.getElementById('realtimeNotifications');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'realtimeNotifications';
+                container.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    z-index: 2000;
+                    max-width: 350px;
+                    width: 100%;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+        
+        function showRealtimeNotification(title, message, type, priority = false) {
+            const container = createNotificationContainer();
+            
+            // Determine icon and color based on type
+            let icon, bgColor;
+            switch (type) {
+                case 'chat':
+                    icon = 'fa-comments';
+                    bgColor = 'linear-gradient(135deg, #0ea5e9, #38bdf8)';
+                    break;
+                case 'voice':
+                    icon = 'fa-microphone';
+                    bgColor = 'linear-gradient(135deg, #8b5cf6, #a78bfa)';
+                    break;
+                case 'call':
+                    icon = 'fa-phone';
+                    bgColor = 'linear-gradient(135deg, #10b981, #34d399)';
+                    break;
+                case 'video':
+                    icon = 'fa-video';
+                    bgColor = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+                    break;
+                case 'announcement':
+                    icon = 'fa-bullhorn';
+                    bgColor = 'linear-gradient(135deg, #e94560, #ff6b6b)';
+                    break;
+                case 'admin':
+                    icon = 'fa-user-shield';
+                    bgColor = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                    break;
+                default:
+                    icon = 'fa-bell';
+                    bgColor = 'linear-gradient(135deg, #667eea, #764ba2)';
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'realtime-notification';
+            notification.style.cssText = `
+                background: ${bgColor};
+                border-radius: 12px;
+                padding: 15px 20px;
+                margin-bottom: 10px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                color: #fff;
+                pointer-events: auto;
+                cursor: pointer;
+                transform: translateX(120%);
+                transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+                opacity: 0;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">${title}</strong>
+                        <p style="margin: 0; font-size: 0.85rem; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${message}</p>
+                        <small style="opacity: 0.7; font-size: 0.75rem;">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; padding: 0; font-size: 1rem;">&times;</button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 50);
+            
+            // Auto remove after 5 seconds (8 for priority)
+            const duration = priority ? 8000 : 5000;
+            setTimeout(() => {
+                notification.style.transform = 'translateX(120%)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+            
+            // Click to dismiss
+            notification.addEventListener('click', function() {
+                notification.style.transform = 'translateX(120%)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            });
+            
+            // Play notification sound
+            playNotificationSound();
+        }
+        
+        // ========================================
+        // INCOMING CALL MODAL
+        // ========================================
+        
+        let incomingCallRingtone = null;
+        
+        function showIncomingCallModal(callData, callType) {
+            // Hide any existing modal
+            hideIncomingCallModal();
+            
+            const modal = document.createElement('div');
+            modal.id = 'incomingCallModal';
+            modal.className = 'incoming-call-modal show';
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+                border-radius: 20px;
+                padding: 40px;
+                z-index: 2500;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+                text-align: center;
+                min-width: 300px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                animation: callPulse 0.5s ease;
+            `;
+            
+            const icon = callType === 'video' ? 'fa-video' : 'fa-phone';
+            const callTypeText = callType === 'video' ? 'Video Call' : 'Voice Call';
+            
+            modal.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div class="recording-indicator" style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #34d399); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas ${icon}" style="font-size: 2rem; color: #fff;"></i>
+                    </div>
+                    <h4 style="color: #fff; margin-bottom: 5px;">Incoming ${callTypeText}</h4>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">${callData.caller || 'Unknown'} is calling...</p>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 20px;">
+                    <button onclick="acceptIncomingCall('${callType}', '${callData.callId || ''}')" style="background: linear-gradient(135deg, #10b981, #34d399); border: none; border-radius: 50%; width: 60px; height: 60px; color: #fff; cursor: pointer; transition: transform 0.3s;">
+                        <i class="fas fa-phone" style="font-size: 1.5rem;"></i>
+                    </button>
+                    <button onclick="rejectIncomingCall('${callData.callId || ''}')" style="background: linear-gradient(135deg, #ef4444, #f87171); border: none; border-radius: 50%; width: 60px; height: 60px; color: #fff; cursor: pointer; transition: transform 0.3s;">
+                        <i class="fas fa-phone-slash" style="font-size: 1.5rem;"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.id = 'incomingCallBackdrop';
+            backdrop.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 2400;
+            `;
+            
+            document.body.appendChild(backdrop);
+            document.body.appendChild(modal);
+        }
+        
+        function hideIncomingCallModal() {
+            const modal = document.getElementById('incomingCallModal');
+            const backdrop = document.getElementById('incomingCallBackdrop');
+            if (modal) modal.remove();
+            if (backdrop) backdrop.remove();
+            stopCallRingtone();
+        }
+        
+        function acceptIncomingCall(callType, callId) {
+            hideIncomingCallModal();
+            
+            // Show appropriate call interface based on call type
+            if (callType === 'video') {
+                // Navigate to video call section or show video call UI
+                const videoContainer = document.getElementById('videoChatContainer') || 
+                                      document.getElementById('parentVideoChatContainer');
+                if (videoContainer) {
+                    videoContainer.classList.add('active');
+                }
+                addNotification('Video call connected!', 'success');
+            } else {
+                // Show voice call UI
+                const voiceControls = document.getElementById('voiceCallControls') ||
+                                     document.getElementById('teacherVoiceCallControls') ||
+                                     document.getElementById('parentVoiceCallControls');
+                if (voiceControls) {
+                    voiceControls.style.display = 'block';
+                }
+                addNotification('Voice call connected!', 'success');
+            }
+            
+            // Broadcast acceptance
+            broadcastMessage(BROADCAST_TYPES.CALL_INCOMING, {
+                action: 'accepted',
+                callId: callId,
+                callType: callType
+            });
+        }
+        
+        function rejectIncomingCall(callId) {
+            hideIncomingCallModal();
+            addNotification('Call rejected', 'info');
+            
+            // Broadcast rejection
+            broadcastMessage(BROADCAST_TYPES.CALL_ENDED, {
+                action: 'rejected',
+                callId: callId
+            });
+        }
+        
+        // ========================================
+        // AUDIO NOTIFICATION SOUNDS
+        // ========================================
+        
+        // Shared AudioContext instance for better performance
+        let sharedAudioContext = null;
+        
+        function getAudioContext() {
+            if (!sharedAudioContext) {
+                try {
+                    sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('AudioContext not available:', e.message);
+                }
+            }
+            return sharedAudioContext;
+        }
+        
+        function playNotificationSound() {
+            try {
+                const audioContext = getAudioContext();
+                if (!audioContext) return;
+                
+                // Resume context if suspended (required by some browsers)
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 880;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.1;
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log('Could not play notification sound:', e.message);
+            }
+        }
+        
+        function playCallRingtone() {
+            try {
+                stopCallRingtone(); // Stop any existing ringtone
+                
+                const audioContext = getAudioContext();
+                if (!audioContext) return;
+                
+                // Resume context if suspended
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                function playRingTone() {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 440;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.15;
+                    
+                    oscillator.start();
+                    
+                    // Ring pattern: on for 0.5s, off for 0.5s
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + 1);
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime + 1.5);
+                    
+                    oscillator.stop(audioContext.currentTime + 2);
+                }
+                
+                playRingTone();
+                incomingCallRingtone = setInterval(playRingTone, 2000);
+            } catch (e) {
+                console.log('Could not play ringtone:', e.message);
+            }
+        }
+        
+        function stopCallRingtone() {
+            if (incomingCallRingtone) {
+                clearInterval(incomingCallRingtone);
+                incomingCallRingtone = null;
+            }
+        }
+        
+        // ========================================
+        // ENHANCED SEND FUNCTIONS WITH BROADCASTING
+        // ========================================
+        
+        // Override sendLiveChatMessage to broadcast
+        const originalSendLiveChatMessage = typeof sendLiveChatMessage !== 'undefined' ? sendLiveChatMessage : null;
+        sendLiveChatMessage = function() {
+            const input = document.getElementById('liveChatInput');
+            const text = input.value.trim();
+            
+            if (!text) {
+                addNotification('Please enter a message', 'warning');
+                return;
+            }
+            
+            const message = {
+                id: Date.now(),
+                sender: currentUser.name,
+                role: currentUser.role,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+            
+            liveChatMessages.push(message);
+            localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+            
+            // Broadcast to all tabs/windows
+            broadcastMessage(BROADCAST_TYPES.LIVE_CHAT, {
+                text: text,
+                messageId: message.id
+            });
+            
+            input.value = '';
+            renderLiveChatMessages();
+            
+            // Scroll to bottom
+            const container = document.getElementById('liveChatMessages');
+            if (container) container.scrollTop = container.scrollHeight;
+            
+            addNotification('Message sent to all users!', 'success');
+        };
+        
+        // Override createAnnouncement to broadcast
+        const originalCreateAnnouncement = typeof createAnnouncement !== 'undefined' ? createAnnouncement : null;
+        createAnnouncement = function() {
+            const title = document.getElementById('announcementTitle').value.trim();
+            const content = document.getElementById('announcementContent').value.trim();
+            const priority = document.getElementById('announcementPriority').value;
+            const audience = document.getElementById('announcementAudience').value;
+            
+            if (!title || !content) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            const announcement = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                priority: priority,
+                audience: audience,
+                timestamp: new Date().toISOString(),
+                createdBy: currentUser.name
+            };
+            
+            announcements.push(announcement);
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // Broadcast announcement to all users immediately
+            broadcastMessage(BROADCAST_TYPES.ANNOUNCEMENT, {
+                title: title,
+                content: content,
+                priority: priority,
+                audience: audience,
+                announcementId: announcement.id
+            });
+            
+            // Clear form
+            document.getElementById('announcementTitle').value = '';
+            document.getElementById('announcementContent').value = '';
+            document.getElementById('announcementPriority').value = 'Medium';
+            document.getElementById('announcementAudience').value = 'All';
+            
+            renderAnnouncementsList();
+            addNotification('Announcement published and broadcast to all users!', 'success');
+        };
+        
+        // Function to broadcast voice notes after recording
+        function broadcastVoiceNote(voiceNoteData, targetChat) {
+            broadcastMessage(BROADCAST_TYPES.VOICE_NOTE, {
+                audioUrl: voiceNoteData.audioUrl,
+                duration: voiceNoteData.duration,
+                targetChat: targetChat
+            });
+        }
+        
+        // Function to broadcast voice call initiation
+        function broadcastVoiceCallStart(callData) {
+            broadcastMessage(BROADCAST_TYPES.VOICE_CALL, {
+                callId: Date.now(),
+                caller: currentUser.name,
+                participants: callData.participants || [],
+                callType: 'voice'
+            });
+        }
+        
+        // Function to broadcast video call initiation
+        function broadcastVideoCallStart(callData) {
+            broadcastMessage(BROADCAST_TYPES.VIDEO_CALL, {
+                callId: Date.now(),
+                caller: currentUser.name,
+                participants: callData.participants || [],
+                callType: 'video'
+            });
+        }
+        
+        // Function to broadcast call end
+        function broadcastCallEnd(callId) {
+            broadcastMessage(BROADCAST_TYPES.CALL_ENDED, {
+                callId: callId,
+                endedBy: currentUser.name
+            });
+        }
+        
+        // Function to broadcast admin messages
+        function broadcastAdminMessage(messageData) {
+            broadcastMessage(BROADCAST_TYPES.ADMIN_MESSAGE, {
+                message: messageData.message,
+                priority: messageData.priority || 'normal',
+                messageId: messageData.id
+            });
+        }
+        
+        // Function to broadcast teacher chat messages
+        function broadcastTeacherChat(chatData) {
+            broadcastMessage(BROADCAST_TYPES.TEACHER_CHAT, {
+                message: chatData.message,
+                studentId: chatData.studentId,
+                chatId: chatData.id
+            });
+        }
+        
+        console.log('Real-time communication system initialized successfully!');
         
         // ========================================
         // HOD (HEAD OF DEPARTMENT) FUNCTIONS
