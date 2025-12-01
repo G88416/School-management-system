@@ -1136,6 +1136,47 @@
             100% { transform: scale(1); }
         }
         
+        /* User Management Styles */
+        #user-management .card-metric {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #user-management .card-metric:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        #usersTableBody tr {
+            transition: all 0.2s ease;
+        }
+        #usersTableBody tr:hover {
+            background: rgba(233, 69, 96, 0.15) !important;
+        }
+        #usersTableBody code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        #user-management .input-group-text {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+        }
+        #settingsTabs .nav-link {
+            border-radius: 8px 8px 0 0;
+        }
+        #settingsTabs .nav-link.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+        }
+        .modal-content code {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        
         /* Enhanced Teachers Module Styles */
         #teachers .nav-tabs {
             border-bottom: 2px solid rgba(255, 255, 255, 0.3);
@@ -6233,205 +6274,601 @@
             
             <section id="settings" class="section d-none admin-only">
                 <h2>Settings</h2>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>SMS Integration (WinSMS)</h5>
-                        <div class="mb-3">
-                            <label>Username</label>
-                            <input type="text" id="smsUsername" class="form-control" placeholder="WinSMS Username">
+                
+                <!-- Settings Navigation Tabs -->
+                <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="general-settings-tab" data-bs-toggle="tab" data-bs-target="#general-settings" type="button" role="tab" aria-controls="general-settings" aria-selected="true">
+                            <i class="fas fa-cog me-2"></i>General
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="user-management-tab" data-bs-toggle="tab" data-bs-target="#user-management" type="button" role="tab" aria-controls="user-management" aria-selected="false">
+                            <i class="fas fa-users-cog me-2"></i>User Management
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="theme-settings-tab" data-bs-toggle="tab" data-bs-target="#theme-settings" type="button" role="tab" aria-controls="theme-settings" aria-selected="false">
+                            <i class="fas fa-palette me-2"></i>Themes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="data-vault-tab" data-bs-toggle="tab" data-bs-target="#data-vault-settings" type="button" role="tab" aria-controls="data-vault-settings" aria-selected="false">
+                            <i class="fas fa-database me-2"></i>Data Vault
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Settings Tab Content -->
+                <div class="tab-content" id="settingsTabContent">
+                    <!-- General Settings Tab -->
+                    <div class="tab-pane fade show active" id="general-settings" role="tabpanel" aria-labelledby="general-settings-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>SMS Integration (WinSMS)</h5>
+                                <div class="mb-3">
+                                    <label>Username</label>
+                                    <input type="text" id="smsUsername" class="form-control" placeholder="WinSMS Username">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Password</label>
+                                    <input type="password" id="smsPassword" class="form-control" placeholder="WinSMS Password">
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSMSSettings()">Save SMS Settings</button>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>HR Settings</h5>
+                                <div class="mb-3">
+                                    <label>Annual Leave Days</label>
+                                    <input type="number" id="annualLeaveDays" class="form-control" value="21">
+                                </div>
+                                <div class="mb-3">
+                                    <label>UIF Rate (%)</label>
+                                    <input type="number" id="uifRate" class="form-control" value="1" step="0.1">
+                                </div>
+                                <button class="btn btn-primary" onclick="updateHRSettings()">Update HR Settings</button>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label>Password</label>
-                            <input type="password" id="smsPassword" class="form-control" placeholder="WinSMS Password">
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5>AI Integration (ChatGPT-4 API)</h5>
+                                <div class="mb-3">
+                                    <label>API Key</label>
+                                    <input type="password" id="chatGPTApiKey" class="form-control" placeholder="Enter ChatGPT-4 API Key">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Model</label>
+                                    <select id="chatGPTModel" class="form-control">
+                                        <option value="gpt-4">GPT-4</option>
+                                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save ChatGPT Settings</button>
+                                <button class="btn btn-secondary ms-2" onclick="configureChatGPTAPI()">Configure</button>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>AI Integration (Grok API)</h5>
+                                <div class="mb-3">
+                                    <label>API Key</label>
+                                    <input type="password" id="grokApiKey" class="form-control" placeholder="Enter Grok API Key">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Model</label>
+                                    <select id="grokModel" class="form-control">
+                                        <option value="grok-beta">Grok Beta</option>
+                                        <option value="grok-1">Grok-1</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveGrokSettings()">Save Grok Settings</button>
+                                <button class="btn btn-secondary ms-2" onclick="configureGrokAPI()">Configure</button>
+                            </div>
                         </div>
-                        <button class="btn btn-primary" onclick="saveSMSSettings()">Save SMS Settings</button>
+                        <div class="mt-4">
+                            <button class="btn btn-secondary" onclick="backupData()">Backup Data</button>
+                            <button class="btn btn-warning ms-2" onclick="restoreData()">Restore Data</button>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <h5>HR Settings</h5>
-                        <div class="mb-3">
-                            <label>Annual Leave Days</label>
-                            <input type="number" id="annualLeaveDays" class="form-control" value="21">
+                    
+                    <!-- User Management Tab -->
+                    <div class="tab-pane fade" id="user-management" role="tabpanel" aria-labelledby="user-management-tab">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>User Management</h5>
+                                    <button class="btn btn-primary" onclick="showCreateUserModal()">
+                                        <i class="fas fa-user-plus me-2"></i>Create New User
+                                    </button>
+                                </div>
+                                <p class="text-muted mt-2">Create and manage user accounts for Parents, Students, Teachers, and HODs. View all users and their credentials.</p>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label>UIF Rate (%)</label>
-                            <input type="number" id="uifRate" class="form-control" value="1" step="0.1">
-                        </div>
-                        <button class="btn btn-primary" onclick="updateHRSettings()">Update HR Settings</button>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <h5>AI Integration (ChatGPT-4 API)</h5>
-                        <div class="mb-3">
-                            <label>API Key</label>
-                            <input type="password" id="chatGPTApiKey" class="form-control" placeholder="Enter ChatGPT-4 API Key">
-                        </div>
-                        <div class="mb-3">
-                            <label>Model</label>
-                            <select id="chatGPTModel" class="form-control">
-                                <option value="gpt-4">GPT-4</option>
-                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save ChatGPT Settings</button>
-                        <button class="btn btn-secondary ms-2" onclick="configureChatGPTAPI()">Configure</button>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>AI Integration (Grok API)</h5>
-                        <div class="mb-3">
-                            <label>API Key</label>
-                            <input type="password" id="grokApiKey" class="form-control" placeholder="Enter Grok API Key">
-                        </div>
-                        <div class="mb-3">
-                            <label>Model</label>
-                            <select id="grokModel" class="form-control">
-                                <option value="grok-beta">Grok Beta</option>
-                                <option value="grok-1">Grok-1</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" onclick="saveGrokSettings()">Save Grok Settings</button>
-                        <button class="btn btn-secondary ms-2" onclick="configureGrokAPI()">Configure</button>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <h5>Enhanced Theme Generator</h5>
-                        <p>Choose from 12 professional color themes to customize the appearance of the application.</p>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="d-flex flex-wrap gap-3" id="themeSelector">
-                                    <!-- Theme 1: Default Purple -->
-                                    <div class="theme-option" onclick="applyTheme('default')" data-theme="default">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Default Purple</div>
-                                    </div>
-                                    
-                                    <!-- Theme 2: Ocean Blue -->
-                                    <div class="theme-option" onclick="applyTheme('ocean')" data-theme="ocean">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Ocean Blue</div>
-                                    </div>
-                                    
-                                    <!-- Theme 3: Forest Green -->
-                                    <div class="theme-option" onclick="applyTheme('forest')" data-theme="forest">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Forest Green</div>
-                                    </div>
-                                    
-                                    <!-- Theme 4: Sunset Orange -->
-                                    <div class="theme-option" onclick="applyTheme('sunset')" data-theme="sunset">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #f46b45 0%, #eea849 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Sunset Orange</div>
-                                    </div>
-                                    
-                                    <!-- Theme 5: Midnight Dark -->
-                                    <div class="theme-option" onclick="applyTheme('midnight')" data-theme="midnight">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #232526 0%, #414345 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Midnight Dark</div>
-                                    </div>
-                                    
-                                    <!-- Theme 6: Rose Pink -->
-                                    <div class="theme-option" onclick="applyTheme('rose')" data-theme="rose">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Rose Pink</div>
-                                    </div>
-                                    
-                                    <!-- Theme 7: Emerald -->
-                                    <div class="theme-option" onclick="applyTheme('emerald')" data-theme="emerald">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Emerald</div>
-                                    </div>
-                                    
-                                    <!-- Theme 8: Crimson Red -->
-                                    <div class="theme-option" onclick="applyTheme('crimson')" data-theme="crimson">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Crimson Red</div>
-                                    </div>
-                                    
-                                    <!-- Theme 9: Royal Gold -->
-                                    <div class="theme-option" onclick="applyTheme('royal')" data-theme="royal">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #141e30 0%, #243b55 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Royal Gold</div>
-                                    </div>
-                                    
-                                    <!-- Theme 10: Cosmic Purple -->
-                                    <div class="theme-option" onclick="applyTheme('cosmic')" data-theme="cosmic">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Cosmic Purple</div>
-                                    </div>
-                                    
-                                    <!-- Theme 11: Aqua Marine -->
-                                    <div class="theme-option" onclick="applyTheme('aqua')" data-theme="aqua">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Aqua Marine</div>
-                                    </div>
-                                    
-                                    <!-- Theme 12: Autumn Leaves -->
-                                    <div class="theme-option" onclick="applyTheme('autumn')" data-theme="autumn">
-                                        <div class="theme-preview" style="background: linear-gradient(135deg, #DAD299 0%, #B0DAB9 100%);">
-                                            <i class="fas fa-check theme-check d-none"></i>
-                                        </div>
-                                        <div class="theme-name">Autumn Leaves</div>
-                                    </div>
+                        
+                        <!-- User Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-users me-2" style="color: #0ea5e9;"></i>Total Users</h5>
+                                    <h3 id="totalUsersCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-chalkboard-teacher me-2" style="color: #10b981;"></i>Teachers</h5>
+                                    <h3 id="teacherUsersCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-user-graduate me-2" style="color: #f59e0b;"></i>Students</h5>
+                                    <h3 id="studentUsersCount">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <h5><i class="fas fa-user-friends me-2" style="color: #8b5cf6;"></i>Parents</h5>
+                                    <h3 id="parentUsersCount">0</h3>
                                 </div>
                             </div>
                         </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Your selected theme will be saved automatically and persist across sessions. Choose from 12 beautiful themes!
+                        
+                        <!-- Search and Filter -->
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" id="userSearchInput" class="form-control" placeholder="Search users by name, username, or email..." oninput="renderUsersList()">
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select id="userRoleFilter" class="form-select" onchange="renderUsersList()">
+                                    <option value="">All Roles</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="HOD">HOD</option>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Student">Student</option>
+                                    <option value="Parent">Parent</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-info w-100" onclick="exportUsersList()">
+                                    <i class="fas fa-download me-2"></i>Export Users
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button class="btn btn-secondary" onclick="backupData()">Backup Data</button>
-                    <button class="btn btn-warning ms-2" onclick="restoreData()">Restore Data</button>
-                </div>
-                <div class="mt-4">
-                    <h5>Data Vault</h5>
-                    <p>The vault stores all reset and archived data for recovery purposes.</p>
-                    <div class="row mb-3">
-                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Items</h5><h3 id="vaultTotalItems">0</h3></div></div>
-                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Attendance Resets</h5><h3 id="vaultAttendanceResets">0</h3></div></div>
-                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Student Resets</h5><h3 id="vaultStudentResets">0</h3></div></div>
-                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Fee Resets</h5><h3 id="vaultFeeResets">0</h3></div></div>
-                    </div>
-                    <button class="btn btn-info mb-3" onclick="showVaultViewer()">View Vault Contents</button>
-                    <button class="btn btn-warning mb-3" onclick="exportVault()">Export Vault</button>
-                    <button class="btn btn-danger mb-3" onclick="clearVault()">Clear Vault</button>
-                    <div id="vaultContent" class="d-none mt-3">
-                        <h6>Vault Contents</h6>
+                        
+                        <!-- Users Table -->
                         <div class="table-responsive">
                             <table class="table table-striped">
-                                <thead><tr><th>Timestamp</th><th>Type</th><th>Description</th><th>Actions</th></tr></thead>
-                                <tbody id="vaultTable"></tbody>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Password</th>
+                                        <th>Role</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Users will be rendered here -->
+                                </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Quick Tips:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Click the <i class="fas fa-eye"></i> button to view/copy passwords</li>
+                                        <li>Use the role filter to quickly find specific user types</li>
+                                        <li>HOD users have Head of Department privileges</li>
+                                        <li>Default password pattern: username + role (e.g., teacher123)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Theme Settings Tab -->
+                    <div class="tab-pane fade" id="theme-settings" role="tabpanel" aria-labelledby="theme-settings-tab">
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h5>Enhanced Theme Generator</h5>
+                                <p>Choose from 12 professional color themes to customize the appearance of the application.</p>
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <div class="d-flex flex-wrap gap-3" id="themeSelector">
+                                            <!-- Theme 1: Default Purple -->
+                                            <div class="theme-option" onclick="applyTheme('default')" data-theme="default">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Default Purple</div>
+                                            </div>
+                                            
+                                            <!-- Theme 2: Ocean Blue -->
+                                            <div class="theme-option" onclick="applyTheme('ocean')" data-theme="ocean">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Ocean Blue</div>
+                                            </div>
+                                            
+                                            <!-- Theme 3: Forest Green -->
+                                            <div class="theme-option" onclick="applyTheme('forest')" data-theme="forest">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Forest Green</div>
+                                            </div>
+                                            
+                                            <!-- Theme 4: Sunset Orange -->
+                                            <div class="theme-option" onclick="applyTheme('sunset')" data-theme="sunset">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #f46b45 0%, #eea849 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Sunset Orange</div>
+                                            </div>
+                                            
+                                            <!-- Theme 5: Midnight Dark -->
+                                            <div class="theme-option" onclick="applyTheme('midnight')" data-theme="midnight">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #232526 0%, #414345 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Midnight Dark</div>
+                                            </div>
+                                            
+                                            <!-- Theme 6: Rose Pink -->
+                                            <div class="theme-option" onclick="applyTheme('rose')" data-theme="rose">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Rose Pink</div>
+                                            </div>
+                                            
+                                            <!-- Theme 7: Emerald -->
+                                            <div class="theme-option" onclick="applyTheme('emerald')" data-theme="emerald">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Emerald</div>
+                                            </div>
+                                            
+                                            <!-- Theme 8: Crimson Red -->
+                                            <div class="theme-option" onclick="applyTheme('crimson')" data-theme="crimson">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Crimson Red</div>
+                                            </div>
+                                            
+                                            <!-- Theme 9: Royal Gold -->
+                                            <div class="theme-option" onclick="applyTheme('royal')" data-theme="royal">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #141e30 0%, #243b55 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Royal Gold</div>
+                                            </div>
+                                            
+                                            <!-- Theme 10: Cosmic Purple -->
+                                            <div class="theme-option" onclick="applyTheme('cosmic')" data-theme="cosmic">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Cosmic Purple</div>
+                                            </div>
+                                            
+                                            <!-- Theme 11: Aqua Marine -->
+                                            <div class="theme-option" onclick="applyTheme('aqua')" data-theme="aqua">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #2E3192 0%, #1BFFFF 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Aqua Marine</div>
+                                            </div>
+                                            
+                                            <!-- Theme 12: Autumn Leaves -->
+                                            <div class="theme-option" onclick="applyTheme('autumn')" data-theme="autumn">
+                                                <div class="theme-preview" style="background: linear-gradient(135deg, #DAD299 0%, #B0DAB9 100%);">
+                                                    <i class="fas fa-check theme-check d-none"></i>
+                                                </div>
+                                                <div class="theme-name">Autumn Leaves</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Your selected theme will be saved automatically and persist across sessions. Choose from 12 beautiful themes!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Vault Tab -->
+                    <div class="tab-pane fade" id="data-vault-settings" role="tabpanel" aria-labelledby="data-vault-tab">
+                        <div class="mt-4">
+                            <h5>Data Vault</h5>
+                            <p>The vault stores all reset and archived data for recovery purposes.</p>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Items</h5><h3 id="vaultTotalItems">0</h3></div></div>
+                                <div class="col-md-3"><div class="card card-metric p-3"><h5>Attendance Resets</h5><h3 id="vaultAttendanceResets">0</h3></div></div>
+                                <div class="col-md-3"><div class="card card-metric p-3"><h5>Student Resets</h5><h3 id="vaultStudentResets">0</h3></div></div>
+                                <div class="col-md-3"><div class="card card-metric p-3"><h5>Fee Resets</h5><h3 id="vaultFeeResets">0</h3></div></div>
+                            </div>
+                            <button class="btn btn-info mb-3" onclick="showVaultViewer()">View Vault Contents</button>
+                            <button class="btn btn-warning mb-3" onclick="exportVault()">Export Vault</button>
+                            <button class="btn btn-danger mb-3" onclick="clearVault()">Clear Vault</button>
+                            <div id="vaultContent" class="d-none mt-3">
+                                <h6>Vault Contents</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead><tr><th>Timestamp</th><th>Type</th><th>Description</th><th>Actions</th></tr></thead>
+                                        <tbody id="vaultTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
+            
+            <!-- Create User Modal -->
+            <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createUserModalLabel"><i class="fas fa-user-plus me-2"></i>Create New User</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('createUserModal')"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Full Name *</label>
+                                    <input type="text" id="newUserName" class="form-control" placeholder="Enter full name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Username *</label>
+                                    <input type="text" id="newUserUsername" class="form-control" placeholder="Enter username" required>
+                                    <small class="text-muted">Username for login</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Password *</label>
+                                    <div class="input-group">
+                                        <input type="password" id="newUserPassword" class="form-control" placeholder="Enter password" required>
+                                        <button class="btn btn-secondary" type="button" onclick="togglePasswordVisibility('newUserPassword', this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-info" type="button" onclick="generateRandomPassword()">
+                                            <i class="fas fa-magic"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Click magic wand to generate a password</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Role *</label>
+                                    <select id="newUserRole" class="form-select" required onchange="toggleRoleFields()">
+                                        <option value="">Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="HOD">HOD (Head of Department)</option>
+                                        <option value="Teacher">Teacher</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Parent">Parent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" id="newUserEmail" class="form-control" placeholder="Enter email address">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" id="newUserPhone" class="form-control" placeholder="Enter phone number">
+                                </div>
+                            </div>
+                            
+                            <!-- HOD Specific Fields -->
+                            <div id="hodFields" class="d-none">
+                                <hr>
+                                <h6><i class="fas fa-user-tie me-2"></i>HOD Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Department *</label>
+                                        <select id="newUserDepartment" class="form-select">
+                                            <option value="">Select Department</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Science">Science</option>
+                                            <option value="Languages">Languages</option>
+                                            <option value="Social Sciences">Social Sciences</option>
+                                            <option value="Arts">Arts</option>
+                                            <option value="Sports">Sports</option>
+                                            <option value="Technology">Technology</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Employee ID</label>
+                                        <input type="text" id="newUserEmployeeId" class="form-control" placeholder="Enter employee ID">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Teacher Specific Fields -->
+                            <div id="teacherFields" class="d-none">
+                                <hr>
+                                <h6><i class="fas fa-chalkboard-teacher me-2"></i>Teacher Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Subject Specialization</label>
+                                        <input type="text" id="newUserSubject" class="form-control" placeholder="Enter subject">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Assigned Grades</label>
+                                        <input type="text" id="newUserGrades" class="form-control" placeholder="e.g., Grade 8, Grade 9">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Student Specific Fields -->
+                            <div id="studentFields" class="d-none">
+                                <hr>
+                                <h6><i class="fas fa-user-graduate me-2"></i>Student Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Grade</label>
+                                        <select id="newUserStudentGrade" class="form-select">
+                                            <option value="">Select Grade</option>
+                                            <option value="Grade R">Grade R</option>
+                                            <option value="Grade 01">Grade 01</option>
+                                            <option value="Grade 02">Grade 02</option>
+                                            <option value="Grade 03">Grade 03</option>
+                                            <option value="Grade 04">Grade 04</option>
+                                            <option value="Grade 05">Grade 05</option>
+                                            <option value="Grade 06">Grade 06</option>
+                                            <option value="Grade 07">Grade 07</option>
+                                            <option value="Grade 08">Grade 08</option>
+                                            <option value="Grade 09">Grade 09</option>
+                                            <option value="Grade 10">Grade 10</option>
+                                            <option value="Grade 11">Grade 11</option>
+                                            <option value="Grade 12">Grade 12</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Class</label>
+                                        <input type="text" id="newUserClass" class="form-control" placeholder="e.g., A, B, C">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Parent Specific Fields -->
+                            <div id="parentFields" class="d-none">
+                                <hr>
+                                <h6><i class="fas fa-user-friends me-2"></i>Parent Details</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Child's Name</label>
+                                        <input type="text" id="newUserChildName" class="form-control" placeholder="Enter child's name">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Relationship</label>
+                                        <select id="newUserRelationship" class="form-select">
+                                            <option value="">Select Relationship</option>
+                                            <option value="Father">Father</option>
+                                            <option value="Mother">Mother</option>
+                                            <option value="Guardian">Guardian</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea id="newUserNotes" class="form-control" rows="2" placeholder="Additional notes (optional)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('createUserModal')">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="createNewUser()">
+                                <i class="fas fa-user-plus me-2"></i>Create User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit User Modal -->
+            <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editUserModalLabel"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('editUserModal')"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="editUserIndex">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" id="editUserName" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" id="editUserUsername" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password *</label>
+                                <div class="input-group">
+                                    <input type="password" id="editUserPassword" class="form-control" required>
+                                    <button class="btn btn-secondary" type="button" onclick="togglePasswordVisibility('editUserPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Role *</label>
+                                <select id="editUserRole" class="form-select" required>
+                                    <option value="Admin">Admin</option>
+                                    <option value="HOD">HOD (Head of Department)</option>
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Student">Student</option>
+                                    <option value="Parent">Parent</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="editUserEmail" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select id="editUserStatus" class="form-select">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Suspended">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('editUserModal')">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="updateUser()">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- View User Modal -->
+            <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewUserModalLabel"><i class="fas fa-user me-2"></i>User Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal('viewUserModal')"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="viewUserContent">
+                                <!-- User details will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" onclick="copyUserCredentials()">
+                                <i class="fas fa-copy me-2"></i>Copy Credentials
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideModal('viewUserModal')">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Parent Portal -->
             <section id="parentPortal" class="section d-none parent-only">
                 <h2>Parent Portal</h2>
@@ -17961,6 +18398,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 document.getElementById('grokApiKey').value = grokSettings.apiKey;
                 document.getElementById('grokModel').value = grokSettings.model;
             }
+            // Load users list for User Management tab
+            renderUsersList();
         }
         function saveSMSSettings() {
             smsSettings.username = document.getElementById('smsUsername').value;
@@ -17990,6 +18429,530 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             saveData();
             addNotification('Grok API settings saved', 'success');
         }
+        
+        // ========================================
+        // USER MANAGEMENT FUNCTIONS
+        // ========================================
+        
+        // Store the currently viewed user for copy functionality
+        let currentViewedUser = null;
+        
+        // Render the users list in the settings tab
+        function renderUsersList() {
+            const searchTerm = (document.getElementById('userSearchInput')?.value || '').toLowerCase();
+            const roleFilter = document.getElementById('userRoleFilter')?.value || '';
+            
+            // Filter users
+            let filteredUsers = users.filter(user => {
+                const matchesSearch = !searchTerm || 
+                    (user.name && user.name.toLowerCase().includes(searchTerm)) ||
+                    (user.username && user.username.toLowerCase().includes(searchTerm)) ||
+                    (user.email && user.email.toLowerCase().includes(searchTerm));
+                const matchesRole = !roleFilter || user.role === roleFilter;
+                return matchesSearch && matchesRole;
+            });
+            
+            // Update statistics
+            updateUserStatistics();
+            
+            // Render table
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No users found</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = filteredUsers.map((user, index) => {
+                const originalIndex = users.indexOf(user);
+                const roleClass = getRoleBadgeClass(user.role);
+                const statusClass = getStatusBadgeClass(user.status || 'Active');
+                const maskedPassword = '••••••••';
+                
+                return `<tr>
+                    <td>${originalIndex + 1}</td>
+                    <td><strong>${escapeHtml(user.name || 'N/A')}</strong></td>
+                    <td><code>${escapeHtml(user.username || 'N/A')}</code></td>
+                    <td>
+                        <span id="pwd-${originalIndex}">${maskedPassword}</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="toggleUserPasswordView(${originalIndex})" title="Show/Hide Password">
+                            <i class="fas fa-eye" id="pwd-icon-${originalIndex}"></i>
+                        </button>
+                    </td>
+                    <td><span class="badge ${roleClass}">${escapeHtml(user.role || 'User')}</span></td>
+                    <td>${escapeHtml(user.email || '-')}</td>
+                    <td><span class="badge ${statusClass}">${escapeHtml(user.status || 'Active')}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="viewUser(${originalIndex})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editUser(${originalIndex})" title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${originalIndex})" title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        // Get badge class for role
+        function getRoleBadgeClass(role) {
+            const classes = {
+                'Admin': 'bg-danger',
+                'HOD': 'bg-primary',
+                'Teacher': 'bg-success',
+                'Student': 'bg-warning text-dark',
+                'Parent': 'bg-info'
+            };
+            return classes[role] || 'bg-secondary';
+        }
+        
+        // Get badge class for status
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'Active': 'bg-success',
+                'Inactive': 'bg-secondary',
+                'Suspended': 'bg-danger'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+        
+        // Update user statistics
+        function updateUserStatistics() {
+            const totalUsers = users.length;
+            const teacherCount = users.filter(u => u.role === 'Teacher').length;
+            const studentCount = users.filter(u => u.role === 'Student').length;
+            const parentCount = users.filter(u => u.role === 'Parent').length;
+            
+            if (document.getElementById('totalUsersCount')) {
+                document.getElementById('totalUsersCount').textContent = totalUsers;
+            }
+            if (document.getElementById('teacherUsersCount')) {
+                document.getElementById('teacherUsersCount').textContent = teacherCount;
+            }
+            if (document.getElementById('studentUsersCount')) {
+                document.getElementById('studentUsersCount').textContent = studentCount;
+            }
+            if (document.getElementById('parentUsersCount')) {
+                document.getElementById('parentUsersCount').textContent = parentCount;
+            }
+        }
+        
+        // Toggle password visibility in the table
+        function toggleUserPasswordView(index) {
+            const pwdSpan = document.getElementById(`pwd-${index}`);
+            const pwdIcon = document.getElementById(`pwd-icon-${index}`);
+            
+            if (!pwdSpan || !users[index]) return;
+            
+            if (pwdSpan.textContent === '••••••••') {
+                pwdSpan.textContent = users[index].password || 'N/A';
+                pwdIcon.classList.remove('fa-eye');
+                pwdIcon.classList.add('fa-eye-slash');
+            } else {
+                pwdSpan.textContent = '••••••••';
+                pwdIcon.classList.remove('fa-eye-slash');
+                pwdIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Show create user modal
+        function showCreateUserModal() {
+            // Reset form
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserUsername').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('newUserRole').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPhone').value = '';
+            document.getElementById('newUserNotes').value = '';
+            
+            // Hide all role-specific fields
+            document.getElementById('hodFields').classList.add('d-none');
+            document.getElementById('teacherFields').classList.add('d-none');
+            document.getElementById('studentFields').classList.add('d-none');
+            document.getElementById('parentFields').classList.add('d-none');
+            
+            showModal('createUserModal');
+        }
+        
+        // Toggle role-specific fields
+        function toggleRoleFields() {
+            const role = document.getElementById('newUserRole').value;
+            
+            // Hide all fields first
+            document.getElementById('hodFields').classList.add('d-none');
+            document.getElementById('teacherFields').classList.add('d-none');
+            document.getElementById('studentFields').classList.add('d-none');
+            document.getElementById('parentFields').classList.add('d-none');
+            
+            // Show relevant fields
+            switch(role) {
+                case 'HOD':
+                    document.getElementById('hodFields').classList.remove('d-none');
+                    break;
+                case 'Teacher':
+                    document.getElementById('teacherFields').classList.remove('d-none');
+                    break;
+                case 'Student':
+                    document.getElementById('studentFields').classList.remove('d-none');
+                    break;
+                case 'Parent':
+                    document.getElementById('parentFields').classList.remove('d-none');
+                    break;
+            }
+        }
+        
+        // Toggle password visibility in form
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // Generate random password
+        function generateRandomPassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < 10; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('newUserPassword').value = password;
+            document.getElementById('newUserPassword').type = 'text';
+            
+            addNotification('Random password generated!', 'success');
+        }
+        
+        // Create new user
+        function createNewUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const username = document.getElementById('newUserUsername').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            const email = document.getElementById('newUserEmail').value.trim();
+            const phone = document.getElementById('newUserPhone').value.trim();
+            const notes = document.getElementById('newUserNotes').value.trim();
+            
+            // Validation
+            if (!name) {
+                addNotification('Please enter a name', 'warning');
+                return;
+            }
+            if (!username) {
+                addNotification('Please enter a username', 'warning');
+                return;
+            }
+            if (!password) {
+                addNotification('Please enter a password', 'warning');
+                return;
+            }
+            if (!role) {
+                addNotification('Please select a role', 'warning');
+                return;
+            }
+            
+            // Check for duplicate username
+            const existingUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+            if (existingUser) {
+                addNotification('Username already exists. Please choose a different username.', 'danger');
+                return;
+            }
+            
+            // Create user object
+            const newUser = {
+                id: Date.now(),
+                name: name,
+                username: username,
+                password: password,
+                role: role,
+                email: email,
+                phone: phone,
+                notes: notes,
+                status: 'Active',
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser ? currentUser.name : 'System'
+            };
+            
+            // Add role-specific data
+            if (role === 'HOD') {
+                newUser.department = document.getElementById('newUserDepartment').value;
+                newUser.employeeId = document.getElementById('newUserEmployeeId').value;
+            } else if (role === 'Teacher') {
+                newUser.subject = document.getElementById('newUserSubject').value;
+                newUser.assignedGrades = document.getElementById('newUserGrades').value;
+            } else if (role === 'Student') {
+                newUser.grade = document.getElementById('newUserStudentGrade').value;
+                newUser.class = document.getElementById('newUserClass').value;
+            } else if (role === 'Parent') {
+                newUser.childName = document.getElementById('newUserChildName').value;
+                newUser.relationship = document.getElementById('newUserRelationship').value;
+            }
+            
+            // Add to users array
+            users.push(newUser);
+            saveData();
+            
+            // Log activity
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Created', `Created ${role} account for ${name} (${username})`);
+            
+            // Close modal and refresh list
+            hideModal('createUserModal');
+            renderUsersList();
+            
+            addNotification(`${role} account created successfully for ${name}!`, 'success');
+        }
+        
+        // View user details
+        function viewUser(index) {
+            const user = users[index];
+            if (!user) return;
+            
+            currentViewedUser = user;
+            
+            const content = document.getElementById('viewUserContent');
+            content.innerHTML = `
+                <div class="text-center mb-4">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user fa-2x" style="color: #fff;"></i>
+                    </div>
+                    <h4 class="mt-3">${escapeHtml(user.name || 'N/A')}</h4>
+                    <span class="badge ${getRoleBadgeClass(user.role)}">${escapeHtml(user.role)}</span>
+                    <span class="badge ${getStatusBadgeClass(user.status || 'Active')} ms-2">${escapeHtml(user.status || 'Active')}</span>
+                </div>
+                
+                <div class="p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px;">
+                    <h6 class="mb-3"><i class="fas fa-key me-2"></i>Login Credentials</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Username:</small>
+                            <p class="mb-0"><code id="viewUsername">${escapeHtml(user.username)}</code></p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Password:</small>
+                            <p class="mb-0"><code id="viewPassword">${escapeHtml(user.password)}</code></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 12px;">
+                    <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Additional Information</h6>
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Email:</small>
+                            <p class="mb-0">${escapeHtml(user.email || 'Not provided')}</p>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Phone:</small>
+                            <p class="mb-0">${escapeHtml(user.phone || 'Not provided')}</p>
+                        </div>
+                        ${user.department ? `<div class="col-6 mb-2"><small class="text-muted">Department:</small><p class="mb-0">${escapeHtml(user.department)}</p></div>` : ''}
+                        ${user.grade ? `<div class="col-6 mb-2"><small class="text-muted">Grade:</small><p class="mb-0">${escapeHtml(user.grade)}</p></div>` : ''}
+                        ${user.childName ? `<div class="col-6 mb-2"><small class="text-muted">Child:</small><p class="mb-0">${escapeHtml(user.childName)}</p></div>` : ''}
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Created:</small>
+                            <p class="mb-0">${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${user.notes ? `
+                <div class="mt-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 12px;">
+                    <h6 class="mb-2"><i class="fas fa-sticky-note me-2"></i>Notes</h6>
+                    <p class="mb-0">${escapeHtml(user.notes)}</p>
+                </div>
+                ` : ''}
+            `;
+            
+            showModal('viewUserModal');
+        }
+        
+        // Copy user credentials
+        function copyUserCredentials() {
+            if (!currentViewedUser) return;
+            
+            const credentials = `Username: ${currentViewedUser.username}\nPassword: ${currentViewedUser.password}`;
+            
+            navigator.clipboard.writeText(credentials).then(() => {
+                addNotification('Credentials copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = credentials;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                addNotification('Credentials copied to clipboard!', 'success');
+            });
+        }
+        
+        // Edit user
+        function editUser(index) {
+            const user = users[index];
+            if (!user) return;
+            
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('editUserName').value = user.name || '';
+            document.getElementById('editUserUsername').value = user.username || '';
+            document.getElementById('editUserPassword').value = user.password || '';
+            document.getElementById('editUserRole').value = user.role || 'Student';
+            document.getElementById('editUserEmail').value = user.email || '';
+            document.getElementById('editUserStatus').value = user.status || 'Active';
+            
+            showModal('editUserModal');
+        }
+        
+        // Update user
+        function updateUser() {
+            const index = parseInt(document.getElementById('editUserIndex').value);
+            
+            if (isNaN(index) || !users[index]) {
+                addNotification('User not found', 'danger');
+                return;
+            }
+            
+            const name = document.getElementById('editUserName').value.trim();
+            const username = document.getElementById('editUserUsername').value.trim();
+            const password = document.getElementById('editUserPassword').value;
+            const role = document.getElementById('editUserRole').value;
+            const email = document.getElementById('editUserEmail').value.trim();
+            const status = document.getElementById('editUserStatus').value;
+            
+            // Validation
+            if (!name || !username || !password || !role) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            // Check for duplicate username (excluding current user)
+            const duplicateUser = users.find((u, i) => i !== index && u.username.toLowerCase() === username.toLowerCase());
+            if (duplicateUser) {
+                addNotification('Username already exists. Please choose a different username.', 'danger');
+                return;
+            }
+            
+            // Update user
+            users[index].name = name;
+            users[index].username = username;
+            users[index].password = password;
+            users[index].role = role;
+            users[index].email = email;
+            users[index].status = status;
+            users[index].updatedAt = new Date().toISOString();
+            users[index].updatedBy = currentUser ? currentUser.name : 'System';
+            
+            saveData();
+            
+            // Log activity
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated account for ${name} (${username})`);
+            
+            hideModal('editUserModal');
+            renderUsersList();
+            
+            addNotification(`User ${name} updated successfully!`, 'success');
+        }
+        
+        // Delete user
+        function deleteUser(index) {
+            const user = users[index];
+            if (!user) return;
+            
+            if (!confirm(`Are you sure you want to delete the user "${user.name}"?\n\nUsername: ${user.username}\nRole: ${user.role}\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            // Log activity before deletion
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Deleted', `Deleted ${user.role} account for ${user.name} (${user.username})`);
+            
+            // Remove user
+            users.splice(index, 1);
+            saveData();
+            
+            renderUsersList();
+            
+            addNotification(`User ${user.name} deleted successfully!`, 'success');
+        }
+        
+        // Export users list
+        function exportUsersList() {
+            if (users.length === 0) {
+                addNotification('No users to export', 'warning');
+                return;
+            }
+            
+            // Create CSV content
+            const headers = ['Name', 'Username', 'Password', 'Role', 'Email', 'Phone', 'Status', 'Created At'];
+            const csvContent = [
+                headers.join(','),
+                ...users.map(user => [
+                    `"${(user.name || '').replace(/"/g, '""')}"`,
+                    `"${(user.username || '').replace(/"/g, '""')}"`,
+                    `"${(user.password || '').replace(/"/g, '""')}"`,
+                    `"${(user.role || '').replace(/"/g, '""')}"`,
+                    `"${(user.email || '').replace(/"/g, '""')}"`,
+                    `"${(user.phone || '').replace(/"/g, '""')}"`,
+                    `"${(user.status || 'Active').replace(/"/g, '""')}"`,
+                    `"${user.createdAt || ''}"`
+                ].join(','))
+            ].join('\n');
+            
+            // Download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            addNotification(`Exported ${users.length} users to CSV file!`, 'success');
+            
+            // Log activity
+            logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'Users Export', `Exported ${users.length} users to CSV`);
+        }
+        
+        // Settings tabs handler - load user list when switching to User Management tab
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handler for Settings tabs
+            const settingsTabs = document.querySelectorAll('#settingsTabs .nav-link');
+            settingsTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active from all tabs
+                    settingsTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Hide all tab panes
+                    document.querySelectorAll('#settingsTabContent .tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    
+                    // Show selected pane
+                    const target = this.getAttribute('data-bs-target');
+                    const targetPane = document.querySelector(target);
+                    if (targetPane) {
+                        targetPane.classList.add('show', 'active');
+                    }
+                    
+                    // Load user list if User Management tab is selected
+                    if (target === '#user-management') {
+                        renderUsersList();
+                    }
+                });
+            });
+        });
+        
         
         function configureChatGPTAPI() {
             const apiKey = document.getElementById('chatGPTApiKey').value;
