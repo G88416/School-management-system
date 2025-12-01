@@ -8813,6 +8813,18 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ========================================
+        // APPLICATION CONFIGURATION
+        // ========================================
+        
+        // Role-based access control configuration
+        const ACCESS_CONTROL_CONFIG = {
+            // Sections restricted from student access
+            studentRestrictedSections: ['students', 'attendance', 'fees', 'admission', 'hr', 'dashboard', 'reports', 'settings', 'eventsManagement'],
+            // Default redirect section for students when accessing restricted areas
+            studentDefaultSection: 'studentTimetable'
+        };
+        
         // Global variables
         var currentUser = null;
         var editingJob = null;
@@ -10166,11 +10178,11 @@
         // Show section
         function showSection(section) {
             // Security check: Prevent students from accessing restricted sections
-            const studentRestrictedSections = ['students', 'attendance', 'fees', 'admission', 'hr', 'dashboard', 'reports', 'settings', 'eventsManagement'];
-            if (currentUser && currentUser.role.toLowerCase() === 'student' && studentRestrictedSections.includes(section)) {
+            if (currentUser && currentUser.role.toLowerCase() === 'student' && 
+                ACCESS_CONTROL_CONFIG.studentRestrictedSections.includes(section)) {
                 addNotification('Access denied. This section is not available for students.', 'warning');
-                // Redirect to student timetable instead
-                showSection('studentTimetable');
+                // Redirect to student default section
+                showSection(ACCESS_CONTROL_CONFIG.studentDefaultSection);
                 return;
             }
             
@@ -23884,11 +23896,11 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
             
             // Also update localStorage for persistence and fallback
-            const broadcasts = JSON.parse(localStorage.getItem('realtimeBroadcasts') || '[]');
+            let broadcasts = JSON.parse(localStorage.getItem('realtimeBroadcasts') || '[]');
             broadcasts.push(message);
-            // Keep only last 100 broadcasts
+            // Keep only last 100 broadcasts efficiently using slice
             if (broadcasts.length > 100) {
-                broadcasts.splice(0, broadcasts.length - 100);
+                broadcasts = broadcasts.slice(-100);
             }
             localStorage.setItem('realtimeBroadcasts', JSON.stringify(broadcasts));
             localStorage.setItem('lastBroadcast', JSON.stringify(message));
@@ -24292,7 +24304,15 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         }
         
         // Function to broadcast data updates to all devices
+        // Valid updateType values: 'STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'
         function broadcastDataUpdate(updateType, details) {
+            // Validate updateType is a known broadcast type
+            const validTypes = ['STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'];
+            if (!validTypes.includes(updateType)) {
+                console.warn('broadcastDataUpdate: Unknown updateType "' + updateType + '", using DATA_UPDATE');
+                updateType = 'DATA_UPDATE';
+            }
+            
             const type = BROADCAST_TYPES[updateType] || BROADCAST_TYPES.DATA_UPDATE;
             broadcastMessage(type, {
                 updateType: updateType,
@@ -24811,9 +24831,12 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             if (event.key === 'incomingCall' && event.newValue) {
                 try {
                     const callInfo = JSON.parse(event.newValue);
-                    // Don't show modal if we initiated the call
-                    if (callInfo.caller !== (currentUser ? currentUser.name : '')) {
-                        showIncomingCallModal(callInfo, callInfo.callType);
+                    // Don't show modal if we initiated the call - use safe null checks
+                    const currentUserName = currentUser && currentUser.name ? currentUser.name : '';
+                    const callerName = callInfo && callInfo.caller ? callInfo.caller : '';
+                    
+                    if (callerName && callerName !== currentUserName) {
+                        showIncomingCallModal(callInfo, callInfo.callType || 'voice');
                         playCallRingtone();
                     }
                 } catch (e) {
