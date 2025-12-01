@@ -10164,16 +10164,66 @@
         function updateVisibility() {
             if (!currentUser) return;
             const role = currentUser.role.toLowerCase();
-            // First, show/hide based on non-student class
-            document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
-            // Show/hide based on non-parent class (hide Student Info and Attendance for parents)
-            document.querySelectorAll('.non-parent').forEach(el => el.style.display = role !== 'parent' ? 'block' : 'none');
-            // Then apply specific role restrictions (these override non-student)
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
-            document.querySelectorAll('.hod-only').forEach(el => el.style.display = role === 'hod' ? 'block' : 'none');
-            document.querySelectorAll('.teacher-only').forEach(el => el.style.display = role === 'teacher' ? 'block' : 'none');
-            document.querySelectorAll('.parent-only').forEach(el => el.style.display = role === 'parent' ? 'block' : 'none');
-            document.querySelectorAll('.student-only').forEach(el => el.style.display = role === 'student' ? 'block' : 'none');
+            
+            // Helper function to set display based on visibility condition
+            // Uses 'block' for visible elements to override CSS defaults like 'display: none'
+            const setVisibility = (elements, isVisible) => {
+                elements.forEach(el => {
+                    // For list items, use 'list-item', for others use 'block'
+                    const displayValue = el.tagName === 'LI' ? 'list-item' : 'block';
+                    el.style.display = isVisible ? displayValue : 'none';
+                });
+            };
+            
+            // For students: Hide all non-student elements (including Student Info and Attendance)
+            if (role === 'student') {
+                setVisibility(document.querySelectorAll('.non-student'), false);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), true);
+            } 
+            // For parents: Hide non-parent elements
+            else if (role === 'parent') {
+                setVisibility(document.querySelectorAll('.non-parent'), false);
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), true);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For admin
+            else if (role === 'admin') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), true);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For HOD
+            else if (role === 'hod') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), true);
+                setVisibility(document.querySelectorAll('.teacher-only'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
+            // For teacher
+            else if (role === 'teacher') {
+                setVisibility(document.querySelectorAll('.non-student'), true);
+                setVisibility(document.querySelectorAll('.non-parent'), true);
+                setVisibility(document.querySelectorAll('.admin-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only'), true);
+                setVisibility(document.querySelectorAll('.parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), false);
+            }
         }
         // Show section
         function showSection(section) {
