@@ -10144,6 +10144,10 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
+            // IMPORTANT: Reload users from localStorage before login attempt
+            // This ensures newly created users can log in immediately on any device/tab
+            users = JSON.parse(localStorage.getItem('users') || '[]');
+            
             // Enhanced authentication: Check username/password patterns to determine user type
             let detectedRole = null;
             if (username.toLowerCase().startsWith('t') && password.toLowerCase().endsWith('t')) {
@@ -18903,6 +18907,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             users.push(newUser);
             saveData();
             
+            // Broadcast USER_UPDATE for real-time sync across all devices/tabs
+            // This ensures the new user can log in immediately on all connected devices
+            if (typeof broadcastDataUpdate === 'function') {
+                broadcastDataUpdate('USER_UPDATE', { 
+                    action: 'create', 
+                    userName: username, 
+                    userRole: role,
+                    userId: newUser.id
+                });
+            }
+            
             // Log activity
             logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Created', `Created ${role} account for ${name} (${username})`);
             
@@ -18910,7 +18925,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             hideModal('createUserModal');
             renderUsersList();
             
-            addNotification(`${role} account created successfully for ${name}!`, 'success');
+            addNotification(`${role} account created successfully for ${name}! User can now log in.`, 'success');
         }
         
         // View user details
@@ -19171,6 +19186,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // Save to localStorage immediately for persistence
                 saveData();
                 
+                // Broadcast USER_UPDATE for real-time sync across all devices/tabs
+                if (typeof broadcastDataUpdate === 'function') {
+                    broadcastDataUpdate('USER_UPDATE', { 
+                        action: 'update', 
+                        userName: users[userIndex].username, 
+                        userRole: users[userIndex].role,
+                        userId: users[userIndex].id,
+                        field: field
+                    });
+                }
+                
                 // Show the save changes button
                 showSaveChangesButton();
                 
@@ -19270,12 +19296,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Store user info before deletion for broadcast
+            const deletedUserName = user.username;
+            const deletedUserRole = user.role;
+            const deletedUserId = user.id;
+            
             // Log activity before deletion
             logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Deleted', `Deleted ${user.role} account for ${user.name} (${user.username})`);
             
             // Remove user
             users.splice(index, 1);
             saveData();
+            
+            // Broadcast USER_UPDATE for real-time sync across all devices/tabs
+            if (typeof broadcastDataUpdate === 'function') {
+                broadcastDataUpdate('USER_UPDATE', { 
+                    action: 'delete', 
+                    userName: deletedUserName, 
+                    userRole: deletedUserRole,
+                    userId: deletedUserId
+                });
+            }
             
             renderUsersList();
             
@@ -24189,7 +24230,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             STAFF_UPDATE: 'staff_update',
             ADMISSION_UPDATE: 'admission_update',
             SETTINGS_UPDATE: 'settings_update',
-            IMMEDIATE_SYNC: 'immediate_sync'
+            IMMEDIATE_SYNC: 'immediate_sync',
+            // User management real-time sync
+            USER_UPDATE: 'user_update'
         };
         
         // Broadcast a message to all tabs/windows
@@ -24275,6 +24318,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 case BROADCAST_TYPES.SETTINGS_UPDATE:
                     handleSettingsDataSync(message);
                     break;
+                case BROADCAST_TYPES.USER_UPDATE:
+                    handleUserDataSync(message);
+                    break;
             }
         }
         
@@ -24293,6 +24339,49 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     handleBroadcastMessage(message);
                 } catch (e) {
                     console.log('Error parsing broadcast message:', e.message, '- Raw value length:', event.newValue ? event.newValue.length : 0);
+                }
+            }
+            
+            // Direct localStorage change detection for immediate sync
+            // This provides additional sync for cross-device scenarios
+            if (event.key === 'users' && event.newValue) {
+                try {
+                    // Reload users immediately when they change
+                    users = JSON.parse(event.newValue);
+                    console.log('Users synced via localStorage change detection');
+                    
+                    // Re-render if viewing settings section
+                    const currentSection = document.querySelector('.section:not(.d-none)');
+                    if (currentSection && currentSection.id === 'settings') {
+                        if (typeof renderUsersList === 'function') {
+                            renderUsersList();
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error syncing users:', e.message);
+                }
+            }
+            
+            if (event.key === 'announcements' && event.newValue) {
+                try {
+                    // Reload announcements immediately when they change
+                    announcements = JSON.parse(event.newValue);
+                    console.log('Announcements synced via localStorage change detection');
+                    
+                    // Re-render announcement lists
+                    if (typeof renderAnnouncementsList === 'function') {
+                        renderAnnouncementsList();
+                    }
+                    
+                    // Re-render dashboard if viewing it
+                    const currentSection = document.querySelector('.section:not(.d-none)');
+                    if (currentSection && currentSection.id === 'dashboard') {
+                        if (typeof renderDashboard === 'function') {
+                            renderDashboard();
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error syncing announcements:', e.message);
                 }
             }
         });
@@ -24385,6 +24474,14 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             // Update any visible announcement lists
             if (typeof renderAnnouncementsList === 'function') {
                 renderAnnouncementsList();
+            }
+            
+            // Also refresh dashboard if currently viewing it (announcements may appear there)
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'dashboard') {
+                if (typeof renderDashboard === 'function') {
+                    renderDashboard();
+                }
             }
             
             // Show prominent notification for announcements
@@ -24576,6 +24673,50 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             );
         }
         
+        function handleUserDataSync(message) {
+            // Reload users data from localStorage - this is critical for login sync
+            users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Re-render if viewing settings section with user management
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'settings') {
+                if (typeof renderUsersList === 'function') {
+                    renderUsersList();
+                }
+                if (typeof updateUserStatistics === 'function') {
+                    updateUserStatistics();
+                }
+            }
+            
+            // Show notification with action-specific message
+            const details = message.data?.details || {};
+            const action = details.action || 'updated';
+            const userName = details.userName || '';
+            const userRole = details.userRole || '';
+            
+            let notificationTitle = '👤 User Data Updated';
+            let notificationMessage = `${message.sender} updated user accounts`;
+            
+            if (action === 'create') {
+                notificationTitle = '👤 New User Created';
+                notificationMessage = `${userRole} account "${userName}" is now active and can log in`;
+            } else if (action === 'delete') {
+                notificationTitle = '👤 User Removed';
+                notificationMessage = `User "${userName}" has been removed from the system`;
+            } else if (action === 'update') {
+                notificationTitle = '👤 User Updated';
+                notificationMessage = `User "${userName}" credentials have been updated`;
+            }
+            
+            showRealtimeNotification(
+                notificationTitle,
+                notificationMessage,
+                'sync'
+            );
+            
+            console.log('User data synchronized in real-time:', action, userName || '(all users)');
+        }
+        
         // Helper function to refresh the current section
         function refreshCurrentSection(sectionId) {
             switch(sectionId) {
@@ -24613,14 +24754,18 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 case 'teacherMonitoring':
                     if (typeof loadTeacherMonitoring === 'function') loadTeacherMonitoring();
                     break;
+                case 'settings':
+                    if (typeof renderUsersList === 'function') renderUsersList();
+                    if (typeof updateUserStatistics === 'function') updateUserStatistics();
+                    break;
             }
         }
         
         // Function to broadcast data updates to all devices
-        // Valid updateType values: 'STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'
+        // Valid updateType values: 'STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC', 'USER_UPDATE'
         function broadcastDataUpdate(updateType, details) {
             // Validate updateType is a known broadcast type
-            const validTypes = ['STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC'];
+            const validTypes = ['STUDENT_UPDATE', 'ATTENDANCE_UPDATE', 'FEE_UPDATE', 'STAFF_UPDATE', 'ADMISSION_UPDATE', 'SETTINGS_UPDATE', 'DATA_UPDATE', 'IMMEDIATE_SYNC', 'USER_UPDATE'];
             if (!validTypes.includes(updateType)) {
                 console.warn('broadcastDataUpdate: Unknown updateType "' + updateType + '", using DATA_UPDATE');
                 updateType = 'DATA_UPDATE';
