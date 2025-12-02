@@ -24689,9 +24689,10 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
             
             // Show notification with action-specific message
-            const action = message.data && message.data.details ? message.data.details.action : 'updated';
-            const userName = message.data && message.data.details ? message.data.details.userName : '';
-            const userRole = message.data && message.data.details ? message.data.details.userRole : '';
+            const details = message.data?.details || {};
+            const action = details.action || 'updated';
+            const userName = details.userName || '';
+            const userRole = details.userRole || '';
             
             let notificationTitle = '👤 User Data Updated';
             let notificationMessage = `${message.sender} updated user accounts`;
