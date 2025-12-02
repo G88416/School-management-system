@@ -18900,11 +18900,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             fields.forEach(field => {
                 const icon = document.getElementById(`sort-${field}`);
                 if (icon) {
-                    icon.className = 'fas ms-1 ';
+                    icon.className = 'fas ms-1';
                     if (usersSortField === field) {
-                        icon.className += usersSortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+                        icon.className += usersSortDirection === 'asc' ? ' fa-sort-up' : ' fa-sort-down';
                     } else {
-                        icon.className += 'fa-sort';
+                        icon.className += ' fa-sort';
                     }
                 }
             });
@@ -18989,7 +18989,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to "${newValue}"`, 'success');
                 
                 // Log activity
-                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name} to ${newValue}`);
+                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name || 'Unknown User'} to ${newValue}`);
                 
                 // Update statistics if role changed
                 if (field === 'role') {
@@ -19557,7 +19557,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} updated: "${newValue}"`, 'success');
                 
                 // Log activity
-                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name} (${users[userIndex].username})`);
+                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name || 'Unknown User'} (${users[userIndex].username || 'Unknown'})`);
                 
                 // Update statistics
                 updateUserStatistics();
