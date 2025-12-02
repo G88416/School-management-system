@@ -1200,6 +1200,40 @@
             transform: translateY(-3px) scale(1.02);
         }
         
+        /* User Table Pagination Styles */
+        #usersPagination .page-link {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        #usersPagination .page-link:hover {
+            background: rgba(233, 69, 96, 0.3);
+            border-color: rgba(233, 69, 96, 0.5);
+            color: #fff;
+        }
+        #usersPagination .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: var(--accent-primary);
+            color: #fff;
+        }
+        #usersPagination .page-item.disabled .page-link {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Sortable Table Headers */
+        #usersTable thead th {
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+        #usersTable thead th:hover {
+            background: rgba(233, 69, 96, 0.2);
+        }
+        #usersTable thead th i {
+            color: var(--accent-secondary);
+        }
+        
         #settingsTabs .nav-link {
             border-radius: 8px 8px 0 0;
         }
@@ -6481,16 +6515,16 @@
                         
                         <!-- Users Table -->
                         <div class="table-responsive">
-                            <table class="table table-striped">
+                            <table class="table table-striped" id="usersTable">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Name</th>
-                                        <th>Username</th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('index')"># <i class="fas fa-sort ms-1" id="sort-index"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('name')">Name <i class="fas fa-sort ms-1" id="sort-name"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('username')">Username <i class="fas fa-sort ms-1" id="sort-username"></i></th>
                                         <th>Password</th>
-                                        <th>Role</th>
-                                        <th>Email</th>
-                                        <th>Status</th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('role')">Role <i class="fas fa-sort ms-1" id="sort-role"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('email')">Email <i class="fas fa-sort ms-1" id="sort-email"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortUsersTable('status')">Status <i class="fas fa-sort ms-1" id="sort-status"></i></th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -6500,11 +6534,38 @@
                             </table>
                         </div>
                         
+                        <!-- Pagination -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <label class="me-2">Show:</label>
+                                    <select id="usersPerPage" class="form-select form-select-sm" style="width: auto;" onchange="changeUsersPerPage()">
+                                        <option value="10">10</option>
+                                        <option value="25" selected>25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span class="ms-2" id="usersTableInfo">Showing 0 of 0 users</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <nav aria-label="Users pagination">
+                                    <ul class="pagination pagination-sm mb-0" id="usersPagination">
+                                        <!-- Pagination will be rendered here -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        
                         <!-- Save Changes Button -->
                         <div class="row mt-4">
-                            <div class="col-12 d-flex justify-content-end">
+                            <div class="col-12 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="realtime-indicator"></span>
+                                    <small class="text-muted">Real-time sync enabled - changes update on all devices instantly</small>
+                                </div>
                                 <button class="btn btn-success btn-lg" id="saveAllChangesBtn" onclick="saveAllUserChanges()" style="display: none;">
-                                    <i class="fas fa-save me-2"></i>Save Changes
+                                    <i class="fas fa-save me-2"></i>Save All Changes
                                 </button>
                             </div>
                         </div>
@@ -6520,7 +6581,10 @@
                                         <li>Use the role filter to quickly find specific user types</li>
                                         <li>HOD users have Head of Department privileges</li>
                                         <li>Use the magic wand button when creating users to generate secure passwords</li>
-                                        <li><strong>NEW:</strong> Click on name or username to edit directly in the table</li>
+                                        <li><strong>Inline Editing:</strong> Click on name, username, email, role, or status to edit directly in the table</li>
+                                        <li><strong>Sorting:</strong> Click column headers to sort the table</li>
+                                        <li><strong>Real-time Sync:</strong> All changes are instantly synced across all connected devices</li>
+                                        <li><strong>Pagination:</strong> Use the controls below the table to navigate through large user lists</li>
                                     </ul>
                                 </div>
                             </div>
@@ -18592,7 +18656,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Store the currently viewed user for copy functionality
         let currentViewedUser = null;
         
-        // Render the users list in the settings tab
+        // Pagination and sorting state
+        let usersCurrentPage = 1;
+        let usersPerPage = 25;
+        let usersSortField = null;
+        let usersSortDirection = 'asc';
+        
+        // Render the users list in the settings tab with pagination and sorting
         function renderUsersList() {
             const searchTerm = (document.getElementById('userSearchInput')?.value || '').toLowerCase();
             const roleFilter = document.getElementById('userRoleFilter')?.value || '';
@@ -18607,6 +18677,20 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return matchesSearch && matchesRole;
             });
             
+            // Sort users if a sort field is set
+            if (usersSortField) {
+                filteredUsers.sort((a, b) => {
+                    let aVal = a[usersSortField] || '';
+                    let bVal = b[usersSortField] || '';
+                    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+                    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+                    
+                    if (aVal < bVal) return usersSortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return usersSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            
             // Update statistics
             updateUserStatistics();
             
@@ -18614,18 +18698,39 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const tbody = document.getElementById('usersTableBody');
             if (!tbody) return;
             
-            if (filteredUsers.length === 0) {
+            // Calculate pagination
+            const totalUsers = filteredUsers.length;
+            const totalPages = Math.ceil(totalUsers / usersPerPage);
+            
+            // Ensure current page is valid
+            if (usersCurrentPage > totalPages) usersCurrentPage = totalPages || 1;
+            if (usersCurrentPage < 1) usersCurrentPage = 1;
+            
+            const startIndex = (usersCurrentPage - 1) * usersPerPage;
+            const endIndex = Math.min(startIndex + usersPerPage, totalUsers);
+            const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+            
+            // Update pagination info
+            const infoEl = document.getElementById('usersTableInfo');
+            if (infoEl) {
+                infoEl.textContent = `Showing ${startIndex + 1}-${endIndex} of ${totalUsers} users`;
+            }
+            
+            // Render pagination controls
+            renderUsersPagination(totalPages);
+            
+            if (paginatedUsers.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No users found</td></tr>`;
                 return;
             }
             
-            tbody.innerHTML = filteredUsers.map((user, index) => {
+            tbody.innerHTML = paginatedUsers.map((user, index) => {
                 const originalIndex = users.indexOf(user);
                 const roleClass = getRoleBadgeClass(user.role);
                 const statusClass = getStatusBadgeClass(user.status || 'Active');
                 const maskedPassword = '••••••••';
                 
-                return `<tr>
+                return `<tr data-user-index="${originalIndex}">
                     <td>${originalIndex + 1}</td>
                     <td>
                         <span class="editable-cell" id="name-display-${originalIndex}" onclick="startInlineEdit(${originalIndex}, 'name')" title="Click to edit">
@@ -18653,9 +18758,44 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                             <i class="fas fa-eye" id="pwd-icon-${originalIndex}"></i>
                         </button>
                     </td>
-                    <td><span class="badge ${roleClass}">${escapeHtml(user.role || 'User')}</span></td>
-                    <td>${escapeHtml(user.email || '-')}</td>
-                    <td><span class="badge ${statusClass}">${escapeHtml(user.status || 'Active')}</span></td>
+                    <td>
+                        <span class="editable-cell" id="role-display-${originalIndex}" onclick="startInlineSelectEdit(${originalIndex}, 'role')" title="Click to edit">
+                            <span class="badge ${roleClass}">${escapeHtml(user.role || 'User')}</span> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>
+                        </span>
+                        <select class="form-select form-select-sm d-none" id="role-input-${originalIndex}" 
+                            onchange="saveInlineSelectEdit(${originalIndex}, 'role')"
+                            onblur="cancelInlineSelectEdit(${originalIndex}, 'role')"
+                            style="max-width:100px;">
+                            <option value="Admin" ${user.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                            <option value="HOD" ${user.role === 'HOD' ? 'selected' : ''}>HOD</option>
+                            <option value="Teacher" ${user.role === 'Teacher' ? 'selected' : ''}>Teacher</option>
+                            <option value="Student" ${user.role === 'Student' ? 'selected' : ''}>Student</option>
+                            <option value="Parent" ${user.role === 'Parent' ? 'selected' : ''}>Parent</option>
+                        </select>
+                    </td>
+                    <td>
+                        <span class="editable-cell" id="email-display-${originalIndex}" onclick="startInlineEdit(${originalIndex}, 'email')" title="Click to edit">
+                            ${escapeHtml(user.email || '-')} <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>
+                        </span>
+                        <input type="email" class="form-control form-control-sm d-none" id="email-input-${originalIndex}" 
+                            value="${escapeHtml(user.email || '')}" 
+                            onblur="saveInlineEdit(${originalIndex}, 'email')" 
+                            onkeydown="handleInlineEditKeydown(event, ${originalIndex}, 'email')"
+                            style="max-width:180px;">
+                    </td>
+                    <td>
+                        <span class="editable-cell" id="status-display-${originalIndex}" onclick="startInlineSelectEdit(${originalIndex}, 'status')" title="Click to edit">
+                            <span class="badge ${statusClass}">${escapeHtml(user.status || 'Active')}</span> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>
+                        </span>
+                        <select class="form-select form-select-sm d-none" id="status-input-${originalIndex}" 
+                            onchange="saveInlineSelectEdit(${originalIndex}, 'status')"
+                            onblur="cancelInlineSelectEdit(${originalIndex}, 'status')"
+                            style="max-width:100px;">
+                            <option value="Active" ${(user.status || 'Active') === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Inactive" ${user.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                            <option value="Suspended" ${user.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
+                        </select>
+                    </td>
                     <td>
                         <button class="btn btn-sm btn-info me-1" onclick="viewUser(${originalIndex})" title="View Details">
                             <i class="fas fa-eye"></i>
@@ -18669,6 +18809,208 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     </td>
                 </tr>`;
             }).join('');
+            
+            // Update sort icons
+            updateSortIcons();
+        }
+        
+        // Render pagination controls
+        function renderUsersPagination(totalPages) {
+            const paginationEl = document.getElementById('usersPagination');
+            if (!paginationEl || totalPages <= 1) {
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<li class="page-item ${usersCurrentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="goToUsersPage(${usersCurrentPage - 1}); return false;">Previous</a>
+            </li>`;
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, usersCurrentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="goToUsersPage(1); return false;">1</a></li>`;
+                if (startPage > 2) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<li class="page-item ${i === usersCurrentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="goToUsersPage(${i}); return false;">${i}</a>
+                </li>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="goToUsersPage(${totalPages}); return false;">${totalPages}</a></li>`;
+            }
+            
+            // Next button
+            html += `<li class="page-item ${usersCurrentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="goToUsersPage(${usersCurrentPage + 1}); return false;">Next</a>
+            </li>`;
+            
+            paginationEl.innerHTML = html;
+        }
+        
+        // Go to a specific page
+        function goToUsersPage(page) {
+            usersCurrentPage = page;
+            renderUsersList();
+        }
+        
+        // Change users per page
+        function changeUsersPerPage() {
+            const selectEl = document.getElementById('usersPerPage');
+            if (selectEl) {
+                usersPerPage = parseInt(selectEl.value);
+                usersCurrentPage = 1;
+                renderUsersList();
+            }
+        }
+        
+        // Sort users table by field
+        function sortUsersTable(field) {
+            if (usersSortField === field) {
+                usersSortDirection = usersSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                usersSortField = field;
+                usersSortDirection = 'asc';
+            }
+            usersCurrentPage = 1;
+            renderUsersList();
+        }
+        
+        // Update sort icons
+        function updateSortIcons() {
+            const fields = ['index', 'name', 'username', 'role', 'email', 'status'];
+            fields.forEach(field => {
+                const icon = document.getElementById(`sort-${field}`);
+                if (icon) {
+                    icon.className = 'fas ms-1';
+                    if (usersSortField === field) {
+                        icon.className += usersSortDirection === 'asc' ? ' fa-sort-up' : ' fa-sort-down';
+                    } else {
+                        icon.className += ' fa-sort';
+                    }
+                }
+            });
+        }
+        
+        // Start inline select edit (for dropdown fields like role and status)
+        function startInlineSelectEdit(userIndex, field) {
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            const selectField = document.getElementById(`${field}-input-${userIndex}`);
+            
+            if (!displaySpan || !selectField) {
+                console.warn(`Inline select edit elements not found for user ${userIndex}, field ${field}`);
+                return;
+            }
+            
+            // Hide display, show select
+            displaySpan.classList.add('d-none');
+            selectField.classList.remove('d-none');
+            selectField.focus();
+        }
+        
+        // Save inline select edit
+        function saveInlineSelectEdit(userIndex, field) {
+            const selectField = document.getElementById(`${field}-input-${userIndex}`);
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            
+            if (!selectField || !displaySpan) {
+                console.warn(`Inline select edit elements not found for user ${userIndex}, field ${field}`);
+                return;
+            }
+            
+            if (!users[userIndex]) {
+                addNotification('User not found. Please refresh the page.', 'danger');
+                return;
+            }
+            
+            const newValue = selectField.value;
+            const oldValue = users[userIndex][field] || '';
+            
+            // Hide select, show display
+            selectField.classList.add('d-none');
+            displaySpan.classList.remove('d-none');
+            
+            // Only update if value changed
+            if (newValue !== oldValue) {
+                // Update display immediately
+                const badgeClass = field === 'role' ? getRoleBadgeClass(newValue) : getStatusBadgeClass(newValue);
+                displaySpan.innerHTML = `<span class="badge ${badgeClass}">${escapeHtml(newValue)}</span> <i class="fas fa-pencil-alt ms-1" style="font-size:0.7rem;opacity:0.5;"></i>`;
+                
+                // Track the pending edit
+                if (!pendingUserEdits[userIndex]) {
+                    pendingUserEdits[userIndex] = { originalValues: {} };
+                }
+                if (!pendingUserEdits[userIndex].originalValues[field]) {
+                    pendingUserEdits[userIndex].originalValues[field] = oldValue;
+                }
+                pendingUserEdits[userIndex][field] = newValue;
+                
+                // Update the user data immediately
+                users[userIndex][field] = newValue;
+                users[userIndex].updatedAt = new Date().toISOString();
+                users[userIndex].updatedBy = currentUser ? currentUser.name : 'System';
+                
+                // Save to localStorage immediately for persistence
+                saveData();
+                
+                // Broadcast USER_UPDATE for real-time sync across all devices/tabs
+                if (typeof broadcastDataUpdate === 'function') {
+                    broadcastDataUpdate('USER_UPDATE', { 
+                        action: 'update', 
+                        userName: users[userIndex].username, 
+                        userRole: users[userIndex].role,
+                        userId: users[userIndex].id,
+                        field: field
+                    });
+                }
+                
+                // Show the save changes button
+                showSaveChangesButton();
+                
+                // Show success feedback
+                addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} updated to "${newValue}"`, 'success');
+                
+                // Log activity
+                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name || 'Unknown User'} to ${newValue}`);
+                
+                // Update statistics if role changed
+                if (field === 'role') {
+                    updateUserStatistics();
+                }
+            }
+        }
+        
+        // Cancel inline select edit
+        function cancelInlineSelectEdit(userIndex, field) {
+            const selectField = document.getElementById(`${field}-input-${userIndex}`);
+            const displaySpan = document.getElementById(`${field}-display-${userIndex}`);
+            
+            if (!selectField || !displaySpan) return;
+            
+            // Reset select to original value and hide
+            if (users[userIndex]) {
+                selectField.value = users[userIndex][field] || '';
+            }
+            selectField.classList.add('d-none');
+            displaySpan.classList.remove('d-none');
         }
         
         // Get badge class for role
@@ -19069,13 +19411,24 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             saveData();
             
+            // Broadcast USER_UPDATE for real-time sync across all devices/tabs
+            if (typeof broadcastDataUpdate === 'function') {
+                broadcastDataUpdate('USER_UPDATE', { 
+                    action: 'update', 
+                    userName: username, 
+                    userRole: role,
+                    userId: users[index].id,
+                    field: 'all'
+                });
+            }
+            
             // Log activity
             logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated account for ${name} (${username})`);
             
             hideModal('editUserModal');
             renderUsersList();
             
-            addNotification(`User ${name} updated successfully!`, 'success');
+            addNotification(`User ${name} updated successfully! Changes synced across all devices.`, 'success');
         }
         
         // Track pending inline edits
@@ -19204,7 +19557,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 addNotification(`${field.charAt(0).toUpperCase() + field.slice(1)} updated: "${newValue}"`, 'success');
                 
                 // Log activity
-                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name} (${users[userIndex].username})`);
+                logUserActivity(currentUser?.username || 'System', currentUser?.role || 'Admin', 'User Updated', `Updated ${field} for ${users[userIndex].name || 'Unknown User'} (${users[userIndex].username || 'Unknown'})`);
                 
                 // Update statistics
                 updateUserStatistics();
