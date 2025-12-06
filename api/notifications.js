@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
             }
 
             const notification = {
-                id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
                 type,
                 data: data || {},
                 sender: sender || 'System',
@@ -91,11 +91,16 @@ module.exports = async function handler(req, res) {
             const limitNum = Math.min(parseInt(limit) || 50, 100);
 
             // Get notifications from sorted set with timestamp > since
-            const notifications = await kv.zrangebyscore(
+            // Using zrange with BYSCORE to get notifications newer than 'since'
+            // Results are ordered by score (timestamp) in ascending order
+            const notifications = await kv.zrange(
                 'notifications',
-                sinceTimestamp + 1,  // Exclusive of the since timestamp
-                '+inf',
-                { count: limitNum }
+                sinceTimestamp + 1,  // Minimum score (exclusive of the since timestamp)
+                '+inf',              // Maximum score
+                {
+                    byScore: true,
+                    count: limitNum
+                }
             );
 
             // Parse notifications and filter out the requester's own messages
@@ -124,7 +129,14 @@ module.exports = async function handler(req, res) {
         console.error('Notification API error:', error);
         
         // Check if it's a Vercel KV connection error
-        if (error.message && (error.message.includes('KV') || error.message.includes('UPSTASH') || error.message.includes('Redis'))) {
+        // Check for common Redis/KV error codes and types
+        const isKVError = (
+            (error.code && ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT'].includes(error.code)) ||
+            (error.name && error.name.includes('Redis')) ||
+            (error.constructor && error.constructor.name.includes('Upstash'))
+        );
+        
+        if (isKVError) {
             return res.status(503).json({ 
                 error: 'Storage service unavailable',
                 message: 'Vercel KV is not configured. Please add KV_REST_API_URL and KV_REST_API_TOKEN environment variables.',
