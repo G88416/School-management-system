@@ -1,0 +1,12 @@
+{
+  "name": "school-management-system",
+  "version": "1.0.0",
+  "description": "Advanced School Management System for Bophelong Independent School",
+  "private": true,
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

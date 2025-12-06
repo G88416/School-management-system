@@ -10269,6 +10269,12 @@
                 }
                 renderHR();
                 populateSelects();
+                
+                // Initialize cross-device notifications for real-time sync
+                if (typeof initCrossDeviceNotifications === 'function') {
+                    initCrossDeviceNotifications();
+                }
+                
                 addNotification('Welcome back, ' + user.name + '!', 'info');
             } else {
                 alert('Invalid credentials. Please check your username and password.');
@@ -10411,6 +10417,11 @@
         }
         // Logout
         function logout() {
+            // Cleanup cross-device notifications
+            if (typeof cleanupCrossDeviceNotifications === 'function') {
+                cleanupCrossDeviceNotifications();
+            }
+            
             currentUser = null;
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
@@ -24588,6 +24599,158 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             USER_UPDATE: 'user_update'
         };
         
+        // ========================================
+        // CROSS-DEVICE NOTIFICATION SYSTEM
+        // Using Vercel KV Storage for cross-device real-time sync
+        // ========================================
+        
+        // API endpoint for cross-device notifications
+        const NOTIFICATION_API_URL = '/api/notifications';
+        
+        // Polling interval for cross-device notifications (in milliseconds)
+        const NOTIFICATION_POLL_INTERVAL = 3000; // Poll every 3 seconds
+        
+        // Last timestamp for polling (to get only new notifications)
+        let lastNotificationTimestamp = Date.now();
+        
+        // Polling interval reference
+        let notificationPollInterval = null;
+        
+        // Flag to track if Vercel KV is available
+        let vercelKVAvailable = true;
+        
+        /**
+         * Send notification to Vercel KV for cross-device delivery
+         * @param {Object} message - The notification message to send
+         */
+        async function sendToVercelKV(message) {
+            if (!vercelKVAvailable) return;
+            
+            try {
+                const response = await fetch(NOTIFICATION_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: message.type,
+                        data: message.data,
+                        sender: message.sender,
+                        senderRole: message.senderRole,
+                        sessionId: message.sessionId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.fallback) {
+                        console.log('Vercel KV not configured, using localStorage only');
+                        vercelKVAvailable = false;
+                    }
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Notification sent to Vercel KV for cross-device delivery');
+                }
+            } catch (error) {
+                console.log('Error sending to Vercel KV:', error.message, '- using localStorage fallback');
+                // Don't disable KV on network errors, just log
+            }
+        }
+        
+        /**
+         * Poll for new notifications from other devices via Vercel KV
+         */
+        async function pollCrossDeviceNotifications() {
+            if (!vercelKVAvailable) return;
+            
+            try {
+                const response = await fetch(
+                    `${NOTIFICATION_API_URL}?since=${lastNotificationTimestamp}&sessionId=${broadcastSessionId}`,
+                    { method: 'GET' }
+                );
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.fallback) {
+                        console.log('Vercel KV not configured, stopping polling');
+                        vercelKVAvailable = false;
+                        stopCrossDevicePolling();
+                    }
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.notifications && result.notifications.length > 0) {
+                    // Process each notification from other devices
+                    result.notifications.forEach(notification => {
+                        console.log('Received cross-device notification:', notification.type);
+                        handleBroadcastMessage(notification);
+                    });
+                    
+                    // Update last timestamp to the latest notification
+                    const latestTimestamp = Math.max(
+                        ...result.notifications.map(n => n.timestamp)
+                    );
+                    if (latestTimestamp > lastNotificationTimestamp) {
+                        lastNotificationTimestamp = latestTimestamp;
+                    }
+                }
+                
+                // Update timestamp for next poll
+                if (result.timestamp) {
+                    lastNotificationTimestamp = Math.max(lastNotificationTimestamp, result.timestamp - 1);
+                }
+            } catch (error) {
+                console.log('Error polling notifications:', error.message);
+                // Continue polling even on network errors
+            }
+        }
+        
+        /**
+         * Start polling for cross-device notifications
+         */
+        function startCrossDevicePolling() {
+            if (notificationPollInterval) {
+                clearInterval(notificationPollInterval);
+            }
+            
+            // Start polling
+            notificationPollInterval = setInterval(pollCrossDeviceNotifications, NOTIFICATION_POLL_INTERVAL);
+            console.log('Cross-device notification polling started');
+            
+            // Also do an immediate poll
+            pollCrossDeviceNotifications();
+        }
+        
+        /**
+         * Stop polling for cross-device notifications
+         */
+        function stopCrossDevicePolling() {
+            if (notificationPollInterval) {
+                clearInterval(notificationPollInterval);
+                notificationPollInterval = null;
+                console.log('Cross-device notification polling stopped');
+            }
+        }
+        
+        // Start cross-device polling when user is logged in
+        // This is called after successful login
+        function initCrossDeviceNotifications() {
+            if (currentUser && currentUser.name) {
+                lastNotificationTimestamp = Date.now();
+                startCrossDevicePolling();
+            }
+        }
+        
+        // Stop polling on logout
+        function cleanupCrossDeviceNotifications() {
+            stopCrossDevicePolling();
+        }
+        
         // Broadcast a message to all tabs/windows
         function broadcastMessage(type, data) {
             const message = {
@@ -24599,7 +24762,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 senderRole: currentUser ? currentUser.role : 'system'
             };
             
-            // Use BroadcastChannel if available
+            // Use BroadcastChannel if available (same device, different tabs)
             if (schoolBroadcastChannel) {
                 schoolBroadcastChannel.postMessage(message);
             }
@@ -24613,6 +24776,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
             localStorage.setItem('realtimeBroadcasts', JSON.stringify(broadcasts));
             localStorage.setItem('lastBroadcast', JSON.stringify(message));
+            
+            // Send to Vercel KV for cross-device delivery
+            sendToVercelKV(message);
         }
         
         // Handle incoming broadcast messages
@@ -24644,6 +24810,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     break;
                 case BROADCAST_TYPES.TEACHER_CHAT:
                     handleIncomingTeacherChat(message);
+                    break;
+                case BROADCAST_TYPES.PARENT_CHAT:
+                    handleIncomingParentChat(message);
                     break;
                 case BROADCAST_TYPES.CALL_ENDED:
                     handleCallEnded(message);
@@ -24735,6 +24904,38 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     }
                 } catch (e) {
                     console.log('Error syncing announcements:', e.message);
+                }
+            }
+            
+            // Parent chats change detection for cross-device sync
+            if (event.key === 'parentChats' && event.newValue) {
+                try {
+                    console.log('Parent chats synced via localStorage change detection');
+                    
+                    // Re-render parent chat if in parent portal
+                    const currentSection = document.querySelector('.section:not(.d-none)');
+                    if (currentSection && currentSection.id === 'parentPortal') {
+                        if (typeof renderParentChatMessages === 'function') {
+                            renderParentChatMessages();
+                        }
+                    }
+                    
+                    // Show notification for new parent message
+                    const chats = JSON.parse(event.newValue);
+                    if (chats.length > 0) {
+                        const latestChat = chats[chats.length - 1];
+                        // Only notify if the message is recent (within last 10 seconds)
+                        if (Date.now() - new Date(latestChat.timestamp).getTime() < 10000) {
+                            showRealtimeNotification(
+                                '💬 New Parent Message',
+                                `${latestChat.senderName}: ${latestChat.message}`,
+                                'chat',
+                                true
+                            );
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error syncing parent chats:', e.message);
                 }
             }
         });
@@ -24886,6 +25087,37 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 `${message.sender}: ${message.data.message || 'New message received'}`,
                 'chat'
             );
+        }
+        
+        function handleIncomingParentChat(message) {
+            // Reload parent chats
+            let parentChats = JSON.parse(localStorage.getItem('parentChats') || '[]');
+            
+            // Re-render if in parent portal section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'parentPortal') {
+                // Re-render parent chat messages
+                if (typeof renderParentChatMessages === 'function') {
+                    renderParentChatMessages();
+                }
+                
+                // Scroll to bottom of chat
+                const container = document.getElementById('parentChatMessages');
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+            
+            // Show notification - this is key for cross-device alerts
+            showRealtimeNotification(
+                '💬 Parent Message',
+                `${message.sender}: ${message.data.message || 'New message received'}`,
+                'chat',
+                true // Priority notification for parent messages
+            );
+            
+            // Also add to notification bell
+            addNotification(`New message from ${message.sender}`, 'info');
         }
         
         function handleCallEnded(message) {
