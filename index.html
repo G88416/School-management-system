@@ -6382,6 +6382,11 @@
                             <i class="fas fa-database me-2"></i>Data Vault
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="firebase-integration-tab" data-bs-toggle="tab" data-bs-target="#firebase-integration" type="button" role="tab" aria-controls="firebase-integration" aria-selected="false">
+                            <i class="fas fa-sync-alt me-2"></i>Real-Time Sync
+                        </button>
+                    </li>
                 </ul>
                 
                 <!-- Settings Tab Content -->
@@ -6737,6 +6742,130 @@
                                         <tbody id="vaultTable"></tbody>
                                     </table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Firebase Real-Time Integration Tab -->
+                    <div class="tab-pane fade" id="firebase-integration" role="tabpanel" aria-labelledby="firebase-integration-tab">
+                        <div class="mt-4">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Real-Time Synchronization</strong>
+                                <p class="mb-0 mt-2">Configure Firebase to enable real-time message syncing across all devices, video/voice calls, and cloud storage for voice notes. Without Firebase, the system uses local BroadcastChannel API (same device only).</p>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card card-metric p-3 text-center">
+                                        <h5><i class="fas fa-signal me-2" style="color: #10b981;"></i>Status</h5>
+                                        <h4 id="firebaseStatus" class="text-warning">Not Configured</h4>
+                                        <small id="firebaseStatusDetail" class="text-muted">Local sync only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card card-metric p-3 text-center">
+                                        <h5><i class="fas fa-sync-alt me-2" style="color: #0ea5e9;"></i>Sync Type</h5>
+                                        <h4 id="syncType">BroadcastChannel</h4>
+                                        <small class="text-muted">Same device only</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card card-metric p-3 text-center">
+                                        <h5><i class="fas fa-video me-2" style="color: #f59e0b;"></i>Calling</h5>
+                                        <h4 id="callingStatus">Ready</h4>
+                                        <small class="text-muted">WebRTC P2P</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h5><i class="fas fa-cog me-2"></i>Firebase Configuration</h5>
+                            <p class="text-muted">Enter your Firebase project credentials to enable cross-device real-time synchronization.</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">API Key</label>
+                                    <input type="password" id="firebaseApiKey" class="form-control" placeholder="Enter Firebase API Key">
+                                    <small class="text-muted">From Firebase Console → Project Settings</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Project ID</label>
+                                    <input type="text" id="firebaseProjectId" class="form-control" placeholder="your-project-id">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Database URL</label>
+                                    <input type="text" id="firebaseDatabaseURL" class="form-control" placeholder="https://your-project.firebaseio.com">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Auth Domain</label>
+                                    <input type="text" id="firebaseAuthDomain" class="form-control" placeholder="your-project.firebaseapp.com">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Storage Bucket</label>
+                                    <input type="text" id="firebaseStorageBucket" class="form-control" placeholder="your-project.appspot.com">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Messaging Sender ID</label>
+                                    <input type="text" id="firebaseMessagingSenderId" class="form-control" placeholder="123456789">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">App ID</label>
+                                    <input type="text" id="firebaseAppId" class="form-control" placeholder="1:123456789:web:abcdef">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">School ID (Optional)</label>
+                                    <input type="text" id="schoolId" class="form-control" placeholder="default-school" value="default-school">
+                                    <small class="text-muted">Unique identifier for your school</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button class="btn btn-success" onclick="saveFirebaseConfig()">
+                                    <i class="fas fa-save me-2"></i>Save & Connect
+                                </button>
+                                <button class="btn btn-info ms-2" onclick="testFirebaseConnection()">
+                                    <i class="fas fa-plug me-2"></i>Test Connection
+                                </button>
+                                <button class="btn btn-warning ms-2" onclick="loadFirebaseConfig()">
+                                    <i class="fas fa-download me-2"></i>Load Saved Config
+                                </button>
+                                <button class="btn btn-danger ms-2" onclick="clearFirebaseConfig()">
+                                    <i class="fas fa-trash me-2"></i>Clear Configuration
+                                </button>
+                            </div>
+                            
+                            <div class="mt-4 alert alert-secondary">
+                                <h6><i class="fas fa-question-circle me-2"></i>How to get Firebase credentials:</h6>
+                                <ol class="mb-0">
+                                    <li>Go to <a href="https://console.firebase.google.com/" target="_blank" class="text-info">Firebase Console</a></li>
+                                    <li>Create a new project or select existing project</li>
+                                    <li>Click on Project Settings (gear icon)</li>
+                                    <li>Scroll down to "Your apps" section</li>
+                                    <li>Click on Web app (</>) to add or view your web app</li>
+                                    <li>Copy the configuration values and paste them above</li>
+                                    <li>Enable Realtime Database, Storage, and Cloud Messaging in Firebase Console</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5><i class="fas fa-mobile-alt me-2"></i>Features Enabled with Firebase</h5>
+                                <ul>
+                                    <li><strong>Cross-Device Sync:</strong> Messages and data sync instantly across all devices (phones, tablets, computers)</li>
+                                    <li><strong>Real-Time Updates:</strong> Admin changes reflect immediately on all connected devices</li>
+                                    <li><strong>Push Notifications:</strong> Receive notifications even when app is closed</li>
+                                    <li><strong>Cloud Storage:</strong> Voice notes stored securely in cloud</li>
+                                    <li><strong>Offline Support:</strong> Data syncs automatically when connection restored</li>
+                                    <li><strong>Call Signaling:</strong> Enhanced video/voice call coordination across devices</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -18660,6 +18789,126 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             grokSettings.enabled = grokSettings.apiKey.length > 0;
             saveData();
             addNotification('Grok API settings saved', 'success');
+        }
+        
+        // ========================================
+        // FIREBASE CONFIGURATION MANAGEMENT
+        // ========================================
+        
+        function saveFirebaseConfig() {
+            const apiKey = document.getElementById('firebaseApiKey').value.trim();
+            const projectId = document.getElementById('firebaseProjectId').value.trim();
+            const databaseURL = document.getElementById('firebaseDatabaseURL').value.trim();
+            const authDomain = document.getElementById('firebaseAuthDomain').value.trim();
+            const storageBucket = document.getElementById('firebaseStorageBucket').value.trim();
+            const messagingSenderId = document.getElementById('firebaseMessagingSenderId').value.trim();
+            const appId = document.getElementById('firebaseAppId').value.trim();
+            const schoolIdValue = document.getElementById('schoolId').value.trim();
+            
+            // Validate required fields
+            if (!apiKey || !projectId || !databaseURL) {
+                addNotification('Please fill in at least API Key, Project ID, and Database URL', 'warning');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('firebaseApiKey', apiKey);
+            localStorage.setItem('firebaseProjectId', projectId);
+            localStorage.setItem('firebaseDatabaseURL', databaseURL);
+            localStorage.setItem('firebaseAuthDomain', authDomain);
+            localStorage.setItem('firebaseStorageBucket', storageBucket);
+            localStorage.setItem('firebaseMessagingSenderId', messagingSenderId);
+            localStorage.setItem('firebaseAppId', appId);
+            localStorage.setItem('schoolId', schoolIdValue || 'default-school');
+            
+            addNotification('Firebase configuration saved! Reconnecting...', 'success');
+            
+            // Reinitialize Firebase with new config
+            firebaseInitialized = false;
+            firebaseApp = null;
+            
+            setTimeout(() => {
+                const success = initializeFirebase();
+                updateFirebaseStatus(success);
+            }, 1000);
+        }
+        
+        function loadFirebaseConfig() {
+            document.getElementById('firebaseApiKey').value = localStorage.getItem('firebaseApiKey') || '';
+            document.getElementById('firebaseProjectId').value = localStorage.getItem('firebaseProjectId') || '';
+            document.getElementById('firebaseDatabaseURL').value = localStorage.getItem('firebaseDatabaseURL') || '';
+            document.getElementById('firebaseAuthDomain').value = localStorage.getItem('firebaseAuthDomain') || '';
+            document.getElementById('firebaseStorageBucket').value = localStorage.getItem('firebaseStorageBucket') || '';
+            document.getElementById('firebaseMessagingSenderId').value = localStorage.getItem('firebaseMessagingSenderId') || '';
+            document.getElementById('firebaseAppId').value = localStorage.getItem('firebaseAppId') || '';
+            document.getElementById('schoolId').value = localStorage.getItem('schoolId') || 'default-school';
+            
+            updateFirebaseStatus(firebaseInitialized);
+            addNotification('Firebase configuration loaded', 'info');
+        }
+        
+        function testFirebaseConnection() {
+            addNotification('Testing Firebase connection...', 'info');
+            
+            if (!firebaseInitialized) {
+                const success = initializeFirebase();
+                updateFirebaseStatus(success);
+                
+                if (success) {
+                    addNotification('Firebase connection successful! ✅', 'success');
+                } else {
+                    addNotification('Firebase connection failed. Check your credentials.', 'danger');
+                }
+            } else {
+                addNotification('Firebase already connected! ✅', 'success');
+                updateFirebaseStatus(true);
+            }
+        }
+        
+        function clearFirebaseConfig() {
+            if (!confirm('Are you sure you want to clear Firebase configuration? This will disable cross-device sync.')) {
+                return;
+            }
+            
+            localStorage.removeItem('firebaseApiKey');
+            localStorage.removeItem('firebaseProjectId');
+            localStorage.removeItem('firebaseDatabaseURL');
+            localStorage.removeItem('firebaseAuthDomain');
+            localStorage.removeItem('firebaseStorageBucket');
+            localStorage.removeItem('firebaseMessagingSenderId');
+            localStorage.removeItem('firebaseAppId');
+            
+            document.getElementById('firebaseApiKey').value = '';
+            document.getElementById('firebaseProjectId').value = '';
+            document.getElementById('firebaseDatabaseURL').value = '';
+            document.getElementById('firebaseAuthDomain').value = '';
+            document.getElementById('firebaseStorageBucket').value = '';
+            document.getElementById('firebaseMessagingSenderId').value = '';
+            document.getElementById('firebaseAppId').value = '';
+            
+            firebaseInitialized = false;
+            firebaseApp = null;
+            
+            updateFirebaseStatus(false);
+            addNotification('Firebase configuration cleared', 'info');
+        }
+        
+        function updateFirebaseStatus(connected) {
+            const statusElement = document.getElementById('firebaseStatus');
+            const statusDetailElement = document.getElementById('firebaseStatusDetail');
+            const syncTypeElement = document.getElementById('syncType');
+            
+            if (connected) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'text-success';
+                statusDetailElement.textContent = 'Cross-device sync enabled';
+                syncTypeElement.textContent = 'Firebase + BroadcastChannel';
+            } else {
+                statusElement.textContent = 'Not Configured';
+                statusElement.className = 'text-warning';
+                statusDetailElement.textContent = 'Local sync only';
+                syncTypeElement.textContent = 'BroadcastChannel';
+            }
         }
         
         // ========================================
