@@ -93,8 +93,11 @@ self.addEventListener('fetch', (event) => {
               .then((cache) => {
                 // Only cache same-origin resources
                 if (event.request.url.startsWith(self.location.origin)) {
-                  cache.put(event.request, responseToCache);
+                  return cache.put(event.request, responseToCache);
                 }
+              })
+              .catch((error) => {
+                console.log('Service Worker: Cache put error -', error);
               });
 
             return response;
@@ -129,8 +132,20 @@ self.addEventListener('message', (event) => {
 self.addEventListener('push', (event) => {
   console.log('Service Worker: Push notification received');
   
+  // Safely extract notification text
+  let notificationBody = 'New notification from BIS Management';
+  try {
+    if (event.data && typeof event.data.text === 'function') {
+      notificationBody = event.data.text();
+    } else if (event.data && typeof event.data === 'string') {
+      notificationBody = event.data;
+    }
+  } catch (error) {
+    console.log('Service Worker: Error parsing push data -', error);
+  }
+  
   const options = {
-    body: event.data ? event.data.text() : 'New notification from BIS Management',
+    body: notificationBody,
     icon: 'https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png',
     badge: 'https://img1.wsimg.com/isteam/ip/33f55342-69d0-4c3b-9478-c9e1f81bbc39/blob.png',
     vibrate: [200, 100, 200],
