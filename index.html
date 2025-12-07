@@ -27,6 +27,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script> <!-- Stripe SDK -->
+    
+    <!-- Firebase SDK for Real-Time Syncing -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
+    <!-- PeerJS for WebRTC Video/Voice Calling -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             /* Default Theme (Purple Gradient) - Enhanced with G19-inspired colors */
@@ -10269,6 +10278,10 @@
                 }
                 renderHR();
                 populateSelects();
+                
+                // Initialize real-time communication systems
+                initializeCommunicationSystems();
+                
                 addNotification('Welcome back, ' + user.name + '!', 'info');
             } else {
                 alert('Invalid credentials. Please check your username and password.');
@@ -25468,7 +25481,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // ENHANCED SEND FUNCTIONS WITH BROADCASTING
         // ========================================
         
-        // Override sendLiveChatMessage to broadcast
+        // Override sendLiveChatMessage to broadcast with Firebase sync
         const originalSendLiveChatMessage = typeof sendLiveChatMessage !== 'undefined' ? sendLiveChatMessage : null;
         sendLiveChatMessage = function() {
             const input = document.getElementById('liveChatInput');
@@ -25490,7 +25503,10 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             liveChatMessages.push(message);
             localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
             
-            // Broadcast to all tabs/windows
+            // Sync to Firebase for cross-device updates
+            syncToFirebase('message', message);
+            
+            // Broadcast to all tabs/windows on this device
             broadcastMessage(BROADCAST_TYPES.LIVE_CHAT, {
                 text: text,
                 messageId: message.id
@@ -25506,7 +25522,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             addNotification('Message sent to all users!', 'success');
         };
         
-        // Override createAnnouncement to broadcast
+        // Override createAnnouncement to broadcast with Firebase sync
         const originalCreateAnnouncement = typeof createAnnouncement !== 'undefined' ? createAnnouncement : null;
         createAnnouncement = function() {
             const title = document.getElementById('announcementTitle').value.trim();
@@ -25532,7 +25548,10 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             announcements.push(announcement);
             localStorage.setItem('announcements', JSON.stringify(announcements));
             
-            // Broadcast announcement to all users immediately
+            // Sync to Firebase for cross-device updates
+            syncToFirebase('announcement', announcement);
+            
+            // Broadcast announcement to all users immediately on this device
             broadcastMessage(BROADCAST_TYPES.ANNOUNCEMENT, {
                 title: title,
                 content: content,
@@ -25657,6 +25676,864 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         });
         
         console.log('Real-time communication system initialized successfully!');
+        
+        // ========================================
+        // FIREBASE REAL-TIME DATABASE INTEGRATION
+        // Enhanced Cross-Device Synchronization
+        // ========================================
+        
+        let firebaseApp = null;
+        let firebaseDb = null;
+        let firebaseMessaging = null;
+        let firebaseStorage = null;
+        let firebaseInitialized = false;
+        
+        // Firebase configuration (Users should replace with their own Firebase project config)
+        const firebaseConfig = {
+            apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
+            authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
+            databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
+            projectId: localStorage.getItem('firebaseProjectId') || "your-project",
+            storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
+            messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
+            appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
+        };
+        
+        // Initialize Firebase if configuration is provided
+        function initializeFirebase() {
+            try {
+                // Check if Firebase SDK is loaded
+                if (typeof firebase === 'undefined') {
+                    console.log('Firebase SDK not loaded, using local-only sync');
+                    return false;
+                }
+                
+                // Check if valid configuration exists
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    console.log('Firebase not configured. Using local BroadcastChannel only.');
+                    console.log('To enable cross-device sync, configure Firebase in Settings > Integration');
+                    return false;
+                }
+                
+                // Initialize Firebase
+                if (!firebaseApp) {
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    firebaseDb = firebase.database();
+                    firebaseStorage = firebase.storage();
+                    
+                    // Try to initialize messaging (may fail if not supported)
+                    try {
+                        if (firebase.messaging.isSupported()) {
+                            firebaseMessaging = firebase.messaging();
+                        }
+                    } catch (e) {
+                        console.log('Firebase messaging not supported:', e.message);
+                    }
+                    
+                    firebaseInitialized = true;
+                    console.log('✅ Firebase initialized successfully - Cross-device sync enabled!');
+                    
+                    // Setup Firebase real-time listeners
+                    setupFirebaseListeners();
+                    
+                    // Show success notification
+                    if (typeof addNotification === 'function') {
+                        addNotification('Real-time sync enabled across all devices!', 'success');
+                    }
+                    
+                    return true;
+                }
+            } catch (error) {
+                console.log('Firebase initialization failed:', error.message);
+                firebaseInitialized = false;
+                return false;
+            }
+        }
+        
+        // Setup Firebase real-time listeners for data synchronization
+        function setupFirebaseListeners() {
+            if (!firebaseInitialized || !firebaseDb) return;
+            
+            const schoolId = localStorage.getItem('schoolId') || 'default-school';
+            
+            // Listen for message updates
+            firebaseDb.ref(`schools/${schoolId}/messages`).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                if (message && message.sender !== currentUser.name) {
+                    // New message from another device
+                    handleFirebaseMessage(message);
+                }
+            });
+            
+            // Listen for announcement updates
+            firebaseDb.ref(`schools/${schoolId}/announcements`).on('child_added', (snapshot) => {
+                const announcement = snapshot.val();
+                if (announcement && announcement.createdBy !== currentUser.name) {
+                    handleFirebaseAnnouncement(announcement);
+                }
+            });
+            
+            // Listen for data updates (students, attendance, fees, etc.)
+            firebaseDb.ref(`schools/${schoolId}/dataUpdates`).on('value', (snapshot) => {
+                const update = snapshot.val();
+                if (update && update.updatedBy !== currentUser.name) {
+                    handleFirebaseDataUpdate(update);
+                }
+            });
+            
+            // Listen for incoming calls
+            firebaseDb.ref(`schools/${schoolId}/calls/${currentUser.username || currentUser.name}`).on('child_added', (snapshot) => {
+                const call = snapshot.val();
+                if (call && call.caller !== currentUser.name) {
+                    handleFirebaseIncomingCall(call);
+                }
+            });
+            
+            console.log('Firebase real-time listeners activated');
+        }
+        
+        // Handle incoming Firebase messages
+        function handleFirebaseMessage(message) {
+            // Add to local storage
+            liveChatMessages.push(message);
+            localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
+            
+            // Update UI if on messages section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection && currentSection.id === 'media') {
+                renderLiveChatMessages();
+            }
+            
+            // Show notification
+            showRealtimeNotification(
+                '💬 New Message',
+                `${message.sender}: ${message.text}`,
+                'chat'
+            );
+        }
+        
+        // Handle incoming Firebase announcements
+        function handleFirebaseAnnouncement(announcement) {
+            // Add to local storage
+            announcements.push(announcement);
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // Update UI
+            if (typeof renderAnnouncementsList === 'function') {
+                renderAnnouncementsList();
+            }
+            
+            // Show notification
+            showRealtimeNotification(
+                `📢 ${announcement.title}`,
+                announcement.content,
+                'announcement',
+                announcement.priority === 'Urgent' || announcement.priority === 'High'
+            );
+        }
+        
+        // Handle incoming Firebase data updates
+        function handleFirebaseDataUpdate(update) {
+            // Reload data from localStorage (Firebase has already updated it)
+            loadData();
+            
+            // Refresh current section
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (currentSection) {
+                refreshCurrentSection(currentSection.id);
+            }
+            
+            // Show sync notification
+            showRealtimeNotification(
+                '🔄 Data Synchronized',
+                `${update.updateType} updated by ${update.updatedBy}`,
+                'sync'
+            );
+        }
+        
+        // Handle incoming Firebase calls
+        function handleFirebaseIncomingCall(call) {
+            showIncomingCallModal(call, call.callType || 'voice');
+            playCallRingtone();
+        }
+        
+        // Sync data to Firebase when changes are made
+        function syncToFirebase(dataType, data) {
+            if (!firebaseInitialized || !firebaseDb) return;
+            
+            const schoolId = localStorage.getItem('schoolId') || 'default-school';
+            const timestamp = Date.now();
+            
+            try {
+                switch (dataType) {
+                    case 'message':
+                        firebaseDb.ref(`schools/${schoolId}/messages`).push({
+                            ...data,
+                            timestamp: timestamp,
+                            synced: true
+                        });
+                        break;
+                        
+                    case 'announcement':
+                        firebaseDb.ref(`schools/${schoolId}/announcements`).push({
+                            ...data,
+                            timestamp: timestamp,
+                            synced: true
+                        });
+                        break;
+                        
+                    case 'dataUpdate':
+                        firebaseDb.ref(`schools/${schoolId}/dataUpdates`).set({
+                            ...data,
+                            timestamp: timestamp,
+                            updatedBy: currentUser.name
+                        });
+                        break;
+                        
+                    case 'call':
+                        // Store call info for the recipient
+                        if (data.recipient) {
+                            firebaseDb.ref(`schools/${schoolId}/calls/${data.recipient}`).push({
+                                ...data,
+                                timestamp: timestamp
+                            });
+                        }
+                        break;
+                }
+                
+                console.log(`✅ ${dataType} synced to Firebase`);
+            } catch (error) {
+                console.log('Firebase sync error:', error.message);
+            }
+        }
+        
+        // Initialize Firebase on page load (after user login)
+        function attemptFirebaseInit() {
+            if (currentUser && !firebaseInitialized) {
+                initializeFirebase();
+            }
+        }
+        
+        // ========================================
+        // WEBRTC VIDEO/VOICE CALLING SYSTEM
+        // Peer-to-Peer Communication
+        // ========================================
+        
+        let peer = null;
+        let currentCall = null;
+        let localStream = null;
+        let remoteStream = null;
+        let peerInitialized = false;
+        
+        // Initialize PeerJS for WebRTC
+        function initializePeer() {
+            try {
+                if (typeof Peer === 'undefined') {
+                    console.log('PeerJS not loaded, video/voice calls unavailable');
+                    return false;
+                }
+                
+                if (peer) {
+                    return true; // Already initialized
+                }
+                
+                // Generate a unique peer ID based on user
+                const peerId = `bis-${currentUser.username || currentUser.name}-${Date.now()}`;
+                
+                peer = new Peer(peerId, {
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    }
+                });
+                
+                peer.on('open', (id) => {
+                    console.log('✅ PeerJS initialized with ID:', id);
+                    peerInitialized = true;
+                    
+                    // Store peer ID for others to call
+                    localStorage.setItem('myPeerId', id);
+                    
+                    // Notify Firebase of peer ID
+                    if (firebaseInitialized) {
+                        const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                        firebaseDb.ref(`schools/${schoolId}/peerIds/${currentUser.username || currentUser.name}`).set(id);
+                    }
+                });
+                
+                peer.on('call', (call) => {
+                    // Incoming call
+                    handleIncomingPeerCall(call);
+                });
+                
+                peer.on('error', (error) => {
+                    console.log('PeerJS error:', error.message);
+                });
+                
+                return true;
+            } catch (error) {
+                console.log('PeerJS initialization failed:', error.message);
+                return false;
+            }
+        }
+        
+        // Start a video call
+        async function startVideoCall(recipientUsername) {
+            try {
+                if (!peerInitialized) {
+                    initializePeer();
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for peer init
+                }
+                
+                // Get local video/audio stream
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                // Get recipient's peer ID
+                const recipientPeerId = await getRecipientPeerId(recipientUsername);
+                
+                if (!recipientPeerId) {
+                    addNotification('Recipient is not online', 'warning');
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                    return;
+                }
+                
+                // Make the call
+                currentCall = peer.call(recipientPeerId, localStream);
+                
+                currentCall.on('stream', (stream) => {
+                    remoteStream = stream;
+                    displayVideoCall(localStream, remoteStream);
+                    addNotification('Video call connected!', 'success');
+                });
+                
+                currentCall.on('close', () => {
+                    endCall();
+                    addNotification('Video call ended', 'info');
+                });
+                
+                // Broadcast call start
+                broadcastVideoCallStart({
+                    callId: Date.now(),
+                    participants: [recipientUsername],
+                    context: 'direct-video'
+                });
+                
+                // Sync to Firebase
+                syncToFirebase('call', {
+                    callType: 'video',
+                    caller: currentUser.name,
+                    recipient: recipientUsername,
+                    callId: Date.now()
+                });
+                
+            } catch (error) {
+                console.log('Video call error:', error.message);
+                addNotification(`Cannot start video call: ${error.message}`, 'danger');
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+            }
+        }
+        
+        // Start a voice call
+        async function startVoiceCall(recipientUsername) {
+            try {
+                if (!peerInitialized) {
+                    initializePeer();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // Get local audio stream only
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: false, 
+                    audio: true 
+                });
+                
+                // Get recipient's peer ID
+                const recipientPeerId = await getRecipientPeerId(recipientUsername);
+                
+                if (!recipientPeerId) {
+                    addNotification('Recipient is not online', 'warning');
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                    return;
+                }
+                
+                // Make the call
+                currentCall = peer.call(recipientPeerId, localStream);
+                
+                currentCall.on('stream', (stream) => {
+                    remoteStream = stream;
+                    displayVoiceCall(localStream, remoteStream);
+                    addNotification('Voice call connected!', 'success');
+                });
+                
+                currentCall.on('close', () => {
+                    endCall();
+                    addNotification('Voice call ended', 'info');
+                });
+                
+                // Broadcast call start
+                broadcastVoiceCallStart({
+                    callId: Date.now(),
+                    participants: [recipientUsername],
+                    context: 'direct-voice'
+                });
+                
+                // Sync to Firebase
+                syncToFirebase('call', {
+                    callType: 'voice',
+                    caller: currentUser.name,
+                    recipient: recipientUsername,
+                    callId: Date.now()
+                });
+                
+            } catch (error) {
+                console.log('Voice call error:', error.message);
+                addNotification(`Cannot start voice call: ${error.message}`, 'danger');
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+            }
+        }
+        
+        // Handle incoming peer call
+        function handleIncomingPeerCall(call) {
+            // Show incoming call modal
+            const caller = call.metadata?.caller || 'Unknown';
+            const callType = call.metadata?.callType || 'voice';
+            
+            showIncomingCallModal({
+                caller: caller,
+                callId: call.peer
+            }, callType);
+            
+            playCallRingtone();
+            
+            // Store call for later answer
+            window.pendingCall = call;
+        }
+        
+        // Accept incoming call
+        async function acceptIncomingPeerCall() {
+            try {
+                const call = window.pendingCall;
+                if (!call) return;
+                
+                // Get local stream
+                const hasVideo = call.metadata?.callType === 'video';
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: hasVideo, 
+                    audio: true 
+                });
+                
+                // Answer the call
+                call.answer(localStream);
+                currentCall = call;
+                
+                call.on('stream', (stream) => {
+                    remoteStream = stream;
+                    if (hasVideo) {
+                        displayVideoCall(localStream, remoteStream);
+                    } else {
+                        displayVoiceCall(localStream, remoteStream);
+                    }
+                });
+                
+                call.on('close', () => {
+                    endCall();
+                });
+                
+                window.pendingCall = null;
+                hideIncomingCallModal();
+                stopCallRingtone();
+                
+            } catch (error) {
+                console.log('Error accepting call:', error.message);
+                addNotification(`Cannot accept call: ${error.message}`, 'danger');
+            }
+        }
+        
+        // Display video call UI
+        function displayVideoCall(local, remote) {
+            // Find or create video container
+            let videoContainer = document.getElementById('videoChatContainer') || 
+                                document.getElementById('parentVideoChatContainer');
+            
+            if (!videoContainer) {
+                // Create a modal for video call
+                videoContainer = document.createElement('div');
+                videoContainer.id = 'activeVideoCall';
+                videoContainer.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.95);
+                    z-index: 3000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                `;
+                document.body.appendChild(videoContainer);
+            }
+            
+            videoContainer.innerHTML = `
+                <div style="position: relative; width: 100%; max-width: 1200px; height: 80vh;">
+                    <video id="remoteVideo" autoplay playsinline style="width: 100%; height: 100%; background: #000; border-radius: 12px;"></video>
+                    <video id="localVideo" autoplay playsinline muted style="position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; background: #000; border-radius: 8px; border: 2px solid #fff;"></video>
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 15px;">
+                    <button onclick="toggleMute()" class="btn btn-warning">
+                        <i class="fas fa-microphone" id="muteIcon"></i>
+                    </button>
+                    <button onclick="toggleVideo()" class="btn btn-info">
+                        <i class="fas fa-video" id="videoIcon"></i>
+                    </button>
+                    <button onclick="endCall()" class="btn btn-danger">
+                        <i class="fas fa-phone-slash"></i> End Call
+                    </button>
+                </div>
+            `;
+            
+            videoContainer.style.display = 'flex';
+            
+            // Attach streams
+            document.getElementById('localVideo').srcObject = local;
+            document.getElementById('remoteVideo').srcObject = remote;
+        }
+        
+        // Display voice call UI
+        function displayVoiceCall(local, remote) {
+            let voiceContainer = document.getElementById('voiceCallContainer');
+            
+            if (!voiceContainer) {
+                voiceContainer = document.createElement('div');
+                voiceContainer.id = 'voiceCallContainer';
+                voiceContainer.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+                    border-radius: 20px;
+                    padding: 40px;
+                    z-index: 3000;
+                    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+                    text-align: center;
+                    min-width: 300px;
+                `;
+                document.body.appendChild(voiceContainer);
+            }
+            
+            voiceContainer.innerHTML = `
+                <div style="margin-bottom: 30px;">
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #10b981, #34d399); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-phone-volume" style="font-size: 2.5rem; color: #fff;"></i>
+                    </div>
+                    <h4 style="color: #fff; margin-bottom: 5px;">Voice Call Active</h4>
+                    <p style="color: rgba(255,255,255,0.7);" id="callDuration">00:00</p>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 20px;">
+                    <button onclick="toggleMute()" class="btn btn-warning" style="border-radius: 50%; width: 60px; height: 60px;">
+                        <i class="fas fa-microphone" id="muteIcon" style="font-size: 1.5rem;"></i>
+                    </button>
+                    <button onclick="endCall()" class="btn btn-danger" style="border-radius: 50%; width: 60px; height: 60px;">
+                        <i class="fas fa-phone-slash" style="font-size: 1.5rem;"></i>
+                    </button>
+                </div>
+                <audio id="remoteAudio" autoplay></audio>
+            `;
+            
+            voiceContainer.style.display = 'block';
+            
+            // Attach remote stream
+            document.getElementById('remoteAudio').srcObject = remote;
+            
+            // Start call duration timer
+            startCallDurationTimer();
+        }
+        
+        // Toggle mute
+        function toggleMute() {
+            if (!localStream) return;
+            
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const muteIcon = document.getElementById('muteIcon');
+                if (muteIcon) {
+                    muteIcon.className = audioTrack.enabled ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+                }
+            }
+        }
+        
+        // Toggle video
+        function toggleVideo() {
+            if (!localStream) return;
+            
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                const videoIcon = document.getElementById('videoIcon');
+                if (videoIcon) {
+                    videoIcon.className = videoTrack.enabled ? 'fas fa-video' : 'fas fa-video-slash';
+                }
+            }
+        }
+        
+        // End call
+        function endCall() {
+            // Stop all tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (remoteStream) {
+                remoteStream.getTracks().forEach(track => track.stop());
+                remoteStream = null;
+            }
+            
+            // Close peer connection
+            if (currentCall) {
+                currentCall.close();
+                currentCall = null;
+            }
+            
+            // Remove UI elements
+            const videoContainer = document.getElementById('activeVideoCall');
+            const voiceContainer = document.getElementById('voiceCallContainer');
+            if (videoContainer) videoContainer.remove();
+            if (voiceContainer) voiceContainer.remove();
+            
+            // Broadcast call end
+            broadcastCallEnd(Date.now());
+            
+            // Stop call duration timer
+            if (window.callDurationInterval) {
+                clearInterval(window.callDurationInterval);
+                window.callDurationInterval = null;
+            }
+        }
+        
+        // Get recipient peer ID from Firebase or localStorage
+        async function getRecipientPeerId(username) {
+            // First check Firebase
+            if (firebaseInitialized) {
+                try {
+                    const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                    const snapshot = await firebaseDb.ref(`schools/${schoolId}/peerIds/${username}`).once('value');
+                    const peerId = snapshot.val();
+                    if (peerId) return peerId;
+                } catch (error) {
+                    console.log('Error getting peer ID from Firebase:', error.message);
+                }
+            }
+            
+            // Fallback: check localStorage (for same-device calls)
+            return localStorage.getItem(`peerId-${username}`);
+        }
+        
+        // Start call duration timer
+        function startCallDurationTimer() {
+            let seconds = 0;
+            window.callDurationInterval = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                const durationElement = document.getElementById('callDuration');
+                if (durationElement) {
+                    durationElement.textContent = `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        
+        // ========================================
+        // VOICE NOTES RECORDING AND PLAYBACK
+        // ========================================
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        // Start recording voice note
+        async function startVoiceNoteRecording(targetElementId) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await handleVoiceNoteComplete(audioBlob, targetElementId);
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // Update UI
+                const recordButton = document.getElementById(targetElementId);
+                if (recordButton) {
+                    recordButton.innerHTML = '<i class="fas fa-stop recording-indicator"></i> Stop Recording';
+                    recordButton.classList.add('btn-danger');
+                    recordButton.classList.remove('btn-info');
+                }
+                
+                addNotification('Recording voice note...', 'info');
+                
+            } catch (error) {
+                console.log('Voice recording error:', error.message);
+                addNotification(`Cannot record audio: ${error.message}`, 'danger');
+            }
+        }
+        
+        // Stop recording voice note
+        function stopVoiceNoteRecording(targetElementId) {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // Reset UI
+                const recordButton = document.getElementById(targetElementId);
+                if (recordButton) {
+                    recordButton.innerHTML = '<i class="fas fa-microphone"></i> Record Voice Note';
+                    recordButton.classList.remove('btn-danger');
+                    recordButton.classList.add('btn-info');
+                }
+            }
+        }
+        
+        // Handle voice note complete
+        async function handleVoiceNoteComplete(audioBlob, context) {
+            try {
+                // Convert blob to base64 for storage
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                
+                reader.onloadend = async () => {
+                    const base64Audio = reader.result;
+                    const voiceNoteId = Date.now();
+                    
+                    // Store locally
+                    const voiceNote = {
+                        id: voiceNoteId,
+                        sender: currentUser.name,
+                        audioData: base64Audio,
+                        duration: 0, // TODO: Calculate actual duration
+                        timestamp: new Date().toISOString(),
+                        context: context
+                    };
+                    
+                    // Save to localStorage
+                    let voiceNotes = JSON.parse(localStorage.getItem('voiceNotes') || '[]');
+                    voiceNotes.push(voiceNote);
+                    localStorage.setItem('voiceNotes', JSON.stringify(voiceNotes));
+                    
+                    // Upload to Firebase Storage if available
+                    if (firebaseInitialized && firebaseStorage) {
+                        try {
+                            const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                            const storageRef = firebaseStorage.ref(`schools/${schoolId}/voiceNotes/${voiceNoteId}.webm`);
+                            await storageRef.put(audioBlob);
+                            const downloadURL = await storageRef.getDownloadURL();
+                            
+                            voiceNote.firebaseUrl = downloadURL;
+                            console.log('Voice note uploaded to Firebase Storage');
+                        } catch (error) {
+                            console.log('Firebase storage upload error:', error.message);
+                        }
+                    }
+                    
+                    // Add to chat or message system
+                    addVoiceNoteToChat(voiceNote);
+                    
+                    // Broadcast voice note
+                    broadcastVoiceNote(voiceNote, context);
+                    
+                    addNotification('Voice note sent!', 'success');
+                };
+                
+            } catch (error) {
+                console.log('Voice note handling error:', error.message);
+                addNotification('Failed to save voice note', 'danger');
+            }
+        }
+        
+        // Add voice note to chat UI
+        function addVoiceNoteToChat(voiceNote) {
+            const chatContainer = document.getElementById('liveChatMessages');
+            if (!chatContainer) return;
+            
+            const voiceNoteElement = document.createElement('div');
+            voiceNoteElement.className = 'voice-note-message';
+            voiceNoteElement.innerHTML = `
+                <div class="voice-note-player">
+                    <button class="play-btn" onclick="playVoiceNote('${voiceNote.id}')">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <div class="waveform"></div>
+                    <small>${voiceNote.sender} - ${new Date(voiceNote.timestamp).toLocaleTimeString()}</small>
+                </div>
+                <audio id="voiceNote-${voiceNote.id}" src="${voiceNote.audioData}" style="display: none;"></audio>
+            `;
+            
+            chatContainer.appendChild(voiceNoteElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Play voice note
+        function playVoiceNote(voiceNoteId) {
+            const audio = document.getElementById(`voiceNote-${voiceNoteId}`);
+            const playBtn = event.target.closest('.play-btn');
+            
+            if (audio) {
+                if (audio.paused) {
+                    audio.play();
+                    if (playBtn) playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    
+                    audio.onended = () => {
+                        if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    };
+                } else {
+                    audio.pause();
+                    if (playBtn) playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            }
+        }
+        
+        // Initialize communication systems after login
+        function initializeCommunicationSystems() {
+            attemptFirebaseInit();
+            initializePeer();
+        }
+        
+        // Override the acceptIncomingCall function to use new implementation
+        window.acceptIncomingCall = function(callType, callId) {
+            acceptIncomingPeerCall();
+        };
+        
+        console.log('✅ Enhanced real-time communication system loaded!');
+        console.log('📱 Features: Firebase sync, WebRTC calls, Voice notes');
         
         // ========================================
         // HOD (HEAD OF DEPARTMENT) FUNCTIONS
