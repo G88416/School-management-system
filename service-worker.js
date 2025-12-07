@@ -64,15 +64,15 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(fetchRequest).then((response) => {
           // Check if we received a valid response
-          // Allow both 'basic' (same-origin) and 'cors' (cross-origin) responses
-          if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
+          // Allow 'basic' (same-origin), 'cors' (cross-origin), and 'opaque' (no-cors) responses
+          if (!response || (response.status !== 200 && response.type !== 'opaque')) {
             return response;
           }
 
           // Clone the response because it can only be used once
           const responseToCache = response.clone();
 
-          // Cache GET requests from same origin and CORS requests
+          // Cache GET requests
           if (event.request.method === 'GET') {
             caches.open(CACHE_NAME)
               .then((cache) => {
@@ -83,7 +83,19 @@ self.addEventListener('fetch', (event) => {
           return response;
         }).catch((error) => {
           console.log('[ServiceWorker] Fetch failed:', error);
-          // You could return a custom offline page here
+          
+          // Provide appropriate offline fallback based on request type
+          if (event.request.destination === 'document') {
+            return new Response('<html><body><h1>Offline</h1><p>Please check your internet connection and try again.</p></body></html>', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({
+                'Content-Type': 'text/html'
+              })
+            });
+          }
+          
+          // For other resources, return generic offline response
           return new Response('Offline - Please check your internet connection', {
             status: 503,
             statusText: 'Service Unavailable',
