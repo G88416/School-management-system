@@ -10341,8 +10341,8 @@
             localStorage.setItem('incidentReports', JSON.stringify(incidentReports));
             localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
         }
-        // Login function
-        function login() {
+        // Login function - Make globally accessible
+        window.login = function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
@@ -10350,41 +10350,20 @@
             // This ensures newly created users can log in immediately on any device/tab
             users = JSON.parse(localStorage.getItem('users') || '[]');
             
-            // Enhanced authentication: Check username/password patterns to determine user type
-            let detectedRole = null;
-            if (username.toLowerCase().startsWith('t') && password.toLowerCase().endsWith('t')) {
-                detectedRole = 'Teacher';
-            } else if (username.toLowerCase().startsWith('s') && password.toLowerCase().endsWith('s')) {
-                detectedRole = 'Student';
-            } else if (username.toLowerCase().startsWith('p') && password.toLowerCase().endsWith('p')) {
-                detectedRole = 'Parent';
-            } else if (username.toLowerCase().startsWith('a') && password.toLowerCase().endsWith('a')) {
-                detectedRole = 'Admin';
-            } else if (username.toLowerCase() === 'hod' || username.toLowerCase().startsWith('hod')) {
-                detectedRole = 'HOD';
-            }
-            
-            // Find user and validate role matches pattern
+            // Find user first - simple username/password match
             let user = users.find(u => u.username === username && u.password === password);
-            if (user && detectedRole && user.role !== detectedRole) {
-                alert('Authentication failed: Invalid credentials.');
-                return;
-            }
             
+            // If not found, check fallback default users
             if (!user) {
                 const fallback = {
-                    'admin': { name: 'Admin User', role: 'Admin' },
-                    'hod': { name: 'HOD User', role: 'HOD' },
-                    'teacher': { name: 'Teacher User', role: 'Teacher' },
-                    'parent': { name: 'Parent User', role: 'Parent' },
-                    'student': { name: 'Student User', role: 'Student' }
-                }[username];
-                if (fallback && password === username + '123') {
-                    // Validate pattern for fallback users too
-                    if (detectedRole && fallback.role !== detectedRole) {
-                        alert('Authentication failed: Username/password pattern does not match user role.');
-                        return;
-                    }
+                    'admin': { username: 'admin', password: 'admin123', name: 'Admin User', role: 'Admin' },
+                    'hod': { username: 'hod', password: 'hod123', name: 'HOD User', role: 'HOD' },
+                    'teacher': { username: 'teacher', password: 'teacher123', name: 'Teacher User', role: 'Teacher' },
+                    'parent': { username: 'parent', password: 'parent123', name: 'Parent User', role: 'Parent' },
+                    'student': { username: 'student', password: 'student123', name: 'Student User', role: 'Student' }
+                }[username.toLowerCase()];
+                
+                if (fallback && password === fallback.password) {
                     user = fallback;
                 }
             }
@@ -10573,7 +10552,7 @@
             document.getElementById('loginPage').style.display = 'flex';
         }
         
-        function g19Login() {
+        window.g19Login = function() {
             const username = document.getElementById('g19Username').value;
             const password = document.getElementById('g19Password').value;
             
@@ -17661,11 +17640,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // ========================================
         
         // Voice Note Variables
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let recordingTimer = null;
-        let recordingSeconds = 0;
-        let currentRecordingContext = null; // 'live', 'teacher', 'parent'
+        var mediaRecorder = null;
+        var audioChunks = [];
+        var recordingTimer = null;
+        var recordingSeconds = 0;
+        var currentRecordingContext = null; // 'live', 'teacher', 'parent'
         
         // Voice Call Variables
         let activeVoiceCall = null;
@@ -26613,9 +26592,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // VOICE NOTES RECORDING AND PLAYBACK
         // ========================================
         
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let isRecording = false;
+        // Note: mediaRecorder, audioChunks, and isRecording are already declared above
+        // Using var allows redeclaration without error
+        var isRecording = false;
         
         // Start recording voice note
         async function startVoiceNoteRecording(targetElementId) {
