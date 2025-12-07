@@ -64,15 +64,16 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(fetchRequest).then((response) => {
           // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+          // Allow both 'basic' (same-origin) and 'cors' (cross-origin) responses
+          if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
             return response;
           }
 
           // Clone the response because it can only be used once
           const responseToCache = response.clone();
 
-          // Don't cache non-GET requests or external resources
-          if (event.request.method === 'GET' && event.request.url.startsWith(self.location.origin)) {
+          // Cache GET requests from same origin and CORS requests
+          if (event.request.method === 'GET') {
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
