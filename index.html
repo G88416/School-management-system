@@ -18827,25 +18827,16 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             addNotification('Firebase configuration saved! Connecting...', 'success');
             
-            // Delete existing Firebase app if it exists
-            if (firebaseApp) {
-                try {
-                    firebaseApp.delete();
-                    console.log('Previous Firebase app deleted');
-                } catch (error) {
-                    console.log('Error deleting previous Firebase app:', error);
-                }
-            }
-            
-            // Reset Firebase state
-            firebaseInitialized = false;
-            firebaseApp = null;
-            firebaseDb = null;
-            firebaseStorage = null;
-            firebaseMessaging = null;
-            
-            // Reinitialize Firebase with new config
-            setTimeout(() => {
+            // Helper function to reinitialize Firebase
+            const reinitializeFirebase = () => {
+                // Reset Firebase state
+                firebaseInitialized = false;
+                firebaseApp = null;
+                firebaseDb = null;
+                firebaseStorage = null;
+                firebaseMessaging = null;
+                
+                // Initialize Firebase with new config
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
                 
@@ -18860,7 +18851,30 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 } else {
                     addNotification('❌ Failed to connect to Firebase. Please check your configuration and browser console for details.', 'danger');
                 }
-            }, 1000);
+            };
+            
+            // Delete existing Firebase app if it exists
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete()
+                        .then(() => {
+                            console.log('Previous Firebase app deleted');
+                            reinitializeFirebase();
+                        })
+                        .catch((error) => {
+                            console.log('Error deleting previous Firebase app:', error);
+                            // Try to reinitialize anyway
+                            reinitializeFirebase();
+                        });
+                } catch (error) {
+                    console.log('Error deleting previous Firebase app:', error);
+                    // Try to reinitialize anyway
+                    reinitializeFirebase();
+                }
+            } else {
+                // No existing app to delete, proceed directly
+                reinitializeFirebase();
+            }
         }
         
         function loadFirebaseConfig() {
@@ -18972,43 +18986,59 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Helper function to complete the clearing process
+            const completeClear = () => {
+                // Clear localStorage
+                localStorage.removeItem('firebaseApiKey');
+                localStorage.removeItem('firebaseProjectId');
+                localStorage.removeItem('firebaseDatabaseURL');
+                localStorage.removeItem('firebaseAuthDomain');
+                localStorage.removeItem('firebaseStorageBucket');
+                localStorage.removeItem('firebaseMessagingSenderId');
+                localStorage.removeItem('firebaseAppId');
+                
+                // Clear input fields
+                document.getElementById('firebaseApiKey').value = '';
+                document.getElementById('firebaseProjectId').value = '';
+                document.getElementById('firebaseDatabaseURL').value = '';
+                document.getElementById('firebaseAuthDomain').value = '';
+                document.getElementById('firebaseStorageBucket').value = '';
+                document.getElementById('firebaseMessagingSenderId').value = '';
+                document.getElementById('firebaseAppId').value = '';
+                
+                // Reset Firebase state
+                firebaseInitialized = false;
+                firebaseApp = null;
+                firebaseDb = null;
+                firebaseStorage = null;
+                firebaseMessaging = null;
+                
+                updateFirebaseStatus(false);
+                addNotification('Firebase configuration cleared. Using local sync only.', 'info');
+            };
+            
             // Delete Firebase app if it exists
             if (firebaseApp) {
                 try {
-                    firebaseApp.delete();
-                    console.log('Firebase app deleted');
+                    firebaseApp.delete()
+                        .then(() => {
+                            console.log('Firebase app deleted');
+                            completeClear();
+                        })
+                        .catch((error) => {
+                            console.log('Error deleting Firebase app:', error);
+                            // Complete clearing anyway
+                            completeClear();
+                        });
                 } catch (error) {
                     console.log('Error deleting Firebase app:', error);
+                    // Complete clearing anyway
+                    completeClear();
                 }
+            } else {
+                // No app to delete, proceed directly
+                completeClear();
             }
-            
-            // Clear localStorage
-            localStorage.removeItem('firebaseApiKey');
-            localStorage.removeItem('firebaseProjectId');
-            localStorage.removeItem('firebaseDatabaseURL');
-            localStorage.removeItem('firebaseAuthDomain');
-            localStorage.removeItem('firebaseStorageBucket');
-            localStorage.removeItem('firebaseMessagingSenderId');
-            localStorage.removeItem('firebaseAppId');
-            
-            // Clear input fields
-            document.getElementById('firebaseApiKey').value = '';
-            document.getElementById('firebaseProjectId').value = '';
-            document.getElementById('firebaseDatabaseURL').value = '';
-            document.getElementById('firebaseAuthDomain').value = '';
-            document.getElementById('firebaseStorageBucket').value = '';
-            document.getElementById('firebaseMessagingSenderId').value = '';
-            document.getElementById('firebaseAppId').value = '';
-            
-            // Reset Firebase state
-            firebaseInitialized = false;
-            firebaseApp = null;
-            firebaseDb = null;
-            firebaseStorage = null;
-            firebaseMessaging = null;
-            
-            updateFirebaseStatus(false);
-            addNotification('Firebase configuration cleared. Using local sync only.', 'info');
         }
         
         function updateFirebaseStatus(connected) {
@@ -26078,16 +26108,18 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         let firebaseStorage = null;
         let firebaseInitialized = false;
         
-        // Firebase configuration (Users should replace with their own Firebase project config)
-        const firebaseConfig = {
-            apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
-            authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
-            databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
-            projectId: localStorage.getItem('firebaseProjectId') || "your-project",
-            storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
-            messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
-            appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
-        };
+        // Build Firebase configuration from localStorage
+        function buildFirebaseConfig() {
+            return {
+                apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
+                authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
+                databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
+                projectId: localStorage.getItem('firebaseProjectId') || "your-project",
+                storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
+                messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
+                appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
+            };
+        }
         
         // Initialize Firebase if configuration is provided
         function initializeFirebase() {
@@ -26099,15 +26131,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 }
                 
                 // Build configuration from localStorage
-                const currentConfig = {
-                    apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
-                    authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
-                    databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
-                    projectId: localStorage.getItem('firebaseProjectId') || "your-project",
-                    storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
-                    messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
-                    appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
-                };
+                const currentConfig = buildFirebaseConfig();
                 
                 // Check if valid configuration exists
                 if (currentConfig.apiKey === "YOUR_API_KEY" || !currentConfig.apiKey) {
