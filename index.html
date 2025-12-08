@@ -6153,7 +6153,7 @@
                                         <p>Cloud-based storage with real-time sync across devices. Requires internet connection.</p>
                                     </div>
                                     <div class="g19-storage-status">
-                                        <span class="badge bg-warning text-dark" id="firebaseStatus">Setup Required</span>
+                                        <span class="badge bg-warning text-dark firebaseStatus" id="firebaseStatusBadge">Setup Required</span>
                                     </div>
                                 </div>
                                 
@@ -6759,7 +6759,7 @@
                                 <div class="col-md-4">
                                     <div class="card card-metric p-3 text-center">
                                         <h5><i class="fas fa-signal me-2" style="color: #10b981;"></i>Status</h5>
-                                        <h4 id="firebaseStatus" class="text-warning">Not Configured</h4>
+                                        <h4 id="firebaseStatus" class="firebaseStatus text-warning">Not Configured</h4>
                                         <small id="firebaseStatusDetail" class="text-muted">Local sync only</small>
                                     </div>
                                 </div>
@@ -6829,10 +6829,10 @@
                             </div>
                             
                             <div class="mt-3">
-                                <button class="btn btn-success" onclick="saveFirebaseConfig()">
+                                <button id="saveFirebaseBtn" class="btn btn-success" onclick="saveFirebaseConfig()">
                                     <i class="fas fa-save me-2"></i>Save & Connect
                                 </button>
-                                <button class="btn btn-info ms-2" onclick="testFirebaseConnection()">
+                                <button id="testFirebaseBtn" class="btn btn-info ms-2" onclick="testFirebaseConnection()">
                                     <i class="fas fa-plug me-2"></i>Test Connection
                                 </button>
                                 <button class="btn btn-warning ms-2" onclick="loadFirebaseConfig()">
@@ -18790,6 +18790,24 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Validate database URL format
+            if (databaseURL && !databaseURL.startsWith('https://') && !databaseURL.startsWith('http://')) {
+                addNotification('Database URL must start with https:// (e.g., https://your-project.firebaseio.com)', 'warning');
+                return;
+            }
+            
+            // Validate auth domain format if provided
+            if (authDomain && authDomain.startsWith('http')) {
+                addNotification('Auth Domain should not include http:// or https:// (e.g., your-project.firebaseapp.com)', 'warning');
+                return;
+            }
+            
+            // Validate storage bucket format if provided
+            if (storageBucket && storageBucket.startsWith('http')) {
+                addNotification('Storage Bucket should not include http:// or https:// (e.g., your-project.appspot.com)', 'warning');
+                return;
+            }
+            
             // Save to localStorage
             localStorage.setItem('firebaseApiKey', apiKey);
             localStorage.setItem('firebaseProjectId', projectId);
@@ -18800,16 +18818,63 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             localStorage.setItem('firebaseAppId', appId);
             localStorage.setItem('schoolId', schoolIdValue || 'default-school');
             
-            addNotification('Firebase configuration saved! Reconnecting...', 'success');
+            // Show loading state on button
+            const saveBtn = document.getElementById('saveFirebaseBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Connecting...';
+            }
             
-            // Reinitialize Firebase with new config
-            firebaseInitialized = false;
-            firebaseApp = null;
+            addNotification('Firebase configuration saved! Connecting...', 'success');
             
-            setTimeout(() => {
+            // Helper function to reinitialize Firebase
+            const reinitializeFirebase = () => {
+                // Reset Firebase state
+                firebaseInitialized = false;
+                firebaseApp = null;
+                firebaseDb = null;
+                firebaseStorage = null;
+                firebaseMessaging = null;
+                
+                // Initialize Firebase with new config
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
-            }, 1000);
+                
+                // Restore button state
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save & Connect';
+                }
+                
+                if (success) {
+                    addNotification('✅ Connected to Firebase! Real-time sync is now active.', 'success');
+                } else {
+                    addNotification('❌ Failed to connect to Firebase. Please check your configuration and browser console for details.', 'danger');
+                }
+            };
+            
+            // Delete existing Firebase app if it exists
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete()
+                        .then(() => {
+                            console.log('Previous Firebase app deleted');
+                            reinitializeFirebase();
+                        })
+                        .catch((error) => {
+                            console.log('Error deleting previous Firebase app:', error);
+                            // Try to reinitialize anyway
+                            reinitializeFirebase();
+                        });
+                } catch (error) {
+                    console.log('Error deleting previous Firebase app:', error);
+                    // Try to reinitialize anyway
+                    reinitializeFirebase();
+                }
+            } else {
+                // No existing app to delete, proceed directly
+                reinitializeFirebase();
+            }
         }
         
         function loadFirebaseConfig() {
@@ -18827,20 +18892,92 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function testFirebaseConnection() {
+            const testBtn = document.getElementById('testFirebaseBtn');
+            
+            // Show loading state
+            if (testBtn) {
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+            }
+            
             addNotification('Testing Firebase connection...', 'info');
+            
+            // Check if configuration exists in localStorage
+            const apiKey = localStorage.getItem('firebaseApiKey');
+            const projectId = localStorage.getItem('firebaseProjectId');
+            const databaseURL = localStorage.getItem('firebaseDatabaseURL');
+            
+            if (!apiKey || !projectId || !databaseURL || apiKey === 'YOUR_API_KEY') {
+                addNotification('❌ No Firebase configuration found. Please save your configuration first.', 'warning');
+                updateFirebaseStatus(false);
+                
+                // Restore button
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                }
+                return;
+            }
             
             if (!firebaseInitialized) {
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
                 
+                // Restore button
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                }
+                
                 if (success) {
-                    addNotification('Firebase connection successful! ✅', 'success');
+                    addNotification('✅ Firebase connection successful!', 'success');
                 } else {
-                    addNotification('Firebase connection failed. Check your credentials.', 'danger');
+                    addNotification('❌ Firebase connection failed. Check your credentials and console for errors.', 'danger');
                 }
             } else {
-                addNotification('Firebase already connected! ✅', 'success');
-                updateFirebaseStatus(true);
+                // Test the connection by attempting to read from database
+                if (firebaseDb) {
+                    try {
+                        const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                        firebaseDb.ref(`schools/${schoolId}/test`).once('value').then(() => {
+                            addNotification('✅ Firebase already connected and working!', 'success');
+                            updateFirebaseStatus(true);
+                            
+                            // Restore button
+                            if (testBtn) {
+                                testBtn.disabled = false;
+                                testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                            }
+                        }).catch((error) => {
+                            addNotification('⚠️ Firebase connected but database access failed: ' + error.message, 'warning');
+                            console.error('Database test error:', error);
+                            
+                            // Restore button
+                            if (testBtn) {
+                                testBtn.disabled = false;
+                                testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                            }
+                        });
+                    } catch (error) {
+                        addNotification('⚠️ Firebase connection test failed: ' + error.message, 'warning');
+                        console.error('Connection test error:', error);
+                        
+                        // Restore button
+                        if (testBtn) {
+                            testBtn.disabled = false;
+                            testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                        }
+                    }
+                } else {
+                    addNotification('✅ Firebase already connected!', 'success');
+                    updateFirebaseStatus(true);
+                    
+                    // Restore button
+                    if (testBtn) {
+                        testBtn.disabled = false;
+                        testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                    }
+                }
             }
         }
         
@@ -18849,44 +18986,99 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
-            localStorage.removeItem('firebaseApiKey');
-            localStorage.removeItem('firebaseProjectId');
-            localStorage.removeItem('firebaseDatabaseURL');
-            localStorage.removeItem('firebaseAuthDomain');
-            localStorage.removeItem('firebaseStorageBucket');
-            localStorage.removeItem('firebaseMessagingSenderId');
-            localStorage.removeItem('firebaseAppId');
+            // Helper function to complete the clearing process
+            const completeClear = () => {
+                // Clear localStorage
+                localStorage.removeItem('firebaseApiKey');
+                localStorage.removeItem('firebaseProjectId');
+                localStorage.removeItem('firebaseDatabaseURL');
+                localStorage.removeItem('firebaseAuthDomain');
+                localStorage.removeItem('firebaseStorageBucket');
+                localStorage.removeItem('firebaseMessagingSenderId');
+                localStorage.removeItem('firebaseAppId');
+                
+                // Clear input fields
+                document.getElementById('firebaseApiKey').value = '';
+                document.getElementById('firebaseProjectId').value = '';
+                document.getElementById('firebaseDatabaseURL').value = '';
+                document.getElementById('firebaseAuthDomain').value = '';
+                document.getElementById('firebaseStorageBucket').value = '';
+                document.getElementById('firebaseMessagingSenderId').value = '';
+                document.getElementById('firebaseAppId').value = '';
+                
+                // Reset Firebase state
+                firebaseInitialized = false;
+                firebaseApp = null;
+                firebaseDb = null;
+                firebaseStorage = null;
+                firebaseMessaging = null;
+                
+                updateFirebaseStatus(false);
+                addNotification('Firebase configuration cleared. Using local sync only.', 'info');
+            };
             
-            document.getElementById('firebaseApiKey').value = '';
-            document.getElementById('firebaseProjectId').value = '';
-            document.getElementById('firebaseDatabaseURL').value = '';
-            document.getElementById('firebaseAuthDomain').value = '';
-            document.getElementById('firebaseStorageBucket').value = '';
-            document.getElementById('firebaseMessagingSenderId').value = '';
-            document.getElementById('firebaseAppId').value = '';
-            
-            firebaseInitialized = false;
-            firebaseApp = null;
-            
-            updateFirebaseStatus(false);
-            addNotification('Firebase configuration cleared', 'info');
+            // Delete Firebase app if it exists
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete()
+                        .then(() => {
+                            console.log('Firebase app deleted');
+                            completeClear();
+                        })
+                        .catch((error) => {
+                            console.log('Error deleting Firebase app:', error);
+                            // Complete clearing anyway
+                            completeClear();
+                        });
+                } catch (error) {
+                    console.log('Error deleting Firebase app:', error);
+                    // Complete clearing anyway
+                    completeClear();
+                }
+            } else {
+                // No app to delete, proceed directly
+                completeClear();
+            }
         }
         
         function updateFirebaseStatus(connected) {
-            const statusElement = document.getElementById('firebaseStatus');
+            // Update all firebaseStatus elements using class selector
+            const statusElements = document.querySelectorAll('.firebaseStatus');
             const statusDetailElement = document.getElementById('firebaseStatusDetail');
             const syncTypeElement = document.getElementById('syncType');
             
             if (connected) {
-                statusElement.textContent = 'Connected';
-                statusElement.className = 'text-success';
-                statusDetailElement.textContent = 'Cross-device sync enabled';
-                syncTypeElement.textContent = 'Firebase + BroadcastChannel';
+                statusElements.forEach(el => {
+                    el.textContent = 'Connected';
+                    // Handle both text color and badge classes
+                    if (el.classList.contains('badge')) {
+                        el.className = 'badge bg-success firebaseStatus';
+                    } else {
+                        el.className = 'firebaseStatus text-success';
+                    }
+                });
+                if (statusDetailElement) {
+                    statusDetailElement.textContent = 'Cross-device sync enabled';
+                }
+                if (syncTypeElement) {
+                    syncTypeElement.textContent = 'Firebase + BroadcastChannel';
+                }
             } else {
-                statusElement.textContent = 'Not Configured';
-                statusElement.className = 'text-warning';
-                statusDetailElement.textContent = 'Local sync only';
-                syncTypeElement.textContent = 'BroadcastChannel';
+                statusElements.forEach(el => {
+                    el.textContent = 'Not Configured';
+                    // Handle both text color and badge classes
+                    if (el.classList.contains('badge')) {
+                        el.className = 'badge bg-warning text-dark firebaseStatus';
+                    } else {
+                        el.className = 'firebaseStatus text-warning';
+                    }
+                });
+                if (statusDetailElement) {
+                    statusDetailElement.textContent = 'Local sync only';
+                }
+                if (syncTypeElement) {
+                    syncTypeElement.textContent = 'BroadcastChannel';
+                }
             }
         }
         
@@ -25916,16 +26108,18 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         let firebaseStorage = null;
         let firebaseInitialized = false;
         
-        // Firebase configuration (Users should replace with their own Firebase project config)
-        const firebaseConfig = {
-            apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
-            authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
-            databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
-            projectId: localStorage.getItem('firebaseProjectId') || "your-project",
-            storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
-            messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
-            appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
-        };
+        // Build Firebase configuration from localStorage
+        function buildFirebaseConfig() {
+            return {
+                apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
+                authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
+                databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
+                projectId: localStorage.getItem('firebaseProjectId') || "your-project",
+                storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
+                messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
+                appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
+            };
+        }
         
         // Initialize Firebase if configuration is provided
         function initializeFirebase() {
@@ -25936,16 +26130,19 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     return false;
                 }
                 
+                // Build configuration from localStorage
+                const currentConfig = buildFirebaseConfig();
+                
                 // Check if valid configuration exists
-                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                if (currentConfig.apiKey === "YOUR_API_KEY" || !currentConfig.apiKey) {
                     console.log('Firebase not configured. Using local BroadcastChannel only.');
                     console.log('To enable cross-device sync, configure Firebase in Settings > Integration');
                     return false;
                 }
                 
-                // Initialize Firebase
+                // Initialize Firebase (or reinitialize if already exists)
                 if (!firebaseApp) {
-                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    firebaseApp = firebase.initializeApp(currentConfig);
                     firebaseDb = firebase.database();
                     firebaseStorage = firebase.storage();
                     
@@ -25970,10 +26167,21 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     }
                     
                     return true;
+                } else {
+                    // Firebase already initialized
+                    console.log('✅ Firebase already initialized');
+                    return true;
                 }
             } catch (error) {
                 console.log('Firebase initialization failed:', error.message);
+                console.error('Error details:', error);
                 firebaseInitialized = false;
+                
+                // Show user-friendly error message
+                if (typeof addNotification === 'function') {
+                    addNotification('Firebase connection failed: ' + error.message, 'danger');
+                }
+                
                 return false;
             }
         }
@@ -26138,7 +26346,11 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Initialize Firebase on page load (after user login)
         function attemptFirebaseInit() {
             if (currentUser && !firebaseInitialized) {
-                initializeFirebase();
+                const success = initializeFirebase();
+                updateFirebaseStatus(success);
+            } else if (firebaseInitialized) {
+                // Already initialized, just update status
+                updateFirebaseStatus(true);
             }
         }
         
