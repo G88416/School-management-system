@@ -18800,15 +18800,35 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             localStorage.setItem('firebaseAppId', appId);
             localStorage.setItem('schoolId', schoolIdValue || 'default-school');
             
-            addNotification('Firebase configuration saved! Reconnecting...', 'success');
+            addNotification('Firebase configuration saved! Connecting...', 'success');
             
-            // Reinitialize Firebase with new config
+            // Delete existing Firebase app if it exists
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete();
+                    console.log('Previous Firebase app deleted');
+                } catch (error) {
+                    console.log('Error deleting previous Firebase app:', error);
+                }
+            }
+            
+            // Reset Firebase state
             firebaseInitialized = false;
             firebaseApp = null;
+            firebaseDb = null;
+            firebaseStorage = null;
+            firebaseMessaging = null;
             
+            // Reinitialize Firebase with new config
             setTimeout(() => {
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
+                
+                if (success) {
+                    addNotification('✅ Connected to Firebase! Real-time sync is now active.', 'success');
+                } else {
+                    addNotification('❌ Failed to connect to Firebase. Please check your configuration.', 'danger');
+                }
             }, 1000);
         }
         
@@ -18829,18 +18849,46 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         function testFirebaseConnection() {
             addNotification('Testing Firebase connection...', 'info');
             
+            // Check if configuration exists in localStorage
+            const apiKey = localStorage.getItem('firebaseApiKey');
+            const projectId = localStorage.getItem('firebaseProjectId');
+            const databaseURL = localStorage.getItem('firebaseDatabaseURL');
+            
+            if (!apiKey || !projectId || !databaseURL || apiKey === 'YOUR_API_KEY') {
+                addNotification('❌ No Firebase configuration found. Please save your configuration first.', 'warning');
+                updateFirebaseStatus(false);
+                return;
+            }
+            
             if (!firebaseInitialized) {
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
                 
                 if (success) {
-                    addNotification('Firebase connection successful! ✅', 'success');
+                    addNotification('✅ Firebase connection successful!', 'success');
                 } else {
-                    addNotification('Firebase connection failed. Check your credentials.', 'danger');
+                    addNotification('❌ Firebase connection failed. Check your credentials and console for errors.', 'danger');
                 }
             } else {
-                addNotification('Firebase already connected! ✅', 'success');
-                updateFirebaseStatus(true);
+                // Test the connection by attempting to read from database
+                if (firebaseDb) {
+                    try {
+                        const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                        firebaseDb.ref(`schools/${schoolId}/test`).once('value').then(() => {
+                            addNotification('✅ Firebase already connected and working!', 'success');
+                            updateFirebaseStatus(true);
+                        }).catch((error) => {
+                            addNotification('⚠️ Firebase connected but database access failed: ' + error.message, 'warning');
+                            console.error('Database test error:', error);
+                        });
+                    } catch (error) {
+                        addNotification('⚠️ Firebase connection test failed: ' + error.message, 'warning');
+                        console.error('Connection test error:', error);
+                    }
+                } else {
+                    addNotification('✅ Firebase already connected!', 'success');
+                    updateFirebaseStatus(true);
+                }
             }
         }
         
@@ -18849,6 +18897,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Delete Firebase app if it exists
+            if (firebaseApp) {
+                try {
+                    firebaseApp.delete();
+                    console.log('Firebase app deleted');
+                } catch (error) {
+                    console.log('Error deleting Firebase app:', error);
+                }
+            }
+            
+            // Clear localStorage
             localStorage.removeItem('firebaseApiKey');
             localStorage.removeItem('firebaseProjectId');
             localStorage.removeItem('firebaseDatabaseURL');
@@ -18857,6 +18916,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             localStorage.removeItem('firebaseMessagingSenderId');
             localStorage.removeItem('firebaseAppId');
             
+            // Clear input fields
             document.getElementById('firebaseApiKey').value = '';
             document.getElementById('firebaseProjectId').value = '';
             document.getElementById('firebaseDatabaseURL').value = '';
@@ -18865,11 +18925,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             document.getElementById('firebaseMessagingSenderId').value = '';
             document.getElementById('firebaseAppId').value = '';
             
+            // Reset Firebase state
             firebaseInitialized = false;
             firebaseApp = null;
+            firebaseDb = null;
+            firebaseStorage = null;
+            firebaseMessaging = null;
             
             updateFirebaseStatus(false);
-            addNotification('Firebase configuration cleared', 'info');
+            addNotification('Firebase configuration cleared. Using local sync only.', 'info');
         }
         
         function updateFirebaseStatus(connected) {
@@ -25936,16 +26000,27 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     return false;
                 }
                 
+                // Build configuration from localStorage
+                const currentConfig = {
+                    apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
+                    authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
+                    databaseURL: localStorage.getItem('firebaseDatabaseURL') || "https://your-project.firebaseio.com",
+                    projectId: localStorage.getItem('firebaseProjectId') || "your-project",
+                    storageBucket: localStorage.getItem('firebaseStorageBucket') || "your-project.appspot.com",
+                    messagingSenderId: localStorage.getItem('firebaseMessagingSenderId') || "123456789",
+                    appId: localStorage.getItem('firebaseAppId') || "1:123456789:web:abcdef"
+                };
+                
                 // Check if valid configuration exists
-                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                if (currentConfig.apiKey === "YOUR_API_KEY" || !currentConfig.apiKey) {
                     console.log('Firebase not configured. Using local BroadcastChannel only.');
                     console.log('To enable cross-device sync, configure Firebase in Settings > Integration');
                     return false;
                 }
                 
-                // Initialize Firebase
+                // Initialize Firebase (or reinitialize if already exists)
                 if (!firebaseApp) {
-                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    firebaseApp = firebase.initializeApp(currentConfig);
                     firebaseDb = firebase.database();
                     firebaseStorage = firebase.storage();
                     
@@ -25970,10 +26045,21 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     }
                     
                     return true;
+                } else {
+                    // Firebase already initialized
+                    console.log('✅ Firebase already initialized');
+                    return true;
                 }
             } catch (error) {
                 console.log('Firebase initialization failed:', error.message);
+                console.error('Error details:', error);
                 firebaseInitialized = false;
+                
+                // Show user-friendly error message
+                if (typeof addNotification === 'function') {
+                    addNotification('Firebase connection failed: ' + error.message, 'danger');
+                }
+                
                 return false;
             }
         }
