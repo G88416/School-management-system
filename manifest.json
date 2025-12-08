@@ -21,6 +21,7 @@
       "purpose": "any maskable"
     }
   ],
+  "_note": "Icons use external URL. For production, replace with locally hosted 192x192 and 512x512 sized PNG images for better quality and offline support.",
   "categories": ["education", "productivity", "business"],
   "screenshots": [],
   "shortcuts": [

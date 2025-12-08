@@ -299,12 +299,12 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ## 📈 Stats
 
-- **Lines of Code**: 27,000+
 - **Features**: 50+
 - **Supported Roles**: 5
 - **Real-time Updates**: Yes ✅
 - **Offline Support**: Yes ✅
 - **Mobile Responsive**: Yes ✅
+- **PWA Ready**: Yes ✅
 
 ---
 
