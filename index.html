@@ -6153,7 +6153,7 @@
                                         <p>Cloud-based storage with real-time sync across devices. Requires internet connection.</p>
                                     </div>
                                     <div class="g19-storage-status">
-                                        <span class="badge bg-warning text-dark" id="firebaseStatus">Setup Required</span>
+                                        <span class="badge bg-warning text-dark firebaseStatus" id="firebaseStatusBadge">Setup Required</span>
                                     </div>
                                 </div>
                                 
@@ -6759,7 +6759,7 @@
                                 <div class="col-md-4">
                                     <div class="card card-metric p-3 text-center">
                                         <h5><i class="fas fa-signal me-2" style="color: #10b981;"></i>Status</h5>
-                                        <h4 id="firebaseStatus" class="text-warning">Not Configured</h4>
+                                        <h4 id="firebaseStatus" class="firebaseStatus text-warning">Not Configured</h4>
                                         <small id="firebaseStatusDetail" class="text-muted">Local sync only</small>
                                     </div>
                                 </div>
@@ -19042,8 +19042,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function updateFirebaseStatus(connected) {
-            // Update all firebaseStatus elements (there may be multiple)
-            const statusElements = document.querySelectorAll('#firebaseStatus');
+            // Update all firebaseStatus elements using class selector
+            const statusElements = document.querySelectorAll('.firebaseStatus');
             const statusDetailElement = document.getElementById('firebaseStatusDetail');
             const syncTypeElement = document.getElementById('syncType');
             
@@ -19052,9 +19052,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     el.textContent = 'Connected';
                     // Handle both text color and badge classes
                     if (el.classList.contains('badge')) {
-                        el.className = 'badge bg-success';
+                        el.className = 'badge bg-success firebaseStatus';
                     } else {
-                        el.className = 'text-success';
+                        el.className = 'firebaseStatus text-success';
                     }
                 });
                 if (statusDetailElement) {
@@ -19068,9 +19068,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     el.textContent = 'Not Configured';
                     // Handle both text color and badge classes
                     if (el.classList.contains('badge')) {
-                        el.className = 'badge bg-warning text-dark';
+                        el.className = 'badge bg-warning text-dark firebaseStatus';
                     } else {
-                        el.className = 'text-warning';
+                        el.className = 'firebaseStatus text-warning';
                     }
                 });
                 if (statusDetailElement) {
