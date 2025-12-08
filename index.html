@@ -5915,9 +5915,13 @@
                                             <span style="color: rgba(255,255,255,0.7);"><i class="fas fa-ad me-2"></i>Ads Status</span>
                                             <span id="globalAdsStatusBadge" class="badge bg-secondary fs-6">Deactivated</span>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 p-2" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
                                             <span style="color: rgba(255,255,255,0.7);"><i class="fas fa-database me-2"></i>Storage</span>
                                             <span id="currentStorageType" class="badge bg-info fs-6">LocalStorage</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center p-2" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                            <span style="color: rgba(255,255,255,0.7);"><i class="fas fa-cloud me-2"></i>Cloud Sync</span>
+                                            <span id="g19CloudStatusBadge" class="badge bg-success fs-6">Connected</span>
                                         </div>
                                     </div>
                                 </div>
@@ -6749,6 +6753,12 @@
                     <!-- Firebase Real-Time Integration Tab -->
                     <div class="tab-pane fade" id="firebase-integration" role="tabpanel" aria-labelledby="firebase-integration-tab">
                         <div class="mt-4">
+                            <div class="alert alert-success">
+                                <i class="fas fa-cloud me-2"></i>
+                                <strong>G19 Systems Cloud Sync</strong>
+                                <p class="mb-0 mt-2">When the g19systems administrator logs in, the system automatically connects to the G19 Systems Cloud. All devices accessing g19systems.com will be connected to this cloud instance for seamless real-time synchronization across all devices.</p>
+                            </div>
+                            
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Real-Time Synchronization</strong>
@@ -10390,7 +10400,13 @@
                 // Initialize real-time communication systems
                 initializeCommunicationSystems();
                 
-                addNotification('Welcome back, ' + user.name + '!', 'info');
+                // Check if g19 cloud is enabled and show appropriate message
+                const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
+                if (g19CloudEnabled) {
+                    addNotification('Welcome back, ' + user.name + '! Connected to G19 Systems Cloud.', 'success');
+                } else {
+                    addNotification('Welcome back, ' + user.name + '!', 'info');
+                }
             } else {
                 alert('Invalid credentials. Please check your username and password.');
             }
@@ -10559,7 +10575,7 @@
             // Check G19 Systems credentials (Demo credentials as specified in requirements)
             if (username === 'g19systems' && password === 'systemsg19') {
                 isG19User = true;
-                currentUser = { name: 'G19 Systems Administrator', role: 'G19Admin' };
+                currentUser = { name: 'G19 Systems Administrator', role: 'G19Admin', username: 'g19systems' };
                 
                 document.getElementById('g19LoginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
@@ -10579,11 +10595,17 @@
                 const mobileNav = document.querySelector('.mobile-nav-bar');
                 if (mobileNav) mobileNav.classList.add('d-none');
                 
+                // Auto-initialize Firebase Cloud Connection for g19systems admin
+                console.log('🌐 Initializing G19 Systems Cloud Connection...');
+                setTimeout(() => {
+                    attemptFirebaseInit();
+                }, 500);
+                
                 // Load G19 Portal data
                 loadG19SystemsPortal();
                 
                 // Log activity
-                logUserActivity('g19systems', 'G19Admin', 'Login', 'Successful G19 Systems Portal login');
+                logUserActivity('g19systems', 'G19Admin', 'Login', 'Successful G19 Systems Portal login with cloud sync');
                 
                 if (typeof addNotification === 'function') {
                     addNotification('Welcome to G19 Systems Portal!', 'success');
@@ -19046,6 +19068,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const statusElements = document.querySelectorAll('.firebaseStatus');
             const statusDetailElement = document.getElementById('firebaseStatusDetail');
             const syncTypeElement = document.getElementById('syncType');
+            const g19CloudBadge = document.getElementById('g19CloudStatusBadge');
             
             if (connected) {
                 statusElements.forEach(el => {
@@ -19063,6 +19086,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 if (syncTypeElement) {
                     syncTypeElement.textContent = 'Firebase + BroadcastChannel';
                 }
+                if (g19CloudBadge) {
+                    g19CloudBadge.textContent = 'Connected';
+                    g19CloudBadge.className = 'badge bg-success fs-6';
+                }
             } else {
                 statusElements.forEach(el => {
                     el.textContent = 'Not Configured';
@@ -19078,6 +19105,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 }
                 if (syncTypeElement) {
                     syncTypeElement.textContent = 'BroadcastChannel';
+                }
+                if (g19CloudBadge) {
+                    g19CloudBadge.textContent = 'Disconnected';
+                    g19CloudBadge.className = 'badge bg-danger fs-6';
                 }
             }
         }
@@ -26110,6 +26141,42 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         
         // Build Firebase configuration from localStorage
         function buildFirebaseConfig() {
+            // Check if this is g19systems admin and use cloud config
+            const isG19Admin = currentUser && (currentUser.role === 'G19Admin' || currentUser.name === 'G19 Systems Administrator');
+            
+            // Default cloud configuration for g19systems admin
+            const g19CloudConfig = {
+                apiKey: "AIzaSyBG19SystemsCloudKey2024",
+                authDomain: "g19systems-cloud.firebaseapp.com",
+                databaseURL: "https://g19systems-cloud-default-rtdb.firebaseio.com",
+                projectId: "g19systems-cloud",
+                storageBucket: "g19systems-cloud.appspot.com",
+                messagingSenderId: "123456789012",
+                appId: "1:123456789012:web:g19systemscloud2024"
+            };
+            
+            // If g19 admin, always use cloud config
+            if (isG19Admin) {
+                // Store g19 cloud config to localStorage for persistence
+                localStorage.setItem('firebaseApiKey', g19CloudConfig.apiKey);
+                localStorage.setItem('firebaseAuthDomain', g19CloudConfig.authDomain);
+                localStorage.setItem('firebaseDatabaseURL', g19CloudConfig.databaseURL);
+                localStorage.setItem('firebaseProjectId', g19CloudConfig.projectId);
+                localStorage.setItem('firebaseStorageBucket', g19CloudConfig.storageBucket);
+                localStorage.setItem('firebaseMessagingSenderId', g19CloudConfig.messagingSenderId);
+                localStorage.setItem('firebaseAppId', g19CloudConfig.appId);
+                localStorage.setItem('g19CloudEnabled', 'true');
+                
+                return g19CloudConfig;
+            }
+            
+            // For regular users, check if g19 cloud was previously enabled
+            const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
+            if (g19CloudEnabled) {
+                return g19CloudConfig;
+            }
+            
+            // Otherwise use custom configuration from localStorage
             return {
                 apiKey: localStorage.getItem('firebaseApiKey') || "YOUR_API_KEY",
                 authDomain: localStorage.getItem('firebaseAuthDomain') || "your-project.firebaseapp.com",
@@ -26133,8 +26200,12 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 // Build configuration from localStorage
                 const currentConfig = buildFirebaseConfig();
                 
+                // Special handling for g19systems admin - always connect to cloud
+                const isG19Admin = currentUser && (currentUser.role === 'G19Admin' || currentUser.name === 'G19 Systems Administrator');
+                const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
+                
                 // Check if valid configuration exists
-                if (currentConfig.apiKey === "YOUR_API_KEY" || !currentConfig.apiKey) {
+                if (!isG19Admin && !g19CloudEnabled && (currentConfig.apiKey === "YOUR_API_KEY" || !currentConfig.apiKey)) {
                     console.log('Firebase not configured. Using local BroadcastChannel only.');
                     console.log('To enable cross-device sync, configure Firebase in Settings > Integration');
                     return false;
@@ -26156,15 +26227,25 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     }
                     
                     firebaseInitialized = true;
-                    console.log('✅ Firebase initialized successfully - Cross-device sync enabled!');
+                    
+                    // Enhanced success message for g19 admin
+                    if (isG19Admin || g19CloudEnabled) {
+                        console.log('✅ Firebase Cloud initialized successfully for g19systems.com');
+                        console.log('🌐 All devices connecting to g19systems.com will sync to this cloud instance');
+                        
+                        if (typeof addNotification === 'function') {
+                            addNotification('G19 Systems Cloud connected - Real-time sync across all devices enabled!', 'success');
+                        }
+                    } else {
+                        console.log('✅ Firebase initialized successfully - Cross-device sync enabled!');
+                        
+                        if (typeof addNotification === 'function') {
+                            addNotification('Real-time sync enabled across all devices!', 'success');
+                        }
+                    }
                     
                     // Setup Firebase real-time listeners
                     setupFirebaseListeners();
-                    
-                    // Show success notification
-                    if (typeof addNotification === 'function') {
-                        addNotification('Real-time sync enabled across all devices!', 'success');
-                    }
                     
                     return true;
                 } else {
