@@ -10350,6 +10350,15 @@
             localStorage.setItem('meetingRequests', JSON.stringify(meetingRequests));
             localStorage.setItem('incidentReports', JSON.stringify(incidentReports));
             localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
+            
+            // Sync to Firebase in real-time when data changes
+            if (typeof syncToFirebase === 'function' && currentUser) {
+                syncToFirebase('dataUpdate', {
+                    updateType: 'General Data Update',
+                    updatedBy: currentUser.name,
+                    timestamp: Date.now()
+                });
+            }
         }
         // Login function - Make globally accessible
         window.login = function() {
@@ -19074,9 +19083,19 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             const syncTypeElement = document.getElementById('syncType');
             const g19CloudBadge = document.getElementById('g19CloudStatusBadge');
             
+            // Check if connected via g19systems.com
+            const isG19Domain = window.location.hostname === 'g19systems.com' || 
+                               window.location.hostname === 'www.g19systems.com' ||
+                               window.location.hostname.includes('g19systems.com');
+            const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
+            
             if (connected) {
                 statusElements.forEach(el => {
-                    el.textContent = 'Connected';
+                    if (isG19Domain || g19CloudEnabled) {
+                        el.textContent = 'G19 Cloud Connected';
+                    } else {
+                        el.textContent = 'Connected';
+                    }
                     // Handle both text color and badge classes
                     if (el.classList.contains('badge')) {
                         el.className = 'badge bg-success firebaseStatus';
@@ -19085,7 +19104,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     }
                 });
                 if (statusDetailElement) {
-                    statusDetailElement.textContent = 'Cross-device sync enabled';
+                    if (isG19Domain || g19CloudEnabled) {
+                        statusDetailElement.textContent = 'Real-time sync via G19 Systems Cloud';
+                    } else {
+                        statusDetailElement.textContent = 'Cross-device sync enabled';
+                    }
                 }
                 if (syncTypeElement) {
                     syncTypeElement.textContent = 'Firebase + BroadcastChannel';
