@@ -6829,10 +6829,10 @@
                             </div>
                             
                             <div class="mt-3">
-                                <button class="btn btn-success" onclick="saveFirebaseConfig()">
+                                <button id="saveFirebaseBtn" class="btn btn-success" onclick="saveFirebaseConfig()">
                                     <i class="fas fa-save me-2"></i>Save & Connect
                                 </button>
-                                <button class="btn btn-info ms-2" onclick="testFirebaseConnection()">
+                                <button id="testFirebaseBtn" class="btn btn-info ms-2" onclick="testFirebaseConnection()">
                                     <i class="fas fa-plug me-2"></i>Test Connection
                                 </button>
                                 <button class="btn btn-warning ms-2" onclick="loadFirebaseConfig()">
@@ -18790,6 +18790,24 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Validate database URL format
+            if (databaseURL && !databaseURL.startsWith('https://') && !databaseURL.startsWith('http://')) {
+                addNotification('Database URL must start with https:// (e.g., https://your-project.firebaseio.com)', 'warning');
+                return;
+            }
+            
+            // Validate auth domain format if provided
+            if (authDomain && authDomain.startsWith('http')) {
+                addNotification('Auth Domain should not include http:// or https:// (e.g., your-project.firebaseapp.com)', 'warning');
+                return;
+            }
+            
+            // Validate storage bucket format if provided
+            if (storageBucket && storageBucket.startsWith('http')) {
+                addNotification('Storage Bucket should not include http:// or https:// (e.g., your-project.appspot.com)', 'warning');
+                return;
+            }
+            
             // Save to localStorage
             localStorage.setItem('firebaseApiKey', apiKey);
             localStorage.setItem('firebaseProjectId', projectId);
@@ -18799,6 +18817,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             localStorage.setItem('firebaseMessagingSenderId', messagingSenderId);
             localStorage.setItem('firebaseAppId', appId);
             localStorage.setItem('schoolId', schoolIdValue || 'default-school');
+            
+            // Show loading state on button
+            const saveBtn = document.getElementById('saveFirebaseBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Connecting...';
+            }
             
             addNotification('Firebase configuration saved! Connecting...', 'success');
             
@@ -18824,10 +18849,16 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
                 
+                // Restore button state
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save & Connect';
+                }
+                
                 if (success) {
                     addNotification('✅ Connected to Firebase! Real-time sync is now active.', 'success');
                 } else {
-                    addNotification('❌ Failed to connect to Firebase. Please check your configuration.', 'danger');
+                    addNotification('❌ Failed to connect to Firebase. Please check your configuration and browser console for details.', 'danger');
                 }
             }, 1000);
         }
@@ -18847,6 +18878,14 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function testFirebaseConnection() {
+            const testBtn = document.getElementById('testFirebaseBtn');
+            
+            // Show loading state
+            if (testBtn) {
+                testBtn.disabled = true;
+                testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+            }
+            
             addNotification('Testing Firebase connection...', 'info');
             
             // Check if configuration exists in localStorage
@@ -18857,12 +18896,24 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             if (!apiKey || !projectId || !databaseURL || apiKey === 'YOUR_API_KEY') {
                 addNotification('❌ No Firebase configuration found. Please save your configuration first.', 'warning');
                 updateFirebaseStatus(false);
+                
+                // Restore button
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                }
                 return;
             }
             
             if (!firebaseInitialized) {
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
+                
+                // Restore button
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                }
                 
                 if (success) {
                     addNotification('✅ Firebase connection successful!', 'success');
@@ -18877,17 +18928,41 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         firebaseDb.ref(`schools/${schoolId}/test`).once('value').then(() => {
                             addNotification('✅ Firebase already connected and working!', 'success');
                             updateFirebaseStatus(true);
+                            
+                            // Restore button
+                            if (testBtn) {
+                                testBtn.disabled = false;
+                                testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                            }
                         }).catch((error) => {
                             addNotification('⚠️ Firebase connected but database access failed: ' + error.message, 'warning');
                             console.error('Database test error:', error);
+                            
+                            // Restore button
+                            if (testBtn) {
+                                testBtn.disabled = false;
+                                testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                            }
                         });
                     } catch (error) {
                         addNotification('⚠️ Firebase connection test failed: ' + error.message, 'warning');
                         console.error('Connection test error:', error);
+                        
+                        // Restore button
+                        if (testBtn) {
+                            testBtn.disabled = false;
+                            testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                        }
                     }
                 } else {
                     addNotification('✅ Firebase already connected!', 'success');
                     updateFirebaseStatus(true);
+                    
+                    // Restore button
+                    if (testBtn) {
+                        testBtn.disabled = false;
+                        testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
+                    }
                 }
             }
         }
