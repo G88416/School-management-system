@@ -18937,20 +18937,43 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function updateFirebaseStatus(connected) {
-            const statusElement = document.getElementById('firebaseStatus');
+            // Update all firebaseStatus elements (there may be multiple)
+            const statusElements = document.querySelectorAll('#firebaseStatus');
             const statusDetailElement = document.getElementById('firebaseStatusDetail');
             const syncTypeElement = document.getElementById('syncType');
             
             if (connected) {
-                statusElement.textContent = 'Connected';
-                statusElement.className = 'text-success';
-                statusDetailElement.textContent = 'Cross-device sync enabled';
-                syncTypeElement.textContent = 'Firebase + BroadcastChannel';
+                statusElements.forEach(el => {
+                    el.textContent = 'Connected';
+                    // Handle both text color and badge classes
+                    if (el.classList.contains('badge')) {
+                        el.className = 'badge bg-success';
+                    } else {
+                        el.className = 'text-success';
+                    }
+                });
+                if (statusDetailElement) {
+                    statusDetailElement.textContent = 'Cross-device sync enabled';
+                }
+                if (syncTypeElement) {
+                    syncTypeElement.textContent = 'Firebase + BroadcastChannel';
+                }
             } else {
-                statusElement.textContent = 'Not Configured';
-                statusElement.className = 'text-warning';
-                statusDetailElement.textContent = 'Local sync only';
-                syncTypeElement.textContent = 'BroadcastChannel';
+                statusElements.forEach(el => {
+                    el.textContent = 'Not Configured';
+                    // Handle both text color and badge classes
+                    if (el.classList.contains('badge')) {
+                        el.className = 'badge bg-warning text-dark';
+                    } else {
+                        el.className = 'text-warning';
+                    }
+                });
+                if (statusDetailElement) {
+                    statusDetailElement.textContent = 'Local sync only';
+                }
+                if (syncTypeElement) {
+                    syncTypeElement.textContent = 'BroadcastChannel';
+                }
             }
         }
         
@@ -26224,7 +26247,11 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Initialize Firebase on page load (after user login)
         function attemptFirebaseInit() {
             if (currentUser && !firebaseInitialized) {
-                initializeFirebase();
+                const success = initializeFirebase();
+                updateFirebaseStatus(success);
+            } else if (firebaseInitialized) {
+                // Already initialized, just update status
+                updateFirebaseStatus(true);
             }
         }
         
