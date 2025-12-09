@@ -6,8 +6,9 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 // Initialize Firebase in service worker
-// Note: Configuration will be loaded from the main app
-const firebaseConfig = {
+// Configuration is dynamically loaded from IndexedDB or passed via postMessage
+// This placeholder will be replaced at runtime
+let firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "your-project.firebaseapp.com",
     databaseURL: "https://your-project.firebaseio.com",
@@ -16,6 +17,14 @@ const firebaseConfig = {
     messagingSenderId: "123456789",
     appId: "1:123456789:web:abcdef"
 };
+
+// Listen for config updates from the main app
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'FIREBASE_CONFIG') {
+        firebaseConfig = event.data.config;
+        console.log('[firebase-messaging-sw.js] Firebase config updated');
+    }
+});
 
 // Initialize Firebase
 try {
@@ -49,6 +58,7 @@ try {
             ];
             notificationOptions.tag = 'incoming-call';
             notificationOptions.vibrate = [300, 200, 300, 200, 300];
+            notificationOptions.data = { callId: data.callId }; // Store callId in notification data
             
             // Play notification sound
             notificationOptions.silent = false;
@@ -75,8 +85,11 @@ try {
         // Handle action buttons
         if (event.action === 'answer') {
             // Open the app and signal to answer the call
+            // Extract callId from notification data
+            const notificationData = event.notification.data || {};
+            const callId = notificationData.callId || '';
             event.waitUntil(
-                clients.openWindow('/?action=answer-call&callId=' + (event.notification.tag || ''))
+                clients.openWindow('/?action=answer-call&callId=' + callId)
             );
         } else if (event.action === 'reject') {
             // Reject the call (no action needed, just close)

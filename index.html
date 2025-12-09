@@ -26418,6 +26418,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     // Setup Firebase real-time listeners
                     setupFirebaseListeners();
                     
+                    // Send Firebase config to service worker
+                    sendConfigToServiceWorker(currentConfig);
+                    
                     return true;
                 } else {
                     // Firebase already initialized
@@ -26435,6 +26438,17 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 }
                 
                 return false;
+            }
+        }
+        
+        // Send Firebase config to service worker
+        function sendConfigToServiceWorker(config) {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'FIREBASE_CONFIG',
+                    config: config
+                });
+                console.log('✅ Firebase config sent to service worker');
             }
         }
         
