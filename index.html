@@ -17718,6 +17718,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function sendLiveChatMessage() {
+            // Check if user is logged in
+            if (!currentUser) {
+                addNotification('Please log in to send messages', 'warning');
+                return;
+            }
+            
             const input = document.getElementById('liveChatInput');
             const text = input.value.trim();
             
@@ -17742,7 +17748,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             // Scroll to bottom
             const container = document.getElementById('liveChatMessages');
-            container.scrollTop = container.scrollHeight;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            // Show success notification
+            addNotification('✅ Message sent', 'success');
         }
         
         function renderLiveChatMessages() {
@@ -17885,7 +17896,16 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // ===== COMMON RECORDING FUNCTIONS =====
         async function startRecording(controlsId, durationId) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Show permission request notification
+                addNotification('Requesting microphone access for voice note...', 'info');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
                 
                 // Try to use the best available audio codec
                 // webm with opus is widely supported and has good quality
@@ -17921,21 +17941,39 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // This interval provides a good balance between audio quality and responsiveness
                 const DATA_CHUNK_INTERVAL_MS = 250;
                 mediaRecorder.start(DATA_CHUNK_INTERVAL_MS);
-                document.getElementById(controlsId).style.display = 'block';
+                
+                const controlsElement = document.getElementById(controlsId);
+                if (controlsElement) {
+                    controlsElement.style.display = 'block';
+                }
                 
                 // Start timer
                 recordingTimer = setInterval(() => {
                     recordingSeconds++;
                     const mins = Math.floor(recordingSeconds / 60);
                     const secs = recordingSeconds % 60;
-                    document.getElementById(durationId).textContent = 
-                        `${mins}:${secs.toString().padStart(2, '0')}`;
+                    const durationElement = document.getElementById(durationId);
+                    if (durationElement) {
+                        durationElement.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
                 }, 1000);
                 
-                addNotification('Recording started... Speak now!', 'info');
+                addNotification('🎤 Recording started... Speak now!', 'success');
             } catch (err) {
                 console.error('Error accessing microphone:', err);
-                addNotification('Unable to access microphone. Please check permissions.', 'error');
+                
+                let errorMessage = 'Unable to access microphone. ';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Microphone access was denied. Please allow microphone access in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage += 'Microphone is already in use by another application.';
+                } else {
+                    errorMessage += 'Please check your microphone permissions and try again.';
+                }
+                
+                addNotification(errorMessage, 'error');
             }
         }
         
