@@ -9168,6 +9168,30 @@
             return true;
         }
         
+        // Validate user is logged in before accessing communication features
+        function validateUserLogin(featureName) {
+            if (!currentUser) {
+                addNotification(`Please log in to ${featureName}`, 'warning');
+                return false;
+            }
+            return true;
+        }
+        
+        // Check if media device support is available
+        function checkMediaDeviceSupport(requireRecorder = false) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                addNotification('Your browser does not support media features. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
+                return false;
+            }
+            
+            if (requireRecorder && typeof MediaRecorder === 'undefined') {
+                addNotification('Your browser does not support voice recording. Please use Chrome or Firefox.', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
         // Global variables
         var currentUser = null;
         var editingJob = null;
@@ -16461,17 +16485,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             showModal('sendMessageModal');
         }
         function sendMessage() {
+            // Validate user is logged in
+            if (!validateUserLogin('send messages')) return;
+            
             const recipient = document.getElementById('messageRecipient')?.value || '';
             const text = document.getElementById('messageText')?.value?.trim();
             const viaSMS = document.getElementById('sendViaSMS')?.checked || false;
             
             if (!text) {
                 addNotification('Please enter a message', 'warning');
-                return;
-            }
-            
-            if (!currentUser) {
-                addNotification('Please log in to send messages', 'error');
                 return;
             }
             
@@ -17743,11 +17765,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function sendLiveChatMessage() {
-            // Check if user is logged in
-            if (!currentUser) {
-                addNotification('Please log in to send messages', 'warning');
-                return;
-            }
+            // Validate user is logged in
+            if (!validateUserLogin('send messages')) return;
             
             const input = document.getElementById('liveChatInput');
             const text = input.value.trim();
@@ -17868,11 +17887,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== LIVE CHAT VOICE NOTE FUNCTIONS =====
         function startVoiceNote() {
-            // Check if user is logged in
-            if (!currentUser) {
-                addNotification('Please log in to send voice notes', 'warning');
-                return;
-            }
+            // Validate user is logged in
+            if (!validateUserLogin('send voice notes')) return;
             
             currentRecordingContext = 'live';
             startRecording('voiceNoteControls', 'recordingDuration');
@@ -17921,27 +17937,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // ===== COMMON RECORDING FUNCTIONS =====
         async function startRecording(controlsId, durationId) {
             try {
-                // Check browser compatibility
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    addNotification('Your browser does not support voice recording. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
-                    return;
-                }
-                
-                if (typeof MediaRecorder === 'undefined') {
-                    addNotification('Your browser does not support voice recording. Please use Chrome or Firefox.', 'error');
-                    return;
-                }
+                // Check browser compatibility including MediaRecorder
+                if (!checkMediaDeviceSupport(true)) return;
                 
                 // Show permission request notification
                 addNotification('Requesting microphone access for voice note...', 'info');
                 
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
+                // Try with enhanced audio settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic audio if enhanced settings not supported
+                    console.log('Enhanced audio settings not supported, using basic audio');
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
                 
                 // Try to use the best available audio codec
                 // webm with opus is widely supported and has good quality
@@ -18236,11 +18252,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== VOICE CALL FUNCTIONS =====
         function startVoiceCall() {
-            // Check if user is logged in
-            if (!currentUser) {
-                addNotification('Please log in to start a call', 'warning');
-                return;
-            }
+            // Validate user is logged in
+            if (!validateUserLogin('start a call')) return;
             
             // Initialize the voice call
             initVoiceCall('live');
@@ -18261,21 +18274,26 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         async function initVoiceCall(context) {
             try {
                 // Check browser compatibility
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    addNotification('Your browser does not support audio calls. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
-                    return;
-                }
+                if (!checkMediaDeviceSupport()) return;
                 
                 // Request microphone permission with enhanced audio settings
                 addNotification('Requesting microphone access...', 'info');
                 
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
+                // Try with enhanced audio settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic audio if enhanced settings not supported
+                    console.log('Enhanced audio settings not supported, using basic audio');
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
                 
                 activeVoiceCall = {
                     context: context,
@@ -18518,11 +18536,8 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // Start video call for each context
         function startVideoCall() {
-            // Check if user is logged in
-            if (!currentUser) {
-                addNotification('Please log in to start a video call', 'warning');
-                return;
-            }
+            // Validate user is logged in
+            if (!validateUserLogin('start a video call')) return;
             
             // Initialize the video call
             initVideoCall('live');
@@ -18544,27 +18559,35 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         async function initVideoCall(context) {
             try {
                 // Check browser compatibility
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    addNotification('Your browser does not support video calls. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
-                    return;
-                }
+                if (!checkMediaDeviceSupport()) return;
                 
                 // Show requesting access notification
                 addNotification('Requesting camera and microphone access...', 'info');
                 
                 // Request access to camera and microphone with enhanced settings
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: 'user'
-                    }, 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
+                // Try with enhanced settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }, 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic settings if enhanced not supported
+                    console.log('Enhanced video/audio settings not supported, using basic settings');
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true,
+                        audio: true
+                    });
+                }
                 
                 videoCallState.activeCall = {
                     context: context,
