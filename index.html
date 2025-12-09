@@ -30189,6 +30189,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubUsername = '';
         let commhubRoom = '';
         
+        // Shared ICE server configuration
+        const COMMHUB_ICE_CONFIG = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+        
         // Initialize CommHub Pro (connects to signaling server)
         function initCommHubSocket() {
             // IMPORTANT: Deploy your own signaling server on Railway
@@ -30256,13 +30261,21 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         // Join CommHub room
         async function joinCommHubRoom() {
             const roomInput = document.getElementById('commhubRoomInput');
-            commhubRoom = roomInput.value.trim() || 'default-room';
-            commhubUsername = currentUser ? currentUser.name : 'User' + Math.floor(Math.random() * 9999);
+            const rawRoom = roomInput.value.trim();
             
-            if (!commhubRoom) {
+            // Validate and sanitize room name
+            if (!rawRoom) {
                 addNotification('Please enter a room name', 'warning');
                 return;
             }
+            
+            // Sanitize room name - allow only alphanumeric, dash, and underscore
+            commhubRoom = rawRoom.replace(/[^a-zA-Z0-9-_]/g, '').substring(0, 50) || 'default-room';
+            if (commhubRoom !== rawRoom) {
+                addNotification('Room name sanitized to: ' + commhubRoom, 'info');
+            }
+            
+            commhubUsername = currentUser ? currentUser.name : 'User' + Math.floor(Math.random() * 9999);
             
             try {
                 // Get local media stream
@@ -30274,28 +30287,32 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 // Initialize socket if not connected
                 if (!commhubSocket || !commhubSocket.connected) {
                     initCommHubSocket();
+                    
+                    // Wait for socket connection with event listener
+                    const connectHandler = () => {
+                        joinCommHubRoomAfterConnection();
+                        commhubSocket.off('connect', connectHandler);
+                    };
+                    commhubSocket.on('connect', connectHandler);
+                } else {
+                    joinCommHubRoomAfterConnection();
                 }
                 
-                // Wait a bit for socket to connect
-                setTimeout(() => {
-                    if (commhubSocket && commhubSocket.connected) {
-                        commhubSocket.emit('join-room', commhubRoom, commhubUsername);
-                        
-                        // Add local video
-                        addCommHubVideoStream(commhubMyStream, commhubUsername, true);
-                        
-                        // Enable controls
-                        enableCommHubControls();
-                        
-                        // Hide join form
-                        roomInput.disabled = true;
-                        document.getElementById('commhubJoinBtn').disabled = true;
-                        
-                        addNotification(`Joined room: ${commhubRoom}`, 'success');
-                    } else {
-                        addNotification('Please wait for connection to server...', 'info');
-                    }
-                }, 1000);
+                function joinCommHubRoomAfterConnection() {
+                    commhubSocket.emit('join-room', commhubRoom, commhubUsername);
+                    
+                    // Add local video
+                    addCommHubVideoStream(commhubMyStream, commhubUsername, true);
+                    
+                    // Enable controls
+                    enableCommHubControls();
+                    
+                    // Hide join form
+                    roomInput.disabled = true;
+                    document.getElementById('commhubJoinBtn').disabled = true;
+                    
+                    addNotification(`Joined room: ${commhubRoom}`, 'success');
+                }
                 
             } catch (error) {
                 console.error('Error joining CommHub room:', error);
@@ -30352,7 +30369,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         }
         
         // Add video stream to grid
-        function addCommHubVideoStream(stream, name, isSelf = false) {
+        function addCommHubVideoStream(stream, name, isSelf = false, userId = null) {
             const videoGrid = document.getElementById('commhubVideoGrid');
             
             // Clear placeholder if exists
@@ -30362,6 +30379,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             
             const container = document.createElement('div');
             container.className = 'commhub-video-container';
+            if (userId) container.dataset.userId = userId;
             container.style.cssText = 'position:relative; border-radius:12px; overflow:hidden; background:#000;';
             
             const video = document.createElement('video');
@@ -30382,16 +30400,14 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         
         // Connect to new user
         async function connectToCommHubUser(userId) {
-            const peer = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-            });
+            const peer = new RTCPeerConnection(COMMHUB_ICE_CONFIG);
             
             commhubMyStream.getTracks().forEach(track => peer.addTrack(track, commhubMyStream));
             
             peer.ontrack = (e) => {
-                const existingVideo = document.querySelector(`[data-user-id="${userId}"]`);
+                const existingVideo = document.querySelector(`.commhub-video-container[data-user-id="${userId}"]`);
                 if (!existingVideo) {
-                    addCommHubVideoStream(e.streams[0], 'Participant', false);
+                    addCommHubVideoStream(e.streams[0], 'Participant', false, userId);
                 }
             };
             
@@ -30413,14 +30429,12 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         
         // Handle incoming offer
         async function handleCommHubOffer(userId, description) {
-            const peer = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-            });
+            const peer = new RTCPeerConnection(COMMHUB_ICE_CONFIG);
             
             commhubMyStream.getTracks().forEach(track => peer.addTrack(track, commhubMyStream));
             
             peer.ontrack = (e) => {
-                addCommHubVideoStream(e.streams[0], 'Participant', false);
+                addCommHubVideoStream(e.streams[0], 'Participant', false, userId);
             };
             
             peer.onicecandidate = (e) => {
