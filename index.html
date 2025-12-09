@@ -6267,6 +6267,12 @@
                                         <button class="btn btn-g19-secondary" onclick="backupCurrentData()">
                                             <i class="fas fa-download me-2"></i>Backup Current Data
                                         </button>
+                                        <button class="btn btn-g19-secondary" onclick="disconnectLocalStorage()" style="border-color: rgba(220, 53, 69, 0.5);">
+                                            <i class="fas fa-unlink me-2"></i>Disconnect Local Storage
+                                        </button>
+                                        <button class="btn btn-g19-secondary" onclick="connectLocalStorage()">
+                                            <i class="fas fa-link me-2"></i>Connect Local Storage
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -11797,6 +11803,64 @@
             }
             
             logUserActivity('g19systems', 'G19Admin', 'Data Backup', 'Created full system backup');
+        }
+        
+        function disconnectLocalStorage() {
+            if (!confirm('Disconnect from Local Storage?\n\nThis will mark Local Storage as disconnected but will not delete your data. You can reconnect at any time.')) {
+                return;
+            }
+            
+            // Mark localStorage as disconnected
+            localStorage.setItem('localStorageConnected', 'false');
+            
+            // Update status badge
+            const statusBadge = document.getElementById('localStorageStatus');
+            if (statusBadge) {
+                statusBadge.textContent = 'Disconnected';
+                statusBadge.classList.remove('bg-success');
+                statusBadge.classList.add('bg-warning');
+            }
+            
+            // Update dashboard badge if present
+            const currentStorageDisplay = document.getElementById('currentStorageType');
+            if (currentStorageDisplay && currentStorageFacility === 'localStorage') {
+                currentStorageDisplay.textContent = 'LocalStorage (Disconnected)';
+                currentStorageDisplay.classList.remove('bg-info');
+                currentStorageDisplay.classList.add('bg-warning');
+            }
+            
+            if (typeof addNotification === 'function') {
+                addNotification('Local Storage has been disconnected. Data is preserved and can be reconnected.', 'success');
+            }
+            
+            logUserActivity('g19systems', 'G19Admin', 'Storage Action', 'Disconnected Local Storage');
+        }
+        
+        function connectLocalStorage() {
+            // Mark localStorage as connected
+            localStorage.setItem('localStorageConnected', 'true');
+            
+            // Update status badge
+            const statusBadge = document.getElementById('localStorageStatus');
+            if (statusBadge) {
+                statusBadge.textContent = 'Active';
+                statusBadge.classList.remove('bg-warning', 'bg-secondary');
+                statusBadge.classList.add('bg-success');
+            }
+            
+            // Update dashboard badge if present
+            const currentStorageDisplay = document.getElementById('currentStorageType');
+            if (currentStorageDisplay && currentStorageFacility === 'localStorage') {
+                currentStorageDisplay.textContent = 'LocalStorage';
+                currentStorageDisplay.classList.remove('bg-warning');
+                currentStorageDisplay.classList.add('bg-info');
+            }
+            
+            if (typeof addNotification === 'function') {
+                addNotification('Local Storage has been reconnected successfully!', 'success');
+            }
+            
+            logUserActivity('g19systems', 'G19Admin', 'Storage Action', 'Connected Local Storage');
         }
         
         function loadStorageDataBreakdown() {
