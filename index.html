@@ -924,6 +924,133 @@
         .video-chat-container.active {
             display: block;
         }
+        
+        /* Participants List Panel Styles */
+        .participants-list-panel {
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .participants-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .participants-header h6 {
+            margin: 0;
+            color: #fff;
+            font-size: 1rem;
+        }
+        .participants-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .participant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .participant-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .participant-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+        .participant-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .participant-name {
+            font-weight: 500;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .participant-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .participant-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+        }
+        .participant-status.muted {
+            color: #ef4444;
+        }
+        .participant-status.unmuted {
+            color: #10b981;
+        }
+        .participant-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .participant-controls .btn {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        /* Voice Participants List */
+        .voice-participants-list {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        /* Recipient Type Badge Styles */
+        .recipient-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        .recipient-badge.teachers {
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            color: #fff;
+        }
+        .recipient-badge.parents {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: #fff;
+        }
+        .recipient-badge.students {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .recipient-badge.hod {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #1a1a2e;
+        }
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -4857,12 +4984,42 @@
                                     <!-- Chat messages will appear here -->
                                 </div>
                                 <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
+                                    <!-- Recipient Type Selector -->
+                                    <div class="mb-3 p-2" style="background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                                        <label class="form-label mb-1"><i class="fas fa-user-tag me-2"></i>Send to:</label>
+                                        <div class="btn-group w-100" role="group">
+                                            <input type="radio" class="btn-check" name="recipientType" id="recipientTeachers" value="teachers" checked>
+                                            <label class="btn btn-outline-primary btn-sm" for="recipientTeachers">
+                                                <i class="fas fa-chalkboard-teacher"></i> Teachers
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="recipientType" id="recipientParents" value="parents">
+                                            <label class="btn btn-outline-success btn-sm" for="recipientParents">
+                                                <i class="fas fa-user-friends"></i> Parents
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="recipientType" id="recipientStudents" value="students">
+                                            <label class="btn btn-outline-info btn-sm" for="recipientStudents">
+                                                <i class="fas fa-user-graduate"></i> Students
+                                            </label>
+                                            
+                                            <input type="radio" class="btn-check" name="recipientType" id="recipientHOD" value="hod">
+                                            <label class="btn btn-outline-warning btn-sm" for="recipientHOD">
+                                                <i class="fas fa-user-tie"></i> HOD
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
                                     <!-- Video Chat Container -->
                                     <div id="videoChatContainer" class="video-chat-container mb-3">
                                         <div class="video-call-status">
                                             <span id="videoCallStatusText">Video Call Active</span>
+                                            <span id="videoCallRecipientType" class="badge bg-primary ms-2"></span>
                                             <span class="call-timer" id="videoCallTimer">0:00</span>
                                             <span id="videoParticipantCount" class="badge bg-info ms-2">0 participants</span>
+                                            <button class="btn btn-sm btn-secondary ms-2" onclick="toggleParticipantsList()" title="Show participants">
+                                                <i class="fas fa-users"></i> Participants
+                                            </button>
                                         </div>
                                         <div class="video-grid" id="videoGrid">
                                             <!-- Local video -->
@@ -4873,6 +5030,18 @@
                                             </div>
                                             <!-- Remote participants will be added here dynamically -->
                                         </div>
+                                        
+                                        <!-- Participants List Panel -->
+                                        <div id="participantsListPanel" class="participants-list-panel" style="display: none;">
+                                            <div class="participants-header">
+                                                <h6><i class="fas fa-users me-2"></i>Participants (<span id="participantsCount">0</span>)</h6>
+                                                <button class="btn btn-sm btn-close" onclick="toggleParticipantsList()" style="filter: invert(1);"></button>
+                                            </div>
+                                            <div class="participants-body" id="participantsList">
+                                                <!-- Participants will be listed here -->
+                                            </div>
+                                        </div>
+                                        
                                         <div class="video-controls">
                                             <button class="btn btn-mute" id="videoMuteBtn" onclick="toggleVideoMute()" title="Toggle Microphone">
                                                 <i class="fas fa-microphone"></i>
@@ -4888,19 +5057,30 @@
                                     
                                     <!-- Voice Call Controls -->
                                     <div id="voiceCallControls" class="mb-3 p-3" style="background: rgba(0, 0, 0, 0.2); border-radius: 10px; display: none;">
-                                        <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div>
                                                 <i class="fas fa-phone-volume text-success me-2"></i>
                                                 <span id="callStatusText">Conference Call Active</span>
+                                                <span id="voiceCallRecipientType" class="badge bg-primary ms-2"></span>
                                                 <span id="callParticipantCount" class="badge bg-info ms-2">0 participants</span>
                                             </div>
                                             <div>
+                                                <button class="btn btn-sm btn-secondary me-2" onclick="toggleVoiceParticipantsList()" title="Show participants">
+                                                    <i class="fas fa-users"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-warning me-2" id="muteCallBtn" onclick="toggleMuteCall()">
                                                     <i class="fas fa-microphone"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-danger" onclick="endVoiceCall()">
                                                     <i class="fas fa-phone-slash me-1"></i>End Call
                                                 </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Voice Call Participants List -->
+                                        <div id="voiceParticipantsList" class="voice-participants-list" style="display: none;">
+                                            <div class="participants-body" id="voiceParticipantsBody">
+                                                <!-- Voice participants will be listed here -->
                                             </div>
                                         </div>
                                     </div>
@@ -17776,11 +17956,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 return;
             }
             
+            // Get selected recipient type
+            const recipientType = document.querySelector('input[name="recipientType"]:checked')?.value || 'teachers';
+            
             const message = {
                 id: Date.now(),
                 sender: currentUser.name,
                 role: currentUser.role,
                 text: text,
+                recipientType: recipientType,
                 timestamp: new Date().toISOString()
             };
             
@@ -17796,8 +17980,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 container.scrollTop = container.scrollHeight;
             }
             
-            // Show success notification
-            addNotification('✅ Message sent', 'success');
+            // Show success notification with recipient type
+            const recipientLabel = recipientType.charAt(0).toUpperCase() + recipientType.slice(1);
+            addNotification(`✅ Message sent to ${recipientLabel}`, 'success');
         }
         
         function renderLiveChatMessages() {
@@ -17814,6 +17999,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 const bgClass = isCurrentUser ? 'bg-primary' : 'bg-secondary';
                 const roleColor = msg.role === 'teacher' ? 'warning' : msg.role === 'admin' ? 'danger' : 'info';
                 
+                // Get recipient badge
+                const recipientBadge = msg.recipientType ? getRecipientBadge(msg.recipientType) : '';
+                
                 // Handle different message types
                 if (msg.type === 'voice_note') {
                     html += `
@@ -17821,6 +18009,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                             <div class="d-inline-block" style="max-width: 70%;">
                                 <div class="mb-1">
                                     <span class="badge bg-${roleColor}">${msg.sender}</span>
+                                    ${recipientBadge}
                                     <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
                                 </div>
                                 <div class="voice-note-message">
@@ -17840,6 +18029,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         <div class="text-center mb-3">
                             <div class="voice-call-notification d-inline-block">
                                 <i class="fas fa-phone-alt me-2"></i>${msg.text}
+                                ${recipientBadge}
                                 <br><small class="text-muted">Participants: ${msg.participants ? msg.participants.join(', ') : 'N/A'}</small>
                             </div>
                         </div>
@@ -17850,6 +18040,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                             <div class="d-inline-block" style="max-width: 70%;">
                                 <div class="mb-1">
                                     <span class="badge bg-${roleColor}">${msg.sender}</span>
+                                    ${recipientBadge}
                                     <small class="text-muted ms-2">${new Date(msg.timestamp).toLocaleString()}</small>
                                 </div>
                                 <div class="p-3 rounded ${bgClass}" style="word-wrap: break-word;">
@@ -17862,6 +18053,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             });
             
             container.innerHTML = html || '<p class="text-center text-muted">No messages yet. Start the conversation!</p>';
+        }
+        
+        // Helper function to get recipient badge HTML
+        function getRecipientBadge(recipientType) {
+            const badges = {
+                'teachers': '<span class="recipient-badge teachers"><i class="fas fa-chalkboard-teacher"></i> Teachers</span>',
+                'parents': '<span class="recipient-badge parents"><i class="fas fa-user-friends"></i> Parents</span>',
+                'students': '<span class="recipient-badge students"><i class="fas fa-user-graduate"></i> Students</span>',
+                'hod': '<span class="recipient-badge hod"><i class="fas fa-user-tie"></i> HOD</span>'
+            };
+            return badges[recipientType] || '';
         }
         
         function startChat() {
@@ -18058,6 +18260,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 reader.onloadend = () => {
                     const audioDataUrl = reader.result; // This is a base64 data URL
                     
+                    // Get selected recipient type for live chat
+                    const recipientType = context === 'live' ? 
+                        (document.querySelector('input[name="recipientType"]:checked')?.value || 'teachers') : 
+                        null;
+                    
                     // Create voice note message with persistent audio data
                     const voiceNoteMessage = {
                         id: Date.now(),
@@ -18066,6 +18273,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         type: 'voice_note',
                         audioUrl: audioDataUrl,
                         duration: recordingSeconds,
+                        recipientType: recipientType,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -18276,6 +18484,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // Check browser compatibility
                 if (!checkMediaDeviceSupport()) return;
                 
+                // Get selected recipient type
+                const recipientType = document.querySelector('input[name="recipientType"]:checked')?.value || 'teachers';
+                
                 // Request microphone permission with enhanced audio settings
                 addNotification('Requesting microphone access...', 'info');
                 
@@ -18297,12 +18508,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 activeVoiceCall = {
                     context: context,
+                    recipientType: recipientType,
                     startTime: Date.now(),
                     stream: stream,
-                    participants: [currentUser.name]
+                    participants: [{ name: currentUser.name, role: currentUser.role, isMuted: false }]
                 };
                 
-                callParticipants = [currentUser.name];
+                callParticipants = [{ name: currentUser.name, role: currentUser.role, isMuted: false }];
                 isMuted = false;
                 
                 // Show call controls based on context
@@ -18310,7 +18522,14 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     const controlsElement = document.getElementById('voiceCallControls');
                     if (controlsElement) {
                         controlsElement.style.display = 'block';
+                        // Update recipient type badge
+                        const recipientBadge = document.getElementById('voiceCallRecipientType');
+                        if (recipientBadge) {
+                            recipientBadge.innerHTML = getRecipientBadgeText(recipientType);
+                            recipientBadge.className = `badge recipient-badge ${recipientType} ms-2`;
+                        }
                         updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                        updateVoiceParticipantsList();
                     }
                 } else if (context === 'teacher') {
                     const controlsElement = document.getElementById('teacherVoiceCallControls');
@@ -18319,7 +18538,7 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
                         // Add student to call
                         if (selectedChatStudent) {
-                            callParticipants.push(selectedChatStudent.name);
+                            callParticipants.push({ name: selectedChatStudent.name, role: 'Student', isMuted: false });
                         }
                     }
                 } else if (context === 'parent') {
@@ -18331,13 +18550,14 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 }
                 
                 // Simulate adding participants
-                simulateConferenceCall(context);
+                simulateConferenceCall(context, recipientType);
                 
-                addNotification('✅ Voice call started! Others can join.', 'success');
+                const recipientLabel = recipientType.charAt(0).toUpperCase() + recipientType.slice(1);
+                addNotification(`✅ Voice call started with ${recipientLabel}! Others can join.`, 'success');
                 
                 // Broadcast call start to other users
                 if (typeof broadcastCallEvent === 'function') {
-                    broadcastCallEvent('call_started', context);
+                    broadcastCallEvent('call_started', context, recipientType);
                 }
                 
             } catch (err) {
@@ -18370,28 +18590,65 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             }
         }
         
-        function simulateConferenceCall(context) {
-            // Simulate other participants joining
-            const possibleParticipants = context === 'live' ? 
-                ['Teacher A', 'Teacher B', 'Admin'] : 
-                context === 'teacher' ? ['Parent'] : ['Teacher'];
+        function simulateConferenceCall(context, recipientType) {
+            // Simulate other participants joining based on recipient type
+            let possibleParticipants = [];
             
-            setTimeout(() => {
-                if (activeVoiceCall) {
-                    const newParticipant = possibleParticipants[0];
-                    callParticipants.push(newParticipant);
-                    
-                    if (context === 'live') {
-                        updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
-                    } else if (context === 'teacher') {
-                        updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
-                    } else if (context === 'parent') {
-                        updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
-                    }
-                    
-                    addNotification(newParticipant + ' joined the call', 'info');
+            if (context === 'live') {
+                switch(recipientType) {
+                    case 'teachers':
+                        possibleParticipants = [
+                            { name: 'Mr. John Smith', role: 'Teacher', isMuted: false },
+                            { name: 'Ms. Sarah Johnson', role: 'Teacher', isMuted: false }
+                        ];
+                        break;
+                    case 'parents':
+                        possibleParticipants = [
+                            { name: 'David Brown', role: 'Parent', isMuted: false },
+                            { name: 'Emily Davis', role: 'Parent', isMuted: false }
+                        ];
+                        break;
+                    case 'students':
+                        possibleParticipants = [
+                            { name: 'Alex Wilson', role: 'Student', isMuted: false },
+                            { name: 'Maya Thompson', role: 'Student', isMuted: false }
+                        ];
+                        break;
+                    case 'hod':
+                        possibleParticipants = [
+                            { name: 'Dr. Michael Anderson', role: 'HOD', isMuted: false }
+                        ];
+                        break;
+                    default:
+                        possibleParticipants = [
+                            { name: 'User A', role: 'User', isMuted: false }
+                        ];
                 }
-            }, 3000);
+            } else if (context === 'teacher') {
+                possibleParticipants = [{ name: 'Parent', role: 'Parent', isMuted: false }];
+            } else if (context === 'parent') {
+                possibleParticipants = [{ name: 'Teacher', role: 'Teacher', isMuted: false }];
+            }
+            
+            // Add participants gradually
+            possibleParticipants.forEach((participant, index) => {
+                setTimeout(() => {
+                    if (activeVoiceCall) {
+                        callParticipants.push(participant);
+                        
+                        if (context === 'live') {
+                            updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                            updateVoiceParticipantsList();
+                        } else if (context === 'teacher') {
+                            updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
+                        } else if (context === 'parent') {
+                            updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                        }
+                        
+                        addNotification(participant.name + ' joined the call', 'info');
+                    }
+                }, 3000 + (index * 2000));
+            });
         }
         
         function toggleMuteCall() {
@@ -18561,6 +18818,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // Check browser compatibility
                 if (!checkMediaDeviceSupport()) return;
                 
+                // Get selected recipient type
+                const recipientType = document.querySelector('input[name="recipientType"]:checked')?.value || 'teachers';
+                
                 // Show requesting access notification
                 addNotification('Requesting camera and microphone access...', 'info');
                 
@@ -18591,15 +18851,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 videoCallState.activeCall = {
                     context: context,
+                    recipientType: recipientType,
                     startTime: Date.now(),
                     stream: stream,
-                    participants: [currentUser.name]
+                    participants: [{ name: currentUser.name, role: currentUser.role, isMuted: false }]
                 };
                 
-                videoCallState.participants = [currentUser.name];
+                videoCallState.participants = [{ name: currentUser.name, role: currentUser.role, isMuted: false }];
                 videoCallState.isMuted = false;
                 videoCallState.isCameraOff = false;
                 videoCallState.seconds = 0;
+                videoCallState.recipientType = recipientType;
                 
                 // Get container and video elements based on context
                 let containerId, videoId, timerElement;
@@ -18622,6 +18884,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 if (container) {
                     container.classList.add('active');
                     container.style.display = 'block';
+                    
+                    // Update recipient type badge for live chat
+                    if (context === 'live') {
+                        const recipientBadge = document.getElementById('videoCallRecipientType');
+                        if (recipientBadge) {
+                            recipientBadge.innerHTML = getRecipientBadgeText(recipientType);
+                            recipientBadge.className = `badge recipient-badge ${recipientType} ms-2`;
+                        }
+                    }
                 }
                 
                 // Attach stream to local video element
@@ -18633,6 +18904,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         console.log('Video play error:', err);
                     });
                 }
+                
+                // Update participants list
+                updateVideoParticipantsList();
                 
                 // Start call timer
                 videoCallState.timer = setInterval(() => {
@@ -18649,12 +18923,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 updateVideoCallStatus(context);
                 
                 // Simulate other participants joining
-                simulateVideoCallParticipants(context);
+                simulateVideoCallParticipants(context, recipientType);
                 
-                addNotification('✅ Video call started! Camera and microphone active.', 'success');
+                const recipientLabel = recipientType.charAt(0).toUpperCase() + recipientType.slice(1);
+                addNotification(`✅ Video call started with ${recipientLabel}! Camera and microphone active.`, 'success');
                 
                 if (typeof broadcastCallEvent === 'function') {
-                    broadcastCallEvent('video_call_started', context);
+                    broadcastCallEvent('video_call_started', context, recipientType);
                 }
                 
             } catch (err) {
@@ -18703,23 +18978,60 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         // Simulate other participants joining the video call
-        function simulateVideoCallParticipants(context) {
-            const possibleParticipants = context === 'live' ? 
-                ['Teacher A', 'Teacher B'] : 
-                context === 'teacher' ? ['Student/Parent'] : ['Teacher'];
+        function simulateVideoCallParticipants(context, recipientType) {
+            let possibleParticipants = [];
             
-            setTimeout(() => {
-                if (videoCallState.activeCall && videoCallState.activeCall.context === context) {
-                    const newParticipant = possibleParticipants[0];
-                    videoCallState.participants.push(newParticipant);
-                    
-                    // Add simulated remote participant video placeholder
-                    addRemoteParticipantVideo(context, newParticipant);
-                    
-                    updateVideoCallStatus(context);
-                    addNotification(newParticipant + ' joined the video call', 'info');
+            if (context === 'live') {
+                switch(recipientType) {
+                    case 'teachers':
+                        possibleParticipants = [
+                            { name: 'Mr. John Smith', role: 'Teacher', isMuted: false },
+                            { name: 'Ms. Sarah Johnson', role: 'Teacher', isMuted: false }
+                        ];
+                        break;
+                    case 'parents':
+                        possibleParticipants = [
+                            { name: 'David Brown', role: 'Parent', isMuted: false },
+                            { name: 'Emily Davis', role: 'Parent', isMuted: false }
+                        ];
+                        break;
+                    case 'students':
+                        possibleParticipants = [
+                            { name: 'Alex Wilson', role: 'Student', isMuted: false },
+                            { name: 'Maya Thompson', role: 'Student', isMuted: false }
+                        ];
+                        break;
+                    case 'hod':
+                        possibleParticipants = [
+                            { name: 'Dr. Michael Anderson', role: 'HOD', isMuted: false }
+                        ];
+                        break;
+                    default:
+                        possibleParticipants = [
+                            { name: 'User A', role: 'User', isMuted: false }
+                        ];
                 }
-            }, 3000);
+            } else if (context === 'teacher') {
+                possibleParticipants = [{ name: 'Student/Parent', role: 'Student', isMuted: false }];
+            } else if (context === 'parent') {
+                possibleParticipants = [{ name: 'Teacher', role: 'Teacher', isMuted: false }];
+            }
+            
+            // Add participants gradually
+            possibleParticipants.forEach((participant, index) => {
+                setTimeout(() => {
+                    if (videoCallState.activeCall && videoCallState.activeCall.context === context) {
+                        videoCallState.participants.push(participant);
+                        
+                        // Add simulated remote participant video placeholder
+                        addRemoteParticipantVideo(context, participant.name);
+                        
+                        updateVideoCallStatus(context);
+                        updateVideoParticipantsList();
+                        addNotification(participant.name + ' joined the video call', 'info');
+                    }
+                }, 3000 + (index * 2000));
+            });
         }
         
         // Add remote participant video placeholder
@@ -18963,6 +19275,166 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             addNotification('Video call ended', 'info');
             broadcastCallEvent('video_call_ended', context);
+        }
+        
+        // ========================================
+        // PARTICIPANT MANAGEMENT FUNCTIONS
+        // ========================================
+        
+        // Toggle participants list panel
+        function toggleParticipantsList() {
+            const panel = document.getElementById('participantsListPanel');
+            if (panel) {
+                if (panel.style.display === 'none') {
+                    panel.style.display = 'block';
+                    updateVideoParticipantsList();
+                } else {
+                    panel.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle voice participants list
+        function toggleVoiceParticipantsList() {
+            const list = document.getElementById('voiceParticipantsList');
+            if (list) {
+                if (list.style.display === 'none') {
+                    list.style.display = 'block';
+                    updateVoiceParticipantsList();
+                } else {
+                    list.style.display = 'none';
+                }
+            }
+        }
+        
+        // Update video participants list
+        function updateVideoParticipantsList() {
+            const list = document.getElementById('participantsList');
+            const count = document.getElementById('participantsCount');
+            
+            if (!list || !videoCallState.participants) return;
+            
+            if (count) {
+                count.textContent = videoCallState.participants.length;
+            }
+            
+            list.innerHTML = videoCallState.participants.map((participant, index) => {
+                const name = typeof participant === 'string' ? participant : participant.name;
+                const role = typeof participant === 'object' ? participant.role : 'User';
+                const isMuted = typeof participant === 'object' ? participant.isMuted : false;
+                const isCurrentUser = name === currentUser.name;
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                return `
+                    <div class="participant-item">
+                        <div class="participant-info">
+                            <div class="participant-avatar">${initials}</div>
+                            <div class="participant-details">
+                                <div class="participant-name">${name}${isCurrentUser ? ' (You)' : ''}</div>
+                                <div class="participant-role">${role}</div>
+                            </div>
+                        </div>
+                        <div class="participant-controls">
+                            <div class="participant-status ${isMuted ? 'muted' : 'unmuted'}">
+                                <i class="fas fa-${isMuted ? 'microphone-slash' : 'microphone'}"></i>
+                                ${isMuted ? 'Muted' : 'Active'}
+                            </div>
+                            ${!isCurrentUser ? `
+                                <button class="btn btn-sm ${isMuted ? 'btn-success' : 'btn-warning'}" 
+                                        onclick="toggleParticipantMute(${index})" 
+                                        title="${isMuted ? 'Unmute' : 'Mute'} participant">
+                                    <i class="fas fa-${isMuted ? 'microphone' : 'microphone-slash'}"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Update voice participants list
+        function updateVoiceParticipantsList() {
+            const list = document.getElementById('voiceParticipantsBody');
+            
+            if (!list || !callParticipants) return;
+            
+            list.innerHTML = callParticipants.map((participant, index) => {
+                const name = typeof participant === 'string' ? participant : participant.name;
+                const role = typeof participant === 'object' ? participant.role : 'User';
+                const isMuted = typeof participant === 'object' ? participant.isMuted : false;
+                const isCurrentUser = name === currentUser.name;
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                return `
+                    <div class="participant-item">
+                        <div class="participant-info">
+                            <div class="participant-avatar">${initials}</div>
+                            <div class="participant-details">
+                                <div class="participant-name">${name}${isCurrentUser ? ' (You)' : ''}</div>
+                                <div class="participant-role">${role}</div>
+                            </div>
+                        </div>
+                        <div class="participant-controls">
+                            <div class="participant-status ${isMuted ? 'muted' : 'unmuted'}">
+                                <i class="fas fa-${isMuted ? 'microphone-slash' : 'microphone'}"></i>
+                                ${isMuted ? 'Muted' : 'Active'}
+                            </div>
+                            ${!isCurrentUser ? `
+                                <button class="btn btn-sm ${isMuted ? 'btn-success' : 'btn-warning'}" 
+                                        onclick="toggleVoiceParticipantMute(${index})" 
+                                        title="${isMuted ? 'Unmute' : 'Mute'} participant">
+                                    <i class="fas fa-${isMuted ? 'microphone' : 'microphone-slash'}"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Toggle mute for a specific video call participant
+        function toggleParticipantMute(index) {
+            if (!videoCallState.participants || !videoCallState.participants[index]) return;
+            
+            const participant = videoCallState.participants[index];
+            if (typeof participant === 'object') {
+                participant.isMuted = !participant.isMuted;
+                const name = participant.name;
+                const status = participant.isMuted ? 'muted' : 'unmuted';
+                addNotification(`${name} has been ${status}`, 'info');
+                updateVideoParticipantsList();
+            }
+        }
+        
+        // Toggle mute for a specific voice call participant
+        function toggleVoiceParticipantMute(index) {
+            if (!callParticipants || !callParticipants[index]) return;
+            
+            const participant = callParticipants[index];
+            if (typeof participant === 'object') {
+                participant.isMuted = !participant.isMuted;
+                const name = participant.name;
+                const status = participant.isMuted ? 'muted' : 'unmuted';
+                addNotification(`${name} has been ${status}`, 'info');
+                updateVoiceParticipantsList();
+            } else {
+                // If it's a string, convert to object
+                const name = participant;
+                callParticipants[index] = { name: name, role: 'User', isMuted: true };
+                addNotification(`${name} has been muted`, 'info');
+                updateVoiceParticipantsList();
+            }
+        }
+        
+        // Helper function to get recipient badge text
+        function getRecipientBadgeText(recipientType) {
+            const badges = {
+                'teachers': '<i class="fas fa-chalkboard-teacher"></i> Teachers',
+                'parents': '<i class="fas fa-user-friends"></i> Parents',
+                'students': '<i class="fas fa-user-graduate"></i> Students',
+                'hod': '<i class="fas fa-user-tie"></i> HOD'
+            };
+            return badges[recipientType] || '';
         }
         
         // Enable teacher buttons when student is selected
