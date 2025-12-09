@@ -17832,6 +17832,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== LIVE CHAT VOICE NOTE FUNCTIONS =====
         function startVoiceNote() {
+            // Check if user is logged in
+            if (!currentUser) {
+                addNotification('Please log in to send voice notes', 'warning');
+                return;
+            }
+            
             currentRecordingContext = 'live';
             startRecording('voiceNoteControls', 'recordingDuration');
         }
@@ -18156,6 +18162,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== VOICE CALL FUNCTIONS =====
         function startVoiceCall() {
+            // Check if user is logged in
+            if (!currentUser) {
+                addNotification('Please log in to start a call', 'warning');
+                return;
+            }
+            
+            // Initialize the voice call
             initVoiceCall('live');
         }
         
@@ -18173,7 +18186,16 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         async function initVoiceCall(context) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Request microphone permission with enhanced audio settings
+                addNotification('Requesting microphone access...', 'info');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
                 
                 activeVoiceCall = {
                     context: context,
@@ -18187,29 +18209,54 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 // Show call controls based on context
                 if (context === 'live') {
-                    document.getElementById('voiceCallControls').style.display = 'block';
-                    updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                    const controlsElement = document.getElementById('voiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                    }
                 } else if (context === 'teacher') {
-                    document.getElementById('teacherVoiceCallControls').style.display = 'block';
-                    updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
-                    // Add student to call
-                    callParticipants.push(selectedChatStudent.name);
+                    const controlsElement = document.getElementById('teacherVoiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
+                        // Add student to call
+                        if (selectedChatStudent) {
+                            callParticipants.push(selectedChatStudent.name);
+                        }
+                    }
                 } else if (context === 'parent') {
-                    document.getElementById('parentVoiceCallControls').style.display = 'block';
-                    updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                    const controlsElement = document.getElementById('parentVoiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                    }
                 }
                 
                 // Simulate adding participants
                 simulateConferenceCall(context);
                 
-                addNotification('Conference call started! Others can join.', 'success');
+                addNotification('✅ Voice call started! Others can join.', 'success');
                 
                 // Broadcast call start to other users
-                broadcastCallEvent('call_started', context);
+                if (typeof broadcastCallEvent === 'function') {
+                    broadcastCallEvent('call_started', context);
+                }
                 
             } catch (err) {
                 console.error('Error starting voice call:', err);
-                addNotification('Unable to start call. Please check microphone permissions.', 'error');
+                let errorMessage = 'Unable to start call. ';
+                
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Microphone access was denied. Please allow microphone access in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage += 'Microphone is already in use by another application.';
+                } else {
+                    errorMessage += 'Please check your microphone permissions and try again.';
+                }
+                
+                addNotification(errorMessage, 'error');
             }
         }
         
@@ -18391,6 +18438,13 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // Start video call for each context
         function startVideoCall() {
+            // Check if user is logged in
+            if (!currentUser) {
+                addNotification('Please log in to start a video call', 'warning');
+                return;
+            }
+            
+            // Initialize the video call
             initVideoCall('live');
         }
         
@@ -18409,14 +18463,21 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Initialize video call with camera and microphone
         async function initVideoCall(context) {
             try {
-                // Request access to camera and microphone
+                // Show requesting access notification
+                addNotification('Requesting camera and microphone access...', 'info');
+                
+                // Request access to camera and microphone with enhanced settings
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         width: { ideal: 640 },
                         height: { ideal: 480 },
                         facingMode: 'user'
                     }, 
-                    audio: true 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
                 });
                 
                 videoCallState.activeCall = {
@@ -18451,12 +18512,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 const container = document.getElementById(containerId);
                 if (container) {
                     container.classList.add('active');
+                    container.style.display = 'block';
                 }
                 
                 // Attach stream to local video element
                 const localVideo = document.getElementById(videoId);
                 if (localVideo) {
                     localVideo.srcObject = stream;
+                    // Ensure video plays
+                    localVideo.play().catch(err => {
+                        console.log('Video play error:', err);
+                    });
                 }
                 
                 // Start call timer
@@ -18476,19 +18542,28 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // Simulate other participants joining
                 simulateVideoCallParticipants(context);
                 
-                addNotification('Video call started! Camera and microphone active.', 'success');
-                broadcastCallEvent('video_call_started', context);
+                addNotification('✅ Video call started! Camera and microphone active.', 'success');
+                
+                if (typeof broadcastCallEvent === 'function') {
+                    broadcastCallEvent('video_call_started', context);
+                }
                 
             } catch (err) {
                 console.error('Error starting video call:', err);
-                let errorMessage = 'Unable to start video call.';
+                let errorMessage = 'Unable to start video call. ';
+                
                 if (err.name === 'NotAllowedError') {
-                    errorMessage = 'Camera and microphone access denied. Please allow permissions in your browser settings.';
+                    errorMessage += 'Camera and microphone access was denied. Please allow permissions in your browser settings.';
                 } else if (err.name === 'NotFoundError') {
-                    errorMessage = 'No camera or microphone found. Please connect a webcam and try again.';
+                    errorMessage += 'No camera or microphone found. Please connect a webcam and try again.';
                 } else if (err.name === 'NotReadableError') {
-                    errorMessage = 'Camera or microphone is already in use by another application.';
+                    errorMessage += 'Camera or microphone is already in use by another application.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage += 'Camera does not meet the required specifications. Try with a different camera.';
+                } else {
+                    errorMessage += 'Please check your camera and microphone permissions and try again.';
                 }
+                
                 addNotification(errorMessage, 'error');
             }
         }
