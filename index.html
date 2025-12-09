@@ -29062,7 +29062,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         
         // Initialize Socket.IO connection for dialer
         function initDialerSocket() {
-            if (dialerSocket) return;
+            if (dialerSocket && dialerSocket.connected) return;
             
             const SIGNALING_SERVER = "https://webrtc-signal-server.up.railway.app";
             
@@ -29074,7 +29074,9 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 });
                 
                 dialerSocket.on('offer', async data => {
-                    if (confirm(`Incoming call from ${data.from}. Accept?`)) {
+                    // Sanitize the caller name to prevent XSS
+                    const sanitizedCaller = String(data.from || 'Unknown').replace(/[<>'"]/g, '');
+                    if (confirm(`Incoming call from ${sanitizedCaller}. Accept?`)) {
                         await dialerAnswerCall(data);
                     }
                 });
@@ -29187,7 +29189,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         // Make a call using the dialer
         async function dialerMakeCall() {
             if (!dialerNumber) {
-                alert('Enter a number or user ID');
+                addNotification('Please enter a number or user ID', 'warning');
                 return;
             }
             
