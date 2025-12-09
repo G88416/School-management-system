@@ -36,6 +36,9 @@
     
     <!-- PeerJS for WebRTC Video/Voice Calling -->
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
+    <!-- Socket.IO for WebRTC Signaling -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root {
             /* Default Theme (Purple Gradient) - Enhanced with G19-inspired colors */
@@ -4984,6 +4987,66 @@
                                 <div class="card-body" style="height: 400px; overflow-y: auto; background: rgba(0, 0, 0, 0.2);" id="liveChatMessages">
                                     <!-- Chat messages will appear here -->
                                 </div>
+                                
+                                <!-- WebRTC Dialer Interface -->
+                                <div id="webrtcDialerContainer" class="d-none" style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px; margin: 10px;">
+                                    <!-- Dialer Screen -->
+                                    <div id="dialerScreen">
+                                        <div class="text-center mb-3">
+                                            <h5><i class="fas fa-phone-alt me-2"></i>WebRTC Dialer</h5>
+                                            <small class="text-muted">Connected to: webrtc-signal-server</small>
+                                        </div>
+                                        <div id="dialerDisplay" style="font-size: 32px; min-height: 50px; text-align: center; color: #fff; margin-bottom: 20px;">
+                                            <!-- Number display -->
+                                        </div>
+                                        <div class="keypad" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto;">
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('1')" style="height: 60px; font-size: 24px; border-radius: 50%;">1</button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('2')" style="height: 60px; font-size: 24px; border-radius: 50%;">2<br><small>ABC</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('3')" style="height: 60px; font-size: 24px; border-radius: 50%;">3<br><small>DEF</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('4')" style="height: 60px; font-size: 24px; border-radius: 50%;">4<br><small>GHI</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('5')" style="height: 60px; font-size: 24px; border-radius: 50%;">5<br><small>JKL</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('6')" style="height: 60px; font-size: 24px; border-radius: 50%;">6<br><small>MNO</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('7')" style="height: 60px; font-size: 24px; border-radius: 50%;">7<br><small>PQRS</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('8')" style="height: 60px; font-size: 24px; border-radius: 50%;">8<br><small>TUV</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('9')" style="height: 60px; font-size: 24px; border-radius: 50%;">9<br><small>WXYZ</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('*')" style="height: 60px; font-size: 24px; border-radius: 50%;">*</button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('0')" style="height: 60px; font-size: 24px; border-radius: 50%;">0<br><small>+</small></button>
+                                            <button class="btn btn-light keypad-btn" onclick="dialerAddDigit('#')" style="height: 60px; font-size: 24px; border-radius: 50%;">#</button>
+                                        </div>
+                                        <div class="text-center mt-3">
+                                            <button class="btn btn-success btn-lg" onclick="dialerMakeCall()" style="width: 70px; height: 70px; border-radius: 50%;">
+                                                <i class="fas fa-phone" style="font-size: 24px;"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-sm ms-2" onclick="dialerClear()">
+                                                <i class="fas fa-backspace"></i> Clear
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm ms-2" onclick="closeDialer()">
+                                                <i class="fas fa-times"></i> Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Active Call Screen -->
+                                    <div id="activeDialerCall" class="d-none">
+                                        <div class="text-center">
+                                            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-user" style="font-size: 3rem; color: #fff;"></i>
+                                            </div>
+                                            <h4 id="dialerCallerName" style="color: #fff;"></h4>
+                                            <p id="dialerCallDuration" style="color: #aaa; font-size: 20px;">00:00</p>
+                                            <video id="dialerRemoteVideo" autoplay playsinline style="width: 300px; height: 225px; background: #000; border-radius: 12px; margin: 20px auto; display: none;"></video>
+                                        </div>
+                                        <div class="text-center mt-4">
+                                            <button class="btn btn-warning" id="dialerMuteBtn" onclick="dialerToggleMute()" style="width: 60px; height: 60px; border-radius: 50%;">
+                                                <i class="fas fa-microphone" style="font-size: 20px;"></i>
+                                            </button>
+                                            <button class="btn btn-danger ms-3" onclick="dialerHangUp()" style="width: 60px; height: 60px; border-radius: 50%;">
+                                                <i class="fas fa-phone-slash" style="font-size: 20px;"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="card-footer" style="background: rgba(255, 255, 255, 0.1);">
                                     <!-- Recipient Type Selector -->
                                     <div class="mb-3 p-2" style="background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
@@ -5115,6 +5178,9 @@
                                         <button class="btn btn-warning" onclick="startVideoCall()" title="Start Video Call">
                                             <i class="fas fa-video"></i>
                                         </button>
+                                        <button class="btn btn-secondary" onclick="openDialer()" title="WebRTC Dialer">
+                                            <i class="fas fa-phone-square"></i>
+                                        </button>
                                         <button class="btn btn-primary" onclick="sendLiveChatMessage()">
                                             <i class="fas fa-paper-plane me-2"></i>Send
                                         </button>
@@ -5122,7 +5188,8 @@
                                     <small class="text-muted mt-2 d-block">
                                         <i class="fas fa-microphone me-1"></i>Voice Note | 
                                         <i class="fas fa-phone me-1"></i>Voice Call | 
-                                        <i class="fas fa-video me-1"></i>Video Call
+                                        <i class="fas fa-video me-1"></i>Video Call | 
+                                        <i class="fas fa-phone-square me-1"></i>WebRTC Dialer
                                     </small>
                                 </div>
                             </div>
@@ -28978,6 +29045,288 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         
         console.log('✅ Enhanced real-time communication system loaded!');
         console.log('📱 Features: Firebase sync, WebRTC calls, Voice notes, Call history');
+        
+        // ========================================
+        // WEBRTC DIALER FUNCTIONS
+        // Integrated dialer with socket.io signaling
+        // ========================================
+        
+        // Dialer state
+        let dialerNumber = '';
+        let dialerSocket = null;
+        let dialerPc = null;
+        let dialerLocalStream = null;
+        let dialerCallingTo = null;
+        let dialerTimerInterval = null;
+        let dialerSeconds = 0;
+        
+        // Initialize Socket.IO connection for dialer
+        function initDialerSocket() {
+            if (dialerSocket && dialerSocket.connected) return;
+            
+            const SIGNALING_SERVER = "https://webrtc-signal-server.up.railway.app";
+            
+            try {
+                dialerSocket = io(SIGNALING_SERVER);
+                
+                dialerSocket.on('connect', () => {
+                    console.log('✅ WebRTC Dialer connected to signaling server');
+                });
+                
+                dialerSocket.on('offer', async data => {
+                    // Sanitize the caller name to prevent XSS
+                    const sanitizedCaller = String(data.from || 'Unknown').replace(/[<>'"]/g, '');
+                    if (confirm(`Incoming call from ${sanitizedCaller}. Accept?`)) {
+                        await dialerAnswerCall(data);
+                    }
+                });
+                
+                dialerSocket.on('answer', async data => {
+                    if (dialerPc) {
+                        await dialerPc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        document.getElementById('dialerCallDuration').textContent = '00:00';
+                    }
+                });
+                
+                dialerSocket.on('candidate', async data => {
+                    if (dialerPc && data.candidate) {
+                        try {
+                            await dialerPc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        } catch(e) {
+                            console.error('Error adding ICE candidate:', e);
+                        }
+                    }
+                });
+                
+                dialerSocket.on('hangup', () => {
+                    dialerHangUp();
+                });
+                
+            } catch (error) {
+                console.error('Failed to connect to signaling server:', error);
+                addNotification('Failed to connect to signaling server', 'danger');
+            }
+        }
+        
+        // Open the dialer interface
+        function openDialer() {
+            const dialerContainer = document.getElementById('webrtcDialerContainer');
+            const chatMessages = document.getElementById('liveChatMessages');
+            
+            if (dialerContainer) {
+                dialerContainer.classList.remove('d-none');
+                if (chatMessages) {
+                    chatMessages.style.height = '200px';
+                }
+                
+                // Initialize socket connection
+                initDialerSocket();
+                
+                addNotification('WebRTC Dialer opened', 'info');
+            }
+        }
+        
+        // Close the dialer interface
+        function closeDialer() {
+            const dialerContainer = document.getElementById('webrtcDialerContainer');
+            const chatMessages = document.getElementById('liveChatMessages');
+            
+            if (dialerContainer) {
+                dialerContainer.classList.add('d-none');
+                if (chatMessages) {
+                    chatMessages.style.height = '400px';
+                }
+                dialerNumber = '';
+                document.getElementById('dialerDisplay').textContent = '';
+            }
+        }
+        
+        // Add digit to dialer display
+        function dialerAddDigit(digit) {
+            dialerNumber += digit;
+            document.getElementById('dialerDisplay').textContent = dialerNumber;
+        }
+        
+        // Clear dialer display
+        function dialerClear() {
+            dialerNumber = '';
+            document.getElementById('dialerDisplay').textContent = '';
+        }
+        
+        // Create WebRTC peer connection
+        function createDialerPeerConnection() {
+            dialerPc = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+            
+            if (dialerLocalStream) {
+                dialerLocalStream.getTracks().forEach(track => {
+                    dialerPc.addTrack(track, dialerLocalStream);
+                });
+            }
+            
+            dialerPc.ontrack = e => {
+                const remoteVideo = document.getElementById('dialerRemoteVideo');
+                if (remoteVideo) {
+                    remoteVideo.srcObject = e.streams[0];
+                    remoteVideo.style.display = 'block';
+                }
+            };
+            
+            dialerPc.onicecandidate = e => {
+                if (e.candidate && dialerSocket) {
+                    dialerSocket.emit('candidate', { 
+                        to: dialerCallingTo || 'all', 
+                        candidate: e.candidate 
+                    });
+                }
+            };
+        }
+        
+        // Make a call using the dialer
+        async function dialerMakeCall() {
+            if (!dialerNumber) {
+                addNotification('Please enter a number or user ID', 'warning');
+                return;
+            }
+            
+            try {
+                addNotification('Initiating call...', 'info');
+                
+                // Get local audio stream
+                dialerLocalStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true, 
+                    video: false 
+                });
+                
+                createDialerPeerConnection();
+                dialerCallingTo = dialerNumber;
+                
+                const offer = await dialerPc.createOffer();
+                await dialerPc.setLocalDescription(offer);
+                
+                if (dialerSocket) {
+                    dialerSocket.emit('offer', { to: dialerCallingTo, offer });
+                }
+                
+                // Show active call screen
+                document.getElementById('dialerScreen').classList.add('d-none');
+                document.getElementById('activeDialerCall').classList.remove('d-none');
+                document.getElementById('dialerCallerName').textContent = dialerNumber;
+                document.getElementById('dialerCallDuration').textContent = 'Ringing...';
+                
+                dialerStartTimer();
+                addNotification('📞 Calling ' + dialerNumber, 'info');
+                
+            } catch (error) {
+                console.error('Error making call:', error);
+                addNotification('Cannot start call: ' + error.message, 'danger');
+            }
+        }
+        
+        // Answer incoming call
+        async function dialerAnswerCall(data) {
+            try {
+                dialerLocalStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true, 
+                    video: false 
+                });
+                
+                createDialerPeerConnection();
+                dialerCallingTo = data.from;
+                
+                await dialerPc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await dialerPc.createAnswer();
+                await dialerPc.setLocalDescription(answer);
+                
+                if (dialerSocket) {
+                    dialerSocket.emit('answer', { to: data.from, answer });
+                }
+                
+                // Show active call screen
+                document.getElementById('dialerScreen').classList.add('d-none');
+                document.getElementById('activeDialerCall').classList.remove('d-none');
+                document.getElementById('dialerCallerName').textContent = data.from;
+                document.getElementById('dialerCallDuration').textContent = '00:00';
+                
+                dialerStartTimer();
+                
+            } catch (error) {
+                console.error('Error answering call:', error);
+                addNotification('Cannot answer call: ' + error.message, 'danger');
+            }
+        }
+        
+        // Hang up the call
+        function dialerHangUp() {
+            if (dialerPc) {
+                dialerPc.close();
+                dialerPc = null;
+            }
+            
+            if (dialerLocalStream) {
+                dialerLocalStream.getTracks().forEach(t => t.stop());
+                dialerLocalStream = null;
+            }
+            
+            if (dialerSocket && dialerCallingTo) {
+                dialerSocket.emit('hangup', { to: dialerCallingTo });
+            }
+            
+            // Reset UI
+            clearInterval(dialerTimerInterval);
+            dialerSeconds = 0;
+            document.getElementById('dialerScreen').classList.remove('d-none');
+            document.getElementById('activeDialerCall').classList.add('d-none');
+            dialerCallingTo = null;
+            
+            const remoteVideo = document.getElementById('dialerRemoteVideo');
+            if (remoteVideo) {
+                remoteVideo.srcObject = null;
+                remoteVideo.style.display = 'none';
+            }
+            
+            addNotification('Call ended', 'info');
+        }
+        
+        // Toggle mute
+        function dialerToggleMute() {
+            if (!dialerLocalStream) return;
+            
+            const audioTrack = dialerLocalStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const muteBtn = document.getElementById('dialerMuteBtn');
+                const icon = muteBtn.querySelector('i');
+                
+                if (audioTrack.enabled) {
+                    icon.className = 'fas fa-microphone';
+                    muteBtn.classList.remove('btn-secondary');
+                    muteBtn.classList.add('btn-warning');
+                } else {
+                    icon.className = 'fas fa-microphone-slash';
+                    muteBtn.classList.remove('btn-warning');
+                    muteBtn.classList.add('btn-secondary');
+                }
+            }
+        }
+        
+        // Start call timer
+        function dialerStartTimer() {
+            clearInterval(dialerTimerInterval);
+            dialerSeconds = 0;
+            dialerTimerInterval = setInterval(() => {
+                dialerSeconds++;
+                const m = String(Math.floor(dialerSeconds / 60)).padStart(2, '0');
+                const s = String(dialerSeconds % 60).padStart(2, '0');
+                document.getElementById('dialerCallDuration').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        
+        console.log('✅ WebRTC Dialer integrated into live chat system');
         
         // ========================================
         // AUTO-DETECT G19SYSTEMS.COM DOMAIN
