@@ -26272,6 +26272,11 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     try {
                         if (firebase.messaging.isSupported()) {
                             firebaseMessaging = firebase.messaging();
+                            
+                            // Setup FCM for push notifications
+                            setupFirebaseCloudMessaging();
+                        } else {
+                            console.log('Firebase Cloud Messaging not supported on this browser');
                         }
                     } catch (e) {
                         console.log('Firebase messaging not supported:', e.message);
@@ -26315,6 +26320,150 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 }
                 
                 return false;
+            }
+        }
+        
+        // ========================================
+        // FIREBASE CLOUD MESSAGING (FCM) SETUP
+        // Push Notifications for Calls & Messages
+        // ========================================
+        
+        let fcmToken = null;
+        
+        // Setup Firebase Cloud Messaging for push notifications
+        async function setupFirebaseCloudMessaging() {
+            if (!firebaseMessaging) {
+                console.log('Firebase Messaging not initialized');
+                return;
+            }
+            
+            try {
+                // Request notification permission
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    console.log('✅ Notification permission granted');
+                    
+                    // Get FCM token
+                    const token = await firebaseMessaging.getToken({
+                        vapidKey: 'YOUR_VAPID_KEY' // This should be configured in Firebase Console
+                    });
+                    
+                    if (token) {
+                        fcmToken = token;
+                        console.log('✅ FCM Token obtained:', token);
+                        
+                        // Store token in Firebase for this user
+                        const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                        const username = currentUser.username || currentUser.name;
+                        
+                        await firebaseDb.ref(`schools/${schoolId}/fcmTokens/${username}`).set({
+                            token: token,
+                            device: navigator.userAgent,
+                            timestamp: Date.now()
+                        });
+                        
+                        console.log('✅ FCM Token registered for user');
+                        
+                        if (typeof addNotification === 'function') {
+                            addNotification('Push notifications enabled for calls & messages!', 'success');
+                        }
+                    } else {
+                        console.log('❌ No FCM token available');
+                    }
+                    
+                    // Listen for foreground messages
+                    firebaseMessaging.onMessage((payload) => {
+                        console.log('📱 Received foreground FCM message:', payload);
+                        handleFCMMessage(payload);
+                    });
+                    
+                } else {
+                    console.log('❌ Notification permission denied');
+                    if (typeof addNotification === 'function') {
+                        addNotification('Push notifications disabled. Enable in browser settings for call notifications.', 'warning');
+                    }
+                }
+            } catch (error) {
+                console.log('FCM setup error:', error.message);
+                console.error('Error details:', error);
+            }
+        }
+        
+        // Handle incoming FCM messages
+        function handleFCMMessage(payload) {
+            console.log('Processing FCM message:', payload);
+            
+            const { notification, data } = payload;
+            
+            // Check message type
+            if (data && data.type === 'call') {
+                // Incoming call notification
+                const callData = {
+                    caller: data.caller,
+                    callType: data.callType || 'voice',
+                    callId: data.callId,
+                    timestamp: Date.now()
+                };
+                
+                // Show incoming call modal
+                showIncomingCallModal(callData, callData.callType);
+                playCallRingtone();
+                
+                // Show browser notification if app is in background
+                if (document.hidden && notification) {
+                    showBrowserNotification(notification.title, notification.body, {
+                        icon: '/icon-192x192.png',
+                        badge: '/icon-96x96.png',
+                        tag: 'incoming-call',
+                        requireInteraction: true,
+                        actions: [
+                            { action: 'answer', title: 'Answer' },
+                            { action: 'reject', title: 'Reject' }
+                        ]
+                    });
+                }
+            } else if (data && data.type === 'message') {
+                // Incoming message notification
+                handleFirebaseMessage({
+                    sender: data.sender,
+                    text: data.text,
+                    timestamp: data.timestamp
+                });
+            } else if (data && data.type === 'voiceNote') {
+                // Incoming voice note
+                showRealtimeNotification(
+                    '🎤 Voice Note',
+                    `${data.sender} sent a voice note`,
+                    'voiceNote'
+                );
+            }
+        }
+        
+        // Show browser notification
+        function showBrowserNotification(title, body, options = {}) {
+            if (!('Notification' in window)) {
+                console.log('Browser does not support notifications');
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body: body,
+                    icon: options.icon || '/icon-192x192.png',
+                    badge: options.badge || '/icon-96x96.png',
+                    tag: options.tag || 'notification',
+                    requireInteraction: options.requireInteraction || false,
+                    ...options
+                });
+                
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    notification.close();
+                };
+                
+                return notification;
             }
         }
         
@@ -26421,8 +26570,86 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         
         // Handle incoming Firebase calls
         function handleFirebaseIncomingCall(call) {
+            // Enhanced call handling with notification and tracking
+            console.log('📞 Incoming call from:', call.caller);
+            
+            // Track call in history
+            trackIncomingCall(call);
+            
+            // Show incoming call modal with enhanced UI
             showIncomingCallModal(call, call.callType || 'voice');
+            
+            // Play ringtone with loop
             playCallRingtone();
+            
+            // Send FCM notification to ensure all devices ring
+            sendCallNotificationToDevices(call);
+            
+            // Show browser notification if tab is not focused
+            if (document.hidden) {
+                showBrowserNotification(
+                    `Incoming ${call.callType === 'video' ? 'Video' : 'Voice'} Call`,
+                    `${call.caller} is calling you...`,
+                    {
+                        icon: '/icon-192x192.png',
+                        tag: 'incoming-call-' + call.callId,
+                        requireInteraction: true,
+                        actions: [
+                            { action: 'answer', title: '✓ Answer' },
+                            { action: 'reject', title: '✗ Decline' }
+                        ]
+                    }
+                );
+            }
+        }
+        
+        // Track incoming call for history
+        function trackIncomingCall(call) {
+            const callHistory = JSON.parse(localStorage.getItem('callHistory') || '[]');
+            
+            callHistory.unshift({
+                ...call,
+                direction: 'incoming',
+                status: 'ringing',
+                timestamp: Date.now(),
+                answered: false
+            });
+            
+            // Keep only last 100 calls
+            if (callHistory.length > 100) {
+                callHistory.pop();
+            }
+            
+            localStorage.setItem('callHistory', JSON.stringify(callHistory));
+        }
+        
+        // Send call notification to all user devices via FCM
+        async function sendCallNotificationToDevices(call) {
+            if (!firebaseInitialized || !firebaseDb) return;
+            
+            try {
+                const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                const recipient = call.recipient || currentUser.username || currentUser.name;
+                
+                // Get all FCM tokens for the recipient
+                const tokensSnapshot = await firebaseDb.ref(`schools/${schoolId}/fcmTokens/${recipient}`).once('value');
+                const tokenData = tokensSnapshot.val();
+                
+                if (tokenData && tokenData.token) {
+                    // Store call notification in Firebase for FCM to pick up
+                    await firebaseDb.ref(`schools/${schoolId}/callNotifications/${recipient}`).push({
+                        caller: call.caller,
+                        callType: call.callType || 'voice',
+                        callId: call.callId,
+                        timestamp: Date.now(),
+                        fcmToken: tokenData.token
+                    });
+                    
+                    console.log('✅ Call notification sent to FCM');
+                }
+            } catch (error) {
+                console.log('Error sending call notification:', error.message);
+            }
         }
         
         // Sync data to Firebase when changes are made
@@ -26554,55 +26781,97 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Start a video call
         async function startVideoCall(recipientUsername) {
             try {
+                // Show initiating call status
+                addNotification('📞 Initiating video call...', 'info');
+                
                 if (!peerInitialized) {
                     initializePeer();
                     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for peer init
                 }
                 
-                // Get local video/audio stream
+                // Get local video/audio stream with enhanced settings
                 localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: true, 
-                    audio: true 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    }, 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
                 });
                 
                 // Get recipient's peer ID
                 const recipientPeerId = await getRecipientPeerId(recipientUsername);
                 
                 if (!recipientPeerId) {
-                    addNotification('Recipient is not online', 'warning');
+                    addNotification('Recipient is not online or not available', 'warning');
                     if (localStream) {
                         localStream.getTracks().forEach(track => track.stop());
                     }
                     return;
                 }
                 
-                // Make the call
-                currentCall = peer.call(recipientPeerId, localStream);
+                const callId = Date.now();
+                
+                // Track outgoing call
+                trackOutgoingCall({
+                    callType: 'video',
+                    recipient: recipientUsername,
+                    callId: callId
+                });
+                
+                // Make the call with metadata
+                currentCall = peer.call(recipientPeerId, localStream, {
+                    metadata: {
+                        caller: currentUser.name,
+                        callType: 'video',
+                        callId: callId
+                    }
+                });
+                
+                // Show ringing status
+                addNotification('📞 Calling ' + recipientUsername + '...', 'info');
                 
                 currentCall.on('stream', (stream) => {
                     remoteStream = stream;
                     displayVideoCall(localStream, remoteStream);
-                    addNotification('Video call connected!', 'success');
+                    addNotification('✅ Video call connected!', 'success');
+                    
+                    // Update call status to connected
+                    updateCallStatus(callId, 'connected');
                 });
                 
                 currentCall.on('close', () => {
                     endCall();
                     addNotification('Video call ended', 'info');
+                    
+                    // Update call status to ended
+                    updateCallStatus(callId, 'ended');
+                });
+                
+                currentCall.on('error', (error) => {
+                    console.log('Call error:', error);
+                    addNotification('Call connection error: ' + error.message, 'danger');
+                    endCall();
                 });
                 
                 // Broadcast call start
                 broadcastVideoCallStart({
-                    callId: Date.now(),
+                    callId: callId,
                     participants: [recipientUsername],
                     context: 'direct-video'
                 });
                 
-                // Sync to Firebase
+                // Sync to Firebase with enhanced data
                 syncToFirebase('call', {
                     callType: 'video',
                     caller: currentUser.name,
                     recipient: recipientUsername,
-                    callId: Date.now()
+                    callId: callId,
+                    status: 'ringing'
                 });
                 
             } catch (error) {
@@ -26617,55 +26886,93 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Start a voice call
         async function startVoiceCall(recipientUsername) {
             try {
+                // Show initiating call status
+                addNotification('📞 Initiating voice call...', 'info');
+                
                 if (!peerInitialized) {
                     initializePeer();
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
-                // Get local audio stream only
+                // Get local audio stream with enhanced settings
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     video: false, 
-                    audio: true 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
                 });
                 
                 // Get recipient's peer ID
                 const recipientPeerId = await getRecipientPeerId(recipientUsername);
                 
                 if (!recipientPeerId) {
-                    addNotification('Recipient is not online', 'warning');
+                    addNotification('Recipient is not online or not available', 'warning');
                     if (localStream) {
                         localStream.getTracks().forEach(track => track.stop());
                     }
                     return;
                 }
                 
-                // Make the call
-                currentCall = peer.call(recipientPeerId, localStream);
+                const callId = Date.now();
+                
+                // Track outgoing call
+                trackOutgoingCall({
+                    callType: 'voice',
+                    recipient: recipientUsername,
+                    callId: callId
+                });
+                
+                // Make the call with metadata
+                currentCall = peer.call(recipientPeerId, localStream, {
+                    metadata: {
+                        caller: currentUser.name,
+                        callType: 'voice',
+                        callId: callId
+                    }
+                });
+                
+                // Show ringing status
+                addNotification('📞 Calling ' + recipientUsername + '...', 'info');
                 
                 currentCall.on('stream', (stream) => {
                     remoteStream = stream;
                     displayVoiceCall(localStream, remoteStream);
-                    addNotification('Voice call connected!', 'success');
+                    addNotification('✅ Voice call connected!', 'success');
+                    
+                    // Update call status to connected
+                    updateCallStatus(callId, 'connected');
                 });
                 
                 currentCall.on('close', () => {
                     endCall();
                     addNotification('Voice call ended', 'info');
+                    
+                    // Update call status to ended
+                    updateCallStatus(callId, 'ended');
+                });
+                
+                currentCall.on('error', (error) => {
+                    console.log('Call error:', error);
+                    addNotification('Call connection error: ' + error.message, 'danger');
+                    endCall();
                 });
                 
                 // Broadcast call start
                 broadcastVoiceCallStart({
-                    callId: Date.now(),
+                    callId: callId,
                     participants: [recipientUsername],
                     context: 'direct-voice'
                 });
                 
-                // Sync to Firebase
+                // Sync to Firebase with enhanced data
                 syncToFirebase('call', {
                     callType: 'voice',
                     caller: currentUser.name,
                     recipient: recipientUsername,
-                    callId: Date.now()
+                    callId: callId,
+                    status: 'ringing'
                 });
                 
             } catch (error) {
@@ -26932,29 +27239,100 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }, 1000);
         }
         
+        // Track outgoing call
+        function trackOutgoingCall(callData) {
+            const callHistory = JSON.parse(localStorage.getItem('callHistory') || '[]');
+            
+            callHistory.unshift({
+                ...callData,
+                caller: currentUser.name,
+                direction: 'outgoing',
+                status: 'ringing',
+                timestamp: Date.now(),
+                answered: false
+            });
+            
+            // Keep only last 100 calls
+            if (callHistory.length > 100) {
+                callHistory.pop();
+            }
+            
+            localStorage.setItem('callHistory', JSON.stringify(callHistory));
+        }
+        
+        // Update call status
+        function updateCallStatus(callId, status) {
+            const callHistory = JSON.parse(localStorage.getItem('callHistory') || '[]');
+            
+            const callIndex = callHistory.findIndex(c => c.callId === callId);
+            if (callIndex !== -1) {
+                callHistory[callIndex].status = status;
+                if (status === 'connected') {
+                    callHistory[callIndex].answered = true;
+                    callHistory[callIndex].connectedAt = Date.now();
+                } else if (status === 'ended') {
+                    callHistory[callIndex].endedAt = Date.now();
+                    if (callHistory[callIndex].connectedAt) {
+                        const duration = callHistory[callIndex].endedAt - callHistory[callIndex].connectedAt;
+                        callHistory[callIndex].duration = Math.floor(duration / 1000); // in seconds
+                    }
+                }
+                
+                localStorage.setItem('callHistory', JSON.stringify(callHistory));
+            }
+        }
+        
         // ========================================
         // VOICE NOTES RECORDING AND PLAYBACK
+        // Enhanced with better audio quality
         // ========================================
         
         // Note: mediaRecorder, audioChunks, and isRecording are already declared above
         // Using var allows redeclaration without error
         var isRecording = false;
         
-        // Start recording voice note
+        // Start recording voice note with enhanced audio quality
         async function startVoiceNoteRecording(targetElementId) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Request audio with enhanced settings
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        channelCount: 1
+                    }
+                });
                 
-                mediaRecorder = new MediaRecorder(stream);
+                // Check for supported MIME types and use the best available
+                let mimeType = 'audio/webm';
+                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    mimeType = 'audio/webm;codecs=opus';
+                } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                    mimeType = 'audio/ogg;codecs=opus';
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    audioBitsPerSecond: 128000
+                });
+                
                 audioChunks = [];
+                let recordingStartTime = Date.now();
                 
                 mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
                 };
                 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    await handleVoiceNoteComplete(audioBlob, targetElementId);
+                    const recordingDuration = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    await handleVoiceNoteComplete(audioBlob, targetElementId, recordingDuration);
                     
                     // Stop all tracks
                     stream.getTracks().forEach(track => track.stop());
@@ -26971,7 +27349,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     recordButton.classList.remove('btn-info');
                 }
                 
-                addNotification('Recording voice note...', 'info');
+                addNotification('🎤 Recording voice note...', 'info');
                 
             } catch (error) {
                 console.log('Voice recording error:', error.message);
@@ -26995,8 +27373,8 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
         }
         
-        // Handle voice note complete
-        async function handleVoiceNoteComplete(audioBlob, context) {
+        // Handle voice note complete with duration
+        async function handleVoiceNoteComplete(audioBlob, context, duration) {
             try {
                 // Convert blob to base64 for storage
                 const reader = new FileReader();
@@ -27006,14 +27384,16 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     const base64Audio = reader.result;
                     const voiceNoteId = Date.now();
                     
-                    // Store locally
+                    // Store locally with enhanced metadata
                     const voiceNote = {
                         id: voiceNoteId,
                         sender: currentUser.name,
                         audioData: base64Audio,
-                        duration: 0, // TODO: Calculate actual duration
+                        duration: duration || 0,
                         timestamp: new Date().toISOString(),
-                        context: context
+                        context: context,
+                        size: audioBlob.size,
+                        type: audioBlob.type
                     };
                     
                     // Save to localStorage
@@ -27030,7 +27410,16 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                             const downloadURL = await storageRef.getDownloadURL();
                             
                             voiceNote.firebaseUrl = downloadURL;
-                            console.log('Voice note uploaded to Firebase Storage');
+                            console.log('✅ Voice note uploaded to Firebase Storage');
+                            
+                            // Sync metadata to Firebase Database for cross-device access
+                            await firebaseDb.ref(`schools/${schoolId}/voiceNotes/${voiceNoteId}`).set({
+                                sender: voiceNote.sender,
+                                firebaseUrl: downloadURL,
+                                duration: voiceNote.duration,
+                                timestamp: voiceNote.timestamp,
+                                context: voiceNote.context
+                            });
                         } catch (error) {
                             console.log('Firebase storage upload error:', error.message);
                         }
@@ -27039,10 +27428,21 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     // Add to chat or message system
                     addVoiceNoteToChat(voiceNote);
                     
-                    // Broadcast voice note
+                    // Broadcast voice note to other devices
                     broadcastVoiceNote(voiceNote, context);
                     
-                    addNotification('Voice note sent!', 'success');
+                    // Sync to Firebase for real-time delivery
+                    if (firebaseInitialized) {
+                        syncToFirebase('message', {
+                            type: 'voiceNote',
+                            sender: voiceNote.sender,
+                            voiceNoteId: voiceNoteId,
+                            duration: voiceNote.duration,
+                            timestamp: voiceNote.timestamp
+                        });
+                    }
+                    
+                    addNotification('✅ Voice note sent!', 'success');
                 };
                 
             } catch (error) {
