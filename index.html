@@ -4773,19 +4773,69 @@
                     <!-- Communication Tab -->
                     <div class="tab-pane fade show active" id="media-communication">
                         <div class="row mb-3">
-                            <div class="col-md-3">
-                                <button class="btn btn-primary" onclick="showSendMessageModal()"><i class="fas fa-envelope me-2"></i>Send Message</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="showSendMessageModal()"><i class="fas fa-envelope me-2"></i>Message</button>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-success" onclick="showAnnouncementsModal()"><i class="fas fa-bullhorn me-2"></i>View Announcements</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-success w-100" onclick="showAnnouncementsModal()"><i class="fas fa-bullhorn me-2"></i>Announcements</button>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-info" onclick="startLiveChat()"><i class="fas fa-comments me-2"></i>Live Chat</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-info w-100" onclick="startLiveChat()"><i class="fas fa-comments me-2"></i>Live Chat</button>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-danger" onclick="clearAllCommunications()"><i class="fas fa-trash me-2"></i>Clear All</button>
+                            <div class="col-md-2">
+                                <button class="btn btn-warning w-100" onclick="showCallHistory()"><i class="fas fa-history me-2"></i>Call History</button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-secondary w-100" onclick="showFCMStatus()"><i class="fas fa-bell me-2"></i>FCM Status</button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-danger w-100" onclick="clearAllCommunications()"><i class="fas fa-trash me-2"></i>Clear All</button>
                             </div>
                         </div>
+                        
+                        <!-- Call History Section -->
+                        <div id="callHistoryContainer" class="d-none mb-4">
+                            <div class="card" style="background: rgba(255, 255, 255, 0.1); border-radius: 15px;">
+                                <div class="card-header" style="background: rgba(255, 255, 255, 0.2);">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4><i class="fas fa-history me-2"></i>Call History</h4>
+                                        <div>
+                                            <button class="btn btn-sm btn-warning me-2" onclick="refreshCallHistory()">
+                                                <i class="fas fa-sync-alt"></i> Refresh
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="closeCallHistory()">
+                                                <i class="fas fa-times"></i> Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>
+                                                    <th>Direction</th>
+                                                    <th>Contact</th>
+                                                    <th>Status</th>
+                                                    <th>Duration</th>
+                                                    <th>Date & Time</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="callHistoryTable">
+                                                <!-- Call history will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="callHistoryEmpty" class="text-center text-muted py-4" style="display: none;">
+                                        <i class="fas fa-phone-slash fa-3x mb-3"></i>
+                                        <p>No call history available</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div id="messagesContainer"></div>
                         
                         <!-- Live Chat Section -->
@@ -18966,6 +19016,11 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 if (success) {
                     addNotification('✅ Firebase connection successful!', 'success');
+                    
+                    // Test FCM
+                    setTimeout(() => {
+                        testFirebaseCloudMessaging();
+                    }, 1000);
                 } else {
                     addNotification('❌ Firebase connection failed. Check your credentials and console for errors.', 'danger');
                 }
@@ -18977,6 +19032,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                         firebaseDb.ref(`schools/${schoolId}/test`).once('value').then(() => {
                             addNotification('✅ Firebase already connected and working!', 'success');
                             updateFirebaseStatus(true);
+                            
+                            // Test FCM
+                            testFirebaseCloudMessaging();
                             
                             // Restore button
                             if (testBtn) {
@@ -19007,12 +19065,69 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                     addNotification('✅ Firebase already connected!', 'success');
                     updateFirebaseStatus(true);
                     
+                    // Test FCM
+                    testFirebaseCloudMessaging();
+                    
                     // Restore button
                     if (testBtn) {
                         testBtn.disabled = false;
                         testBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test Connection';
                     }
                 }
+            }
+        }
+        
+        // Test Firebase Cloud Messaging
+        async function testFirebaseCloudMessaging() {
+            if (!firebaseMessaging) {
+                addNotification('ℹ️ Firebase Cloud Messaging not available on this browser', 'info');
+                return;
+            }
+            
+            try {
+                // Check notification permission
+                if (Notification.permission === 'default') {
+                    addNotification('📱 Requesting notification permission...', 'info');
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        addNotification('✅ Notification permission granted!', 'success');
+                    } else {
+                        addNotification('❌ Notification permission denied. Calls won\'t ring on this device.', 'warning');
+                        return;
+                    }
+                } else if (Notification.permission === 'denied') {
+                    addNotification('❌ Notifications blocked. Enable in browser settings for call notifications.', 'warning');
+                    return;
+                } else {
+                    addNotification('✅ Notification permission already granted', 'success');
+                }
+                
+                // Check if FCM token exists
+                if (fcmToken) {
+                    addNotification('✅ FCM Token registered: ' + fcmToken.substring(0, 20) + '...', 'success');
+                    console.log('Full FCM Token:', fcmToken);
+                } else {
+                    addNotification('⚠️ FCM Token not yet registered. Will register on next login.', 'info');
+                }
+                
+                // Send test notification
+                if (firebaseDb) {
+                    const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                    const username = currentUser.username || currentUser.name;
+                    
+                    await firebaseDb.ref(`schools/${schoolId}/testNotifications/${username}`).set({
+                        message: 'Test notification from Firebase',
+                        timestamp: Date.now(),
+                        type: 'test'
+                    });
+                    
+                    addNotification('✅ Test notification sent through Firebase', 'success');
+                }
+                
+            } catch (error) {
+                console.error('FCM test error:', error);
+                addNotification('⚠️ FCM test error: ' + error.message, 'warning');
             }
         }
         
@@ -27504,8 +27619,185 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             acceptIncomingPeerCall();
         };
         
+        // ========================================
+        // CALL HISTORY UI FUNCTIONS
+        // ========================================
+        
+        // Show call history
+        function showCallHistory() {
+            const container = document.getElementById('callHistoryContainer');
+            if (container) {
+                container.classList.remove('d-none');
+                loadCallHistory();
+            }
+        }
+        
+        // Close call history
+        function closeCallHistory() {
+            const container = document.getElementById('callHistoryContainer');
+            if (container) {
+                container.classList.add('d-none');
+            }
+        }
+        
+        // Load and display call history
+        function loadCallHistory() {
+            const callHistory = JSON.parse(localStorage.getItem('callHistory') || '[]');
+            const tableBody = document.getElementById('callHistoryTable');
+            const emptyMessage = document.getElementById('callHistoryEmpty');
+            
+            if (!tableBody) return;
+            
+            if (callHistory.length === 0) {
+                tableBody.innerHTML = '';
+                if (emptyMessage) emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            if (emptyMessage) emptyMessage.style.display = 'none';
+            
+            tableBody.innerHTML = callHistory.map(call => {
+                const date = new Date(call.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                
+                // Determine contact name
+                const contact = call.direction === 'outgoing' ? 
+                    (call.recipient || 'Unknown') : 
+                    (call.caller || 'Unknown');
+                
+                // Format duration
+                const duration = call.duration ? 
+                    `${Math.floor(call.duration / 60)}:${String(call.duration % 60).padStart(2, '0')}` : 
+                    (call.status === 'connected' ? 'In progress' : '-');
+                
+                // Call type icon and color
+                const typeIcon = call.callType === 'video' ? 
+                    '<i class="fas fa-video text-warning"></i>' : 
+                    '<i class="fas fa-phone text-success"></i>';
+                
+                // Direction icon
+                const directionIcon = call.direction === 'outgoing' ? 
+                    '<i class="fas fa-arrow-up text-info"></i> Outgoing' : 
+                    '<i class="fas fa-arrow-down text-primary"></i> Incoming';
+                
+                // Status badge
+                let statusBadge = '';
+                switch(call.status) {
+                    case 'connected':
+                        statusBadge = '<span class="badge bg-success">Connected</span>';
+                        break;
+                    case 'ended':
+                        statusBadge = call.answered ? 
+                            '<span class="badge bg-info">Completed</span>' : 
+                            '<span class="badge bg-danger">Missed</span>';
+                        break;
+                    case 'ringing':
+                        statusBadge = '<span class="badge bg-warning">Ringing</span>';
+                        break;
+                    default:
+                        statusBadge = '<span class="badge bg-secondary">' + call.status + '</span>';
+                }
+                
+                // Action buttons
+                const actions = `
+                    <button class="btn btn-sm btn-success" onclick="callBack('${contact}', '${call.callType}')" title="Call back">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCallRecord('${call.callId}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                return `
+                    <tr>
+                        <td>${typeIcon} ${call.callType === 'video' ? 'Video' : 'Voice'}</td>
+                        <td>${directionIcon}</td>
+                        <td>${contact}</td>
+                        <td>${statusBadge}</td>
+                        <td>${duration}</td>
+                        <td><small>${formattedDate}</small></td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Refresh call history
+        function refreshCallHistory() {
+            addNotification('Refreshing call history...', 'info');
+            loadCallHistory();
+            addNotification('✅ Call history refreshed', 'success');
+        }
+        
+        // Call back from history
+        function callBack(contact, callType) {
+            closeCallHistory();
+            if (callType === 'video') {
+                startVideoCall(contact);
+            } else {
+                startVoiceCall(contact);
+            }
+        }
+        
+        // Delete call record
+        function deleteCallRecord(callId) {
+            if (!confirm('Delete this call record?')) return;
+            
+            let callHistory = JSON.parse(localStorage.getItem('callHistory') || '[]');
+            callHistory = callHistory.filter(c => c.callId != callId);
+            localStorage.setItem('callHistory', JSON.stringify(callHistory));
+            
+            loadCallHistory();
+            addNotification('Call record deleted', 'info');
+        }
+        
+        // Show FCM status
+        function showFCMStatus() {
+            const status = {
+                messaging: firebaseMessaging ? '✅ Enabled' : '❌ Not available',
+                token: fcmToken ? '✅ Registered' : '❌ Not registered',
+                notifications: Notification.permission === 'granted' ? '✅ Allowed' : 
+                              Notification.permission === 'denied' ? '❌ Blocked' : '⚠️ Not requested',
+                firebase: firebaseInitialized ? '✅ Connected' : '❌ Not connected'
+            };
+            
+            const message = `
+<strong>Firebase Cloud Messaging Status:</strong><br>
+📡 Firebase: ${status.firebase}<br>
+📱 FCM Service: ${status.messaging}<br>
+🔑 FCM Token: ${status.token}<br>
+🔔 Browser Notifications: ${status.notifications}<br>
+<br>
+${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
+            `;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade show';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">FCM Status</h5>
+                            <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${message}
+                        </div>
+                        <div class="modal-footer">
+                            ${Notification.permission !== 'granted' ? 
+                                '<button class="btn btn-primary" onclick="testFirebaseCloudMessaging(); this.closest(\'.modal\').remove();">Request Permission</button>' : ''}
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
         console.log('✅ Enhanced real-time communication system loaded!');
-        console.log('📱 Features: Firebase sync, WebRTC calls, Voice notes');
+        console.log('📱 Features: Firebase sync, WebRTC calls, Voice notes, Call history');
         
         // ========================================
         // AUTO-DETECT G19SYSTEMS.COM DOMAIN
