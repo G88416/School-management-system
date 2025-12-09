@@ -2959,6 +2959,9 @@
             <span id="statusIndicator" class="badge bg-success shadow">
                 <i class="fas fa-wifi me-1"></i>Online
             </span>
+            <span id="syncStatusIndicator" class="badge bg-secondary shadow ms-2" style="font-size:0.75rem; padding: 6px 10px; border-radius: 8px; display: none;">
+                <i class="fas fa-sync-alt fa-spin me-1"></i><span id="syncStatusText">Syncing...</span>
+            </span>
             <button id="updateAppBtn" class="btn btn-info shadow ms-2" onclick="updateApplicationData()" onkeypress="if(event.key==='Enter')updateApplicationData()" tabindex="0" title="⚡ Instantly sync all data across all devices in real-time" aria-label="Update application data across all devices" style="font-weight: 600; padding: 8px 16px; border-radius: 10px; transition: all 0.3s ease;">
                 <i class="fas fa-sync-alt me-1"></i><span class="d-none d-md-inline">Real-time </span>Update
             </button>
@@ -10367,6 +10370,7 @@
         }
         // Save data to localStorage
         function saveData() {
+            // Save to localStorage
             localStorage.setItem('students', JSON.stringify(students));
             localStorage.setItem('admissions', JSON.stringify(admissions));
             localStorage.setItem('fees', JSON.stringify(fees));
@@ -10401,12 +10405,26 @@
             localStorage.setItem('incidentReports', JSON.stringify(incidentReports));
             localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
             
-            // Sync to Firebase in real-time when data changes
-            if (typeof syncToFirebase === 'function' && currentUser) {
-                syncToFirebase('dataUpdate', {
-                    updateType: 'General Data Update',
-                    updatedBy: currentUser.name,
-                    timestamp: Date.now()
+            // ENHANCED: Sync all critical data types to Firebase for real-time updates
+            if (typeof syncDataToAllDevices === 'function' && currentUser) {
+                // Sync critical data types that need real-time propagation
+                const criticalDataTypes = [
+                    { name: 'students', data: students },
+                    { name: 'attendance', data: attendanceRecords },
+                    { name: 'fees', data: fees },
+                    { name: 'grades', data: grades },
+                    { name: 'staff', data: staff },
+                    { name: 'announcements', data: announcements },
+                    { name: 'users', data: users },
+                    { name: 'admissions', data: admissions },
+                    { name: 'timetable', data: timetable },
+                    { name: 'resources', data: resources },
+                    { name: 'lessonPlans', data: lessonPlans }
+                ];
+                
+                // Sync each critical data type
+                criticalDataTypes.forEach(item => {
+                    syncDataToAllDevices(item.name, item.data, 'update');
                 });
             }
         }
@@ -22618,8 +22636,18 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                 updateBtn.classList.remove('btn-info');
             }
             
+            // Show sync status indicator
+            if (typeof showSyncStatus === 'function') {
+                showSyncStatus('Syncing all data...', 'info');
+            }
+            
             // Force reload all data from localStorage immediately
             loadData();
+            
+            // ENHANCED: Use new universal sync system for Firebase real-time updates
+            if (typeof saveData === 'function') {
+                saveData(); // This will trigger syncDataToAllDevices for all data types
+            }
             
             // Immediately broadcast to ALL devices using multiple methods for guaranteed delivery
             
@@ -22663,11 +22691,17 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     
                     // Reset button after a short delay
                     setTimeout(() => {
-                        updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
+                        updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i><span class="d-none d-md-inline">Real-time </span>Update';
                         updateBtn.classList.remove('btn-success');
                         updateBtn.classList.add('btn-info');
                     }, 1500);
                 }
+                
+                // Show sync status success
+                if (typeof showSyncStatus === 'function') {
+                    showSyncStatus('✓ Synced!', 'success');
+                }
+                
                 addNotification('✅ Real-time sync complete! All devices updated instantly.', 'success');
             }, UPDATE_BUTTON_RESET_DELAY);
             
@@ -22677,7 +22711,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     currentUser ? (currentUser.username || currentUser.name) : 'System',
                     currentUser ? currentUser.role : 'System',
                     'Real-time Sync',
-                    'Triggered immediate sync to all devices'
+                    'Triggered immediate sync to all devices via Firebase and BroadcastChannel'
                 );
             }
         }
@@ -26831,14 +26865,280 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             }
         }
         
+        // ========================================
+        // UNIVERSAL REAL-TIME DATA SYNC SYSTEM
+        // Automatically sync all data changes across all devices
+        // ========================================
+        
+        /**
+         * Universal sync wrapper - Call this after ANY data modification
+         * Automatically syncs to Firebase and notifies all connected users
+         * @param {string} dataType - Type of data (students, attendance, fees, grades, etc.)
+         * @param {object} data - The actual data being synced
+         * @param {string} action - Action performed (add, update, delete)
+         */
+        function syncDataToAllDevices(dataType, data, action = 'update') {
+            if (!currentUser) return;
+            
+            // Always save to localStorage first
+            saveToLocalStorage(dataType, data);
+            
+            // Sync to Firebase if available
+            if (firebaseInitialized && firebaseDb) {
+                const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                const timestamp = Date.now();
+                
+                try {
+                    // Store the actual data
+                    firebaseDb.ref(`schools/${schoolId}/data/${dataType}`).set(data);
+                    
+                    // Store metadata about the update
+                    firebaseDb.ref(`schools/${schoolId}/updates/${dataType}`).set({
+                        action: action,
+                        timestamp: timestamp,
+                        updatedBy: currentUser.name,
+                        userRole: currentUser.role,
+                        dataType: dataType,
+                        isAdminUpdate: currentUser.role.toLowerCase() === 'admin'
+                    });
+                    
+                    console.log(`✅ ${dataType} synced to Firebase (${action})`);
+                    
+                    // Show sync indicator for admin
+                    if (currentUser.role.toLowerCase() === 'admin') {
+                        addNotification(`✓ ${dataType} updated across all devices`, 'success', 2000);
+                    }
+                } catch (error) {
+                    console.log('Firebase sync error:', error.message);
+                }
+            }
+        }
+        
+        /**
+         * Save data to localStorage with proper formatting
+         */
+        function saveToLocalStorage(dataType, data) {
+            try {
+                localStorage.setItem(dataType, JSON.stringify(data));
+            } catch (error) {
+                console.log('LocalStorage save error:', error.message);
+            }
+        }
+        
+        /**
+         * Enhanced Firebase listener setup for comprehensive real-time sync
+         */
+        function setupEnhancedFirebaseListeners() {
+            if (!firebaseInitialized || !firebaseDb) return;
+            
+            const schoolId = localStorage.getItem('schoolId') || 'default-school';
+            
+            // List of all data types to monitor
+            const dataTypes = [
+                'students', 'attendance', 'fees', 'grades', 'staff', 
+                'admissions', 'timetable', 'resources', 'announcements',
+                'liveChatMessages', 'users', 'subjects', 'classes',
+                'lessonPlans', 'parentMessages', 'teacherChats'
+            ];
+            
+            // Set up listeners for each data type
+            dataTypes.forEach(dataType => {
+                firebaseDb.ref(`schools/${schoolId}/updates/${dataType}`).on('value', (snapshot) => {
+                    const update = snapshot.val();
+                    if (!update) return;
+                    
+                    // Don't process our own updates
+                    if (update.updatedBy === currentUser.name && Date.now() - update.timestamp < 2000) {
+                        return;
+                    }
+                    
+                    // Fetch and apply the updated data
+                    firebaseDb.ref(`schools/${schoolId}/data/${dataType}`).once('value', (dataSnapshot) => {
+                        const newData = dataSnapshot.val();
+                        if (newData) {
+                            // Update localStorage
+                            localStorage.setItem(dataType, JSON.stringify(newData));
+                            
+                            // Reload the data in memory
+                            loadDataFromLocalStorage(dataType);
+                            
+                            // Refresh the current view if relevant
+                            refreshViewIfNeeded(dataType);
+                            
+                            // Show notification for important updates
+                            if (update.isAdminUpdate) {
+                                showRealtimeNotification(
+                                    '🔄 System Update',
+                                    `${dataType} updated by Admin`,
+                                    'sync',
+                                    true // priority
+                                );
+                            }
+                            
+                            console.log(`✅ ${dataType} synced from Firebase`);
+                        }
+                    });
+                });
+            });
+            
+            console.log('✅ Enhanced real-time listeners activated for all data types');
+        }
+        
+        /**
+         * Load specific data type from localStorage into memory
+         */
+        function loadDataFromLocalStorage(dataType) {
+            try {
+                const data = JSON.parse(localStorage.getItem(dataType) || '[]');
+                
+                // Update the corresponding global variable
+                switch (dataType) {
+                    case 'students':
+                        students = data;
+                        break;
+                    case 'attendance':
+                        attendance = data;
+                        break;
+                    case 'fees':
+                        fees = data;
+                        break;
+                    case 'grades':
+                        grades = data;
+                        break;
+                    case 'staff':
+                        staff = data;
+                        break;
+                    case 'admissions':
+                        admissions = data;
+                        break;
+                    case 'announcements':
+                        announcements = data;
+                        break;
+                    case 'liveChatMessages':
+                        liveChatMessages = data;
+                        break;
+                    case 'users':
+                        users = data;
+                        break;
+                    // Add more cases as needed
+                }
+            } catch (error) {
+                console.log(`Error loading ${dataType}:`, error.message);
+            }
+        }
+        
+        /**
+         * Refresh the view if the updated data is currently displayed
+         */
+        function refreshViewIfNeeded(dataType) {
+            const currentSection = document.querySelector('.section:not(.d-none)');
+            if (!currentSection) return;
+            
+            const sectionId = currentSection.id;
+            
+            // Map data types to their sections and refresh functions
+            const refreshMap = {
+                'students': { sections: ['students', 'dashboard'], fn: () => { 
+                    if (typeof renderStudentsTable === 'function') renderStudentsTable();
+                    if (sectionId === 'dashboard') loadDashboard();
+                }},
+                'attendance': { sections: ['attendance', 'dashboard'], fn: () => {
+                    if (typeof renderAttendanceTable === 'function') renderAttendanceTable();
+                    if (sectionId === 'dashboard') loadDashboard();
+                }},
+                'fees': { sections: ['fees', 'dashboard'], fn: () => {
+                    if (typeof renderFeesTable === 'function') renderFeesTable();
+                    if (sectionId === 'dashboard') loadDashboard();
+                }},
+                'grades': { sections: ['grades', 'dashboard'], fn: () => {
+                    if (typeof renderGradesTable === 'function') renderGradesTable();
+                }},
+                'staff': { sections: ['teachers', 'dashboard'], fn: () => {
+                    if (typeof renderStaffTable === 'function') renderStaffTable();
+                }},
+                'announcements': { sections: ['announcements', 'dashboard'], fn: () => {
+                    if (typeof renderAnnouncementsList === 'function') renderAnnouncementsList();
+                }},
+                'liveChatMessages': { sections: ['media'], fn: () => {
+                    if (typeof renderLiveChatMessages === 'function') renderLiveChatMessages();
+                }},
+                'users': { sections: ['user-management'], fn: () => {
+                    if (typeof loadUserManagement === 'function') loadUserManagement();
+                }}
+            };
+            
+            const refreshInfo = refreshMap[dataType];
+            if (refreshInfo && refreshInfo.sections.includes(sectionId)) {
+                setTimeout(() => {
+                    if (typeof refreshInfo.fn === 'function') {
+                        refreshInfo.fn();
+                    }
+                }, 100);
+            }
+        }
+        
+        /**
+         * Show sync status indicator with message
+         */
+        function showSyncStatus(message = 'Syncing...', type = 'info') {
+            const indicator = document.getElementById('syncStatusIndicator');
+            const text = document.getElementById('syncStatusText');
+            
+            if (indicator && text) {
+                text.textContent = message;
+                indicator.style.display = 'inline-block';
+                
+                // Set color based on type
+                indicator.className = 'badge shadow ms-2';
+                switch(type) {
+                    case 'success':
+                        indicator.classList.add('bg-success');
+                        break;
+                    case 'error':
+                        indicator.classList.add('bg-danger');
+                        break;
+                    case 'warning':
+                        indicator.classList.add('bg-warning');
+                        break;
+                    default:
+                        indicator.classList.add('bg-info');
+                }
+                
+                // Auto-hide after 3 seconds for success
+                if (type === 'success') {
+                    setTimeout(() => {
+                        if (indicator) indicator.style.display = 'none';
+                    }, 3000);
+                }
+            }
+        }
+        
+        /**
+         * Hide sync status indicator
+         */
+        function hideSyncStatus() {
+            const indicator = document.getElementById('syncStatusIndicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+        
         // Initialize Firebase on page load (after user login)
         function attemptFirebaseInit() {
             if (currentUser && !firebaseInitialized) {
                 const success = initializeFirebase();
                 updateFirebaseStatus(success);
+                
+                // Setup enhanced listeners if Firebase initialized successfully
+                if (success) {
+                    setupEnhancedFirebaseListeners();
+                    showSyncStatus('✓ Real-time sync active', 'success');
+                }
             } else if (firebaseInitialized) {
                 // Already initialized, just update status
                 updateFirebaseStatus(true);
+                setupEnhancedFirebaseListeners();
+                showSyncStatus('✓ Real-time sync active', 'success');
             }
         }
         
