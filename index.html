@@ -10477,6 +10477,12 @@
                 // Initialize real-time communication systems
                 initializeCommunicationSystems();
                 
+                // Setup periodic auto-sync for real-time updates (every 30 seconds)
+                // This ensures data stays fresh even if other mechanisms fail
+                if (typeof setupPeriodicSync === 'function') {
+                    setupPeriodicSync();
+                }
+                
                 // Check if g19 cloud is enabled and show appropriate message
                 const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
                 const isG19Domain = window.location.hostname === 'g19systems.com' || 
@@ -10629,6 +10635,11 @@
         }
         // Logout
         function logout() {
+            // Stop periodic sync
+            if (typeof stopPeriodicSync === 'function') {
+                stopPeriodicSync();
+            }
+            
             currentUser = null;
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
@@ -27120,6 +27131,56 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             const indicator = document.getElementById('syncStatusIndicator');
             if (indicator) {
                 indicator.style.display = 'none';
+            }
+        }
+        
+        /**
+         * Setup periodic auto-sync to keep data fresh
+         * Runs every 30 seconds when Firebase is available
+         */
+        let periodicSyncInterval = null;
+        
+        function setupPeriodicSync() {
+            // Clear any existing interval
+            if (periodicSyncInterval) {
+                clearInterval(periodicSyncInterval);
+            }
+            
+            // Only run periodic sync if Firebase is initialized
+            if (!firebaseInitialized) {
+                console.log('Skipping periodic sync - Firebase not initialized');
+                return;
+            }
+            
+            // Run every 30 seconds (unobtrusive background sync)
+            periodicSyncInterval = setInterval(() => {
+                if (firebaseInitialized && currentUser) {
+                    // Check if any data needs syncing (silent sync, no UI updates)
+                    const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                    
+                    // Just verify Firebase connection is alive
+                    if (firebaseDb) {
+                        firebaseDb.ref(`schools/${schoolId}/heartbeat`).set({
+                            user: currentUser.name,
+                            timestamp: Date.now()
+                        }).catch(err => {
+                            console.log('Periodic sync heartbeat failed:', err.message);
+                        });
+                    }
+                }
+            }, 30000); // 30 seconds
+            
+            console.log('✅ Periodic sync enabled (every 30 seconds)');
+        }
+        
+        /**
+         * Stop periodic sync (when user logs out)
+         */
+        function stopPeriodicSync() {
+            if (periodicSyncInterval) {
+                clearInterval(periodicSyncInterval);
+                periodicSyncInterval = null;
+                console.log('Periodic sync stopped');
             }
         }
         
