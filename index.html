@@ -9143,6 +9143,55 @@
             studentDefaultSection: 'studentTimetable'
         };
         
+        // Check browser compatibility for media features
+        function checkBrowserCompatibility() {
+            const features = {
+                mediaDevices: !!navigator.mediaDevices,
+                getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                mediaRecorder: typeof MediaRecorder !== 'undefined',
+                rtc: !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection)
+            };
+            
+            if (!features.getUserMedia) {
+                console.warn('⚠️ getUserMedia not supported - Voice/video features may not work');
+                return false;
+            }
+            
+            if (!features.mediaRecorder) {
+                console.warn('⚠️ MediaRecorder not supported - Voice notes may not work');
+            }
+            
+            if (!features.rtc) {
+                console.warn('⚠️ WebRTC not supported - Peer-to-peer calls may not work');
+            }
+            
+            return true;
+        }
+        
+        // Validate user is logged in before accessing communication features
+        function validateUserLogin(featureName) {
+            if (!currentUser) {
+                addNotification(`Please log in to ${featureName}`, 'warning');
+                return false;
+            }
+            return true;
+        }
+        
+        // Check if media device support is available
+        function checkMediaDeviceSupport(requireRecorder = false) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                addNotification('Your browser does not support media features. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
+                return false;
+            }
+            
+            if (requireRecorder && typeof MediaRecorder === 'undefined') {
+                addNotification('Your browser does not support voice recording. Please use Chrome or Firefox.', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
         // Global variables
         var currentUser = null;
         var editingJob = null;
@@ -16436,17 +16485,15 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             showModal('sendMessageModal');
         }
         function sendMessage() {
+            // Validate user is logged in
+            if (!validateUserLogin('send messages')) return;
+            
             const recipient = document.getElementById('messageRecipient')?.value || '';
             const text = document.getElementById('messageText')?.value?.trim();
             const viaSMS = document.getElementById('sendViaSMS')?.checked || false;
             
             if (!text) {
                 addNotification('Please enter a message', 'warning');
-                return;
-            }
-            
-            if (!currentUser) {
-                addNotification('Please log in to send messages', 'error');
                 return;
             }
             
@@ -17718,6 +17765,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         }
         
         function sendLiveChatMessage() {
+            // Validate user is logged in
+            if (!validateUserLogin('send messages')) return;
+            
             const input = document.getElementById('liveChatInput');
             const text = input.value.trim();
             
@@ -17742,7 +17792,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
             
             // Scroll to bottom
             const container = document.getElementById('liveChatMessages');
-            container.scrollTop = container.scrollHeight;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            // Show success notification
+            addNotification('✅ Message sent', 'success');
         }
         
         function renderLiveChatMessages() {
@@ -17832,6 +17887,9 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== LIVE CHAT VOICE NOTE FUNCTIONS =====
         function startVoiceNote() {
+            // Validate user is logged in
+            if (!validateUserLogin('send voice notes')) return;
+            
             currentRecordingContext = 'live';
             startRecording('voiceNoteControls', 'recordingDuration');
         }
@@ -17879,7 +17937,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // ===== COMMON RECORDING FUNCTIONS =====
         async function startRecording(controlsId, durationId) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Check browser compatibility including MediaRecorder
+                if (!checkMediaDeviceSupport(true)) return;
+                
+                // Show permission request notification
+                addNotification('Requesting microphone access for voice note...', 'info');
+                
+                // Try with enhanced audio settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic audio if enhanced settings not supported
+                    console.log('Enhanced audio settings not supported, using basic audio');
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
                 
                 // Try to use the best available audio codec
                 // webm with opus is widely supported and has good quality
@@ -17915,21 +17993,39 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // This interval provides a good balance between audio quality and responsiveness
                 const DATA_CHUNK_INTERVAL_MS = 250;
                 mediaRecorder.start(DATA_CHUNK_INTERVAL_MS);
-                document.getElementById(controlsId).style.display = 'block';
+                
+                const controlsElement = document.getElementById(controlsId);
+                if (controlsElement) {
+                    controlsElement.style.display = 'block';
+                }
                 
                 // Start timer
                 recordingTimer = setInterval(() => {
                     recordingSeconds++;
                     const mins = Math.floor(recordingSeconds / 60);
                     const secs = recordingSeconds % 60;
-                    document.getElementById(durationId).textContent = 
-                        `${mins}:${secs.toString().padStart(2, '0')}`;
+                    const durationElement = document.getElementById(durationId);
+                    if (durationElement) {
+                        durationElement.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
                 }, 1000);
                 
-                addNotification('Recording started... Speak now!', 'info');
+                addNotification('🎤 Recording started... Speak now!', 'success');
             } catch (err) {
                 console.error('Error accessing microphone:', err);
-                addNotification('Unable to access microphone. Please check permissions.', 'error');
+                
+                let errorMessage = 'Unable to access microphone. ';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Microphone access was denied. Please allow microphone access in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage += 'Microphone is already in use by another application.';
+                } else {
+                    errorMessage += 'Please check your microphone permissions and try again.';
+                }
+                
+                addNotification(errorMessage, 'error');
             }
         }
         
@@ -18156,6 +18252,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // ===== VOICE CALL FUNCTIONS =====
         function startVoiceCall() {
+            // Validate user is logged in
+            if (!validateUserLogin('start a call')) return;
+            
+            // Initialize the voice call
             initVoiceCall('live');
         }
         
@@ -18173,7 +18273,27 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         async function initVoiceCall(context) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Check browser compatibility
+                if (!checkMediaDeviceSupport()) return;
+                
+                // Request microphone permission with enhanced audio settings
+                addNotification('Requesting microphone access...', 'info');
+                
+                // Try with enhanced audio settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic audio if enhanced settings not supported
+                    console.log('Enhanced audio settings not supported, using basic audio');
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
                 
                 activeVoiceCall = {
                     context: context,
@@ -18187,29 +18307,54 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 
                 // Show call controls based on context
                 if (context === 'live') {
-                    document.getElementById('voiceCallControls').style.display = 'block';
-                    updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                    const controlsElement = document.getElementById('voiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('voiceCallControls', 'callStatusText', 'callParticipantCount');
+                    }
                 } else if (context === 'teacher') {
-                    document.getElementById('teacherVoiceCallControls').style.display = 'block';
-                    updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
-                    // Add student to call
-                    callParticipants.push(selectedChatStudent.name);
+                    const controlsElement = document.getElementById('teacherVoiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('teacherVoiceCallControls', 'teacherCallStatusText', 'teacherCallParticipantCount');
+                        // Add student to call
+                        if (selectedChatStudent) {
+                            callParticipants.push(selectedChatStudent.name);
+                        }
+                    }
                 } else if (context === 'parent') {
-                    document.getElementById('parentVoiceCallControls').style.display = 'block';
-                    updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                    const controlsElement = document.getElementById('parentVoiceCallControls');
+                    if (controlsElement) {
+                        controlsElement.style.display = 'block';
+                        updateCallStatus('parentVoiceCallControls', 'parentCallStatusText', 'parentCallParticipantCount');
+                    }
                 }
                 
                 // Simulate adding participants
                 simulateConferenceCall(context);
                 
-                addNotification('Conference call started! Others can join.', 'success');
+                addNotification('✅ Voice call started! Others can join.', 'success');
                 
                 // Broadcast call start to other users
-                broadcastCallEvent('call_started', context);
+                if (typeof broadcastCallEvent === 'function') {
+                    broadcastCallEvent('call_started', context);
+                }
                 
             } catch (err) {
                 console.error('Error starting voice call:', err);
-                addNotification('Unable to start call. Please check microphone permissions.', 'error');
+                let errorMessage = 'Unable to start call. ';
+                
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += 'Microphone access was denied. Please allow microphone access in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone and try again.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage += 'Microphone is already in use by another application.';
+                } else {
+                    errorMessage += 'Please check your microphone permissions and try again.';
+                }
+                
+                addNotification(errorMessage, 'error');
             }
         }
         
@@ -18391,6 +18536,10 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         // Start video call for each context
         function startVideoCall() {
+            // Validate user is logged in
+            if (!validateUserLogin('start a video call')) return;
+            
+            // Initialize the video call
             initVideoCall('live');
         }
         
@@ -18409,15 +18558,36 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Initialize video call with camera and microphone
         async function initVideoCall(context) {
             try {
-                // Request access to camera and microphone
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: 'user'
-                    }, 
-                    audio: true 
-                });
+                // Check browser compatibility
+                if (!checkMediaDeviceSupport()) return;
+                
+                // Show requesting access notification
+                addNotification('Requesting camera and microphone access...', 'info');
+                
+                // Request access to camera and microphone with enhanced settings
+                // Try with enhanced settings first, fallback to basic if not supported
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }, 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                } catch (enhancedErr) {
+                    // Fallback to basic settings if enhanced not supported
+                    console.log('Enhanced video/audio settings not supported, using basic settings');
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true,
+                        audio: true
+                    });
+                }
                 
                 videoCallState.activeCall = {
                     context: context,
@@ -18451,12 +18621,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 const container = document.getElementById(containerId);
                 if (container) {
                     container.classList.add('active');
+                    container.style.display = 'block';
                 }
                 
                 // Attach stream to local video element
                 const localVideo = document.getElementById(videoId);
                 if (localVideo) {
                     localVideo.srcObject = stream;
+                    // Ensure video plays
+                    localVideo.play().catch(err => {
+                        console.log('Video play error:', err);
+                    });
                 }
                 
                 // Start call timer
@@ -18476,19 +18651,28 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 // Simulate other participants joining
                 simulateVideoCallParticipants(context);
                 
-                addNotification('Video call started! Camera and microphone active.', 'success');
-                broadcastCallEvent('video_call_started', context);
+                addNotification('✅ Video call started! Camera and microphone active.', 'success');
+                
+                if (typeof broadcastCallEvent === 'function') {
+                    broadcastCallEvent('video_call_started', context);
+                }
                 
             } catch (err) {
                 console.error('Error starting video call:', err);
-                let errorMessage = 'Unable to start video call.';
+                let errorMessage = 'Unable to start video call. ';
+                
                 if (err.name === 'NotAllowedError') {
-                    errorMessage = 'Camera and microphone access denied. Please allow permissions in your browser settings.';
+                    errorMessage += 'Camera and microphone access was denied. Please allow permissions in your browser settings.';
                 } else if (err.name === 'NotFoundError') {
-                    errorMessage = 'No camera or microphone found. Please connect a webcam and try again.';
+                    errorMessage += 'No camera or microphone found. Please connect a webcam and try again.';
                 } else if (err.name === 'NotReadableError') {
-                    errorMessage = 'Camera or microphone is already in use by another application.';
+                    errorMessage += 'Camera or microphone is already in use by another application.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage += 'Camera does not meet the required specifications. Try with a different camera.';
+                } else {
+                    errorMessage += 'Please check your camera and microphone permissions and try again.';
                 }
+                
                 addNotification(errorMessage, 'error');
             }
         }
