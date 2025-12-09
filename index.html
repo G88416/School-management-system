@@ -26879,6 +26879,37 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // ========================================
         // UNIVERSAL REAL-TIME DATA SYNC SYSTEM
         // Automatically sync all data changes across all devices
+        // 
+        // OVERVIEW:
+        // This system ensures that ANY change made by ANY user on ANY device
+        // is immediately reflected across ALL devices accessing the system.
+        // Admin changes have priority and are highlighted to all users.
+        //
+        // ARCHITECTURE:
+        // 1. Local Storage → Primary data store (fast, offline-capable)
+        // 2. Firebase Realtime Database → Cloud sync (cross-device, real-time)
+        // 3. BroadcastChannel API → Same-browser sync (instant, no server)
+        // 4. Storage Events → Cross-tab sync (same browser, different tabs)
+        //
+        // DATA FLOW:
+        // User Action → saveData() → syncDataToAllDevices() → Firebase
+        //   ↓                                                      ↓
+        // localStorage                                  Firebase Listeners (all devices)
+        //                                                          ↓
+        //                                              loadDataFromLocalStorage()
+        //                                                          ↓
+        //                                                refreshViewIfNeeded()
+        //                                                          ↓
+        //                                                   User sees update
+        //
+        // SUPPORTED DATA TYPES (15+):
+        // students, attendance, fees, grades, staff, admissions, timetable,
+        // resources, announcements, liveChatMessages, users, subjects, classes,
+        // lessonPlans, parentMessages, teacherChats
+        //
+        // USAGE:
+        // Automatic - Just call saveData() after any modification, or
+        // Manual - Call syncDataToAllDevices(dataType, data, action)
         // ========================================
         
         /**
@@ -26899,28 +26930,43 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 const schoolId = localStorage.getItem('schoolId') || 'default-school';
                 const timestamp = Date.now();
                 
+                // Ensure session ID exists
+                if (!window.sessionSyncId) {
+                    window.sessionSyncId = `${currentUser.name}-${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
+                }
+                
                 try {
-                    // Store the actual data
-                    firebaseDb.ref(`schools/${schoolId}/data/${dataType}`).set(data);
-                    
-                    // Store metadata about the update
-                    firebaseDb.ref(`schools/${schoolId}/updates/${dataType}`).set({
-                        action: action,
-                        timestamp: timestamp,
-                        updatedBy: currentUser.name,
-                        userRole: currentUser.role,
-                        dataType: dataType,
-                        isAdminUpdate: currentUser.role.toLowerCase() === 'admin'
-                    });
-                    
-                    console.log(`✅ ${dataType} synced to Firebase (${action})`);
-                    
-                    // Show sync indicator for admin
-                    if (currentUser.role.toLowerCase() === 'admin') {
-                        addNotification(`✓ ${dataType} updated across all devices`, 'success', 2000);
+                    // For small datasets, use set; for large arrays, consider incremental updates
+                    // Only sync if data size is reasonable (< 5MB stringified)
+                    const dataStr = JSON.stringify(data);
+                    if (dataStr.length < 5 * 1024 * 1024) {
+                        // Store the actual data
+                        firebaseDb.ref(`schools/${schoolId}/data/${dataType}`).set(data);
+                        
+                        // Store metadata about the update
+                        firebaseDb.ref(`schools/${schoolId}/updates/${dataType}`).set({
+                            action: action,
+                            timestamp: timestamp,
+                            updatedBy: currentUser.name,
+                            userRole: currentUser.role,
+                            dataType: dataType,
+                            isAdminUpdate: currentUser.role.toLowerCase() === 'admin',
+                            sessionId: window.sessionSyncId
+                        });
+                        
+                        console.log(`✅ ${dataType} synced to Firebase (${action})`);
+                        
+                        // Show sync indicator for admin
+                        if (currentUser.role.toLowerCase() === 'admin') {
+                            addNotification(`✓ ${dataType} updated across all devices`, 'success', 2000);
+                        }
+                    } else {
+                        console.warn(`⚠️ ${dataType} too large to sync (${(dataStr.length / 1024 / 1024).toFixed(2)}MB)`);
+                        addNotification('Dataset too large for real-time sync', 'warning');
                     }
                 } catch (error) {
                     console.log('Firebase sync error:', error.message);
+                    addNotification('Sync error - check connection', 'warning');
                 }
             }
         }
@@ -26952,14 +26998,19 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 'lessonPlans', 'parentMessages', 'teacherChats'
             ];
             
+            // Generate a unique session ID for this login session
+            if (!window.sessionSyncId) {
+                window.sessionSyncId = `${currentUser.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            }
+            
             // Set up listeners for each data type
             dataTypes.forEach(dataType => {
                 firebaseDb.ref(`schools/${schoolId}/updates/${dataType}`).on('value', (snapshot) => {
                     const update = snapshot.val();
                     if (!update) return;
                     
-                    // Don't process our own updates
-                    if (update.updatedBy === currentUser.name && Date.now() - update.timestamp < 2000) {
+                    // Don't process our own updates from this session
+                    if (update.sessionId === window.sessionSyncId) {
                         return;
                     }
                     
@@ -26967,26 +27018,34 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     firebaseDb.ref(`schools/${schoolId}/data/${dataType}`).once('value', (dataSnapshot) => {
                         const newData = dataSnapshot.val();
                         if (newData) {
-                            // Update localStorage
-                            localStorage.setItem(dataType, JSON.stringify(newData));
-                            
-                            // Reload the data in memory
-                            loadDataFromLocalStorage(dataType);
-                            
-                            // Refresh the current view if relevant
-                            refreshViewIfNeeded(dataType);
-                            
-                            // Show notification for important updates
-                            if (update.isAdminUpdate) {
-                                showRealtimeNotification(
-                                    '🔄 System Update',
-                                    `${dataType} updated by Admin`,
-                                    'sync',
-                                    true // priority
-                                );
+                            try {
+                                // Update localStorage with error handling
+                                localStorage.setItem(dataType, JSON.stringify(newData));
+                                
+                                // Reload the data in memory
+                                loadDataFromLocalStorage(dataType);
+                                
+                                // Refresh the current view if relevant
+                                refreshViewIfNeeded(dataType);
+                                
+                                // Show notification for important updates
+                                if (update.isAdminUpdate) {
+                                    showRealtimeNotification(
+                                        '🔄 System Update',
+                                        `${dataType} updated by Admin`,
+                                        'sync',
+                                        true // priority
+                                    );
+                                }
+                                
+                                console.log(`✅ ${dataType} synced from Firebase`);
+                            } catch (error) {
+                                console.error(`Error syncing ${dataType}:`, error.message);
+                                // Show error notification if localStorage is full
+                                if (error.name === 'QuotaExceededError') {
+                                    addNotification('Storage full - please clear old data', 'warning');
+                                }
                             }
-                            
-                            console.log(`✅ ${dataType} synced from Firebase`);
                         }
                     });
                 });
@@ -27022,6 +27081,12 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     case 'admissions':
                         admissions = data;
                         break;
+                    case 'timetable':
+                        timetable = data;
+                        break;
+                    case 'resources':
+                        resources = data;
+                        break;
                     case 'announcements':
                         announcements = data;
                         break;
@@ -27031,7 +27096,23 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     case 'users':
                         users = data;
                         break;
-                    // Add more cases as needed
+                    case 'subjects':
+                        subjects = data;
+                        break;
+                    case 'classes':
+                        classes = data;
+                        break;
+                    case 'lessonPlans':
+                        lessonPlans = data;
+                        break;
+                    case 'parentMessages':
+                        parentMessages = data;
+                        break;
+                    case 'teacherChats':
+                        teacherChats = data;
+                        break;
+                    default:
+                        console.log(`Unknown data type: ${dataType}`);
                 }
             } catch (error) {
                 console.log(`Error loading ${dataType}:`, error.message);
@@ -27152,15 +27233,17 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 return;
             }
             
-            // Run every 30 seconds (unobtrusive background sync)
+            // Run every 2 minutes (unobtrusive background sync, reduced Firebase writes)
             periodicSyncInterval = setInterval(() => {
                 if (firebaseInitialized && currentUser) {
                     // Check if any data needs syncing (silent sync, no UI updates)
                     const schoolId = localStorage.getItem('schoolId') || 'default-school';
                     
                     // Just verify Firebase connection is alive
+                    // Using update() instead of set() to be more efficient
                     if (firebaseDb) {
-                        firebaseDb.ref(`schools/${schoolId}/heartbeat`).set({
+                        const sessionId = window.sessionSyncId || 'unknown';
+                        firebaseDb.ref(`schools/${schoolId}/heartbeat/${sessionId}`).update({
                             user: currentUser.name,
                             timestamp: Date.now()
                         }).catch(err => {
@@ -27168,9 +27251,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                         });
                     }
                 }
-            }, 30000); // 30 seconds
+            }, 120000); // 2 minutes (reduced from 30 seconds to minimize Firebase writes)
             
-            console.log('✅ Periodic sync enabled (every 30 seconds)');
+            console.log('✅ Periodic sync enabled (every 2 minutes)');
         }
         
         /**
