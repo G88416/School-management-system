@@ -205,7 +205,11 @@ socket.on('answer', async data => {
 
 socket.on('candidate', async data => {
   if (pc && data.candidate) {
-    try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(e) {}
+    try { 
+      await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); 
+    } catch(e) {
+      console.error('Error adding ICE candidate:', e);
+    }
   }
 });
 
@@ -244,12 +248,17 @@ function startTimer() {
 }
 
 // Mute toggle
-document.getElementById('muteBtn').addEventListener('click', () => {
-  const enabled = localStream.getAudioTracks()[0].enabled;
-  localStream.getAudioTracks()[0].enabled = !enabled;
-  muteBtn.innerHTML = enabled 
-    ? '<i class="fas fa-microphone-slash"></i>'
-    : '<i class="fas fa-microphone"></i>';
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  if (!localStream || localStream.getAudioTracks().length === 0) {
+    console.warn('No active audio stream to mute');
+    return;
+  }
+  const audioTrack = localStream.getAudioTracks()[0];
+  audioTrack.enabled = !audioTrack.enabled;
+  muteBtn.innerHTML = audioTrack.enabled 
+    ? '<i class="fas fa-microphone"></i>'
+    : '<i class="fas fa-microphone-slash"></i>';
 });
 </script>
 </body>
