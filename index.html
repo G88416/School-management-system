@@ -9143,6 +9143,31 @@
             studentDefaultSection: 'studentTimetable'
         };
         
+        // Check browser compatibility for media features
+        function checkBrowserCompatibility() {
+            const features = {
+                mediaDevices: !!navigator.mediaDevices,
+                getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                mediaRecorder: typeof MediaRecorder !== 'undefined',
+                rtc: !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection)
+            };
+            
+            if (!features.getUserMedia) {
+                console.warn('⚠️ getUserMedia not supported - Voice/video features may not work');
+                return false;
+            }
+            
+            if (!features.mediaRecorder) {
+                console.warn('⚠️ MediaRecorder not supported - Voice notes may not work');
+            }
+            
+            if (!features.rtc) {
+                console.warn('⚠️ WebRTC not supported - Peer-to-peer calls may not work');
+            }
+            
+            return true;
+        }
+        
         // Global variables
         var currentUser = null;
         var editingJob = null;
@@ -17896,6 +17921,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // ===== COMMON RECORDING FUNCTIONS =====
         async function startRecording(controlsId, durationId) {
             try {
+                // Check browser compatibility
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    addNotification('Your browser does not support voice recording. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
+                    return;
+                }
+                
+                if (typeof MediaRecorder === 'undefined') {
+                    addNotification('Your browser does not support voice recording. Please use Chrome or Firefox.', 'error');
+                    return;
+                }
+                
                 // Show permission request notification
                 addNotification('Requesting microphone access for voice note...', 'info');
                 
@@ -18224,6 +18260,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         
         async function initVoiceCall(context) {
             try {
+                // Check browser compatibility
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    addNotification('Your browser does not support audio calls. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
+                    return;
+                }
+                
                 // Request microphone permission with enhanced audio settings
                 addNotification('Requesting microphone access...', 'info');
                 
@@ -18501,6 +18543,12 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
         // Initialize video call with camera and microphone
         async function initVideoCall(context) {
             try {
+                // Check browser compatibility
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    addNotification('Your browser does not support video calls. Please use a modern browser like Chrome, Firefox, or Edge.', 'error');
+                    return;
+                }
+                
                 // Show requesting access notification
                 addNotification('Requesting camera and microphone access...', 'info');
                 
