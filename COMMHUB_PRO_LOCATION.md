@@ -20,7 +20,7 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 
 ### HTML Section:
 - **File**: `index.html`
-- **Line Range**: Approximately lines **4245-4330**
+- **Line Range**: Approximately lines **4253-4353**
 - **Element ID**: `group-video-chat` (tab pane)
 - **Container ID**: `commhub-container`
 
@@ -91,7 +91,7 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 
 ### Configuration:
 ```javascript
-const SIGNALING_SERVER = "wss://your-group-server.up.railway.app";
+const SIGNALING_SERVER = "wss://your-signaling-server.railway.app";
 const COMMHUB_ICE_CONFIG = {
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 };
@@ -147,7 +147,7 @@ CommHub Pro is accessible to:
 ```
 index.html
 │
-├── HTML Structure (Lines ~4245-4330)
+├── HTML Structure (Lines ~4253-4353)
 │   ├── Tab Navigation
 │   ├── CommHub Container
 │   ├── Sidebar (Room Join, Participants)
