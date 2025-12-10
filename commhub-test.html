@@ -388,25 +388,31 @@
             const usernameInput = document.getElementById('usernameInput');
             const roomInput = document.getElementById('roomInput');
             
-            username = usernameInput.value.trim() || 'User' + Math.floor(Math.random() * 9999);
+            username = usernameInput.value.trim() || 'User' + Date.now().toString().slice(-4);
             roomName = roomInput.value.trim() || 'test-room';
             
-            if (!socket || !socket.connected) {
-                initSocket();
-                // Wait for connection
-                await new Promise(resolve => {
-                    const checkConnection = setInterval(() => {
-                        if (socket && socket.connected) {
-                            clearInterval(checkConnection);
-                            resolve();
-                        }
-                    }, 100);
-                });
-            }
-            
-            log(`🚀 Joining room: ${roomName} as ${username}`, 'info');
-            
             try {
+                if (!socket || !socket.connected) {
+                    initSocket();
+                    // Wait for connection with timeout
+                    await new Promise((resolve, reject) => {
+                        let attempts = 0;
+                        const maxAttempts = 50; // 5 seconds timeout
+                        const checkConnection = setInterval(() => {
+                            attempts++;
+                            if (socket && socket.connected) {
+                                clearInterval(checkConnection);
+                                resolve();
+                            } else if (attempts >= maxAttempts) {
+                                clearInterval(checkConnection);
+                                reject(new Error('Connection timeout'));
+                            }
+                        }, 100);
+                    });
+                }
+                
+                log(`🚀 Joining room: ${roomName} as ${username}`, 'info');
+                
                 // Get local media
                 myStream = await navigator.mediaDevices.getUserMedia({ 
                     video: true, 
@@ -431,8 +437,13 @@
                 roomInput.disabled = true;
                 
             } catch (error) {
-                log('❌ Cannot access camera/microphone: ' + error.message, 'error');
-                alert('Please allow camera and microphone permissions to use video conferencing.');
+                if (error.message === 'Connection timeout') {
+                    log('❌ Failed to connect to server: Connection timeout', 'error');
+                    alert('Cannot connect to video server. Please check your internet connection and try again.');
+                } else {
+                    log('❌ Cannot access camera/microphone: ' + error.message, 'error');
+                    alert('Please allow camera and microphone permissions to use video conferencing.');
+                }
             }
         }
         
@@ -624,8 +635,8 @@
             log('📡 Ready to connect...', 'info');
             initSocket();
             
-            // Set default username
-            document.getElementById('usernameInput').value = 'User' + Math.floor(Math.random() * 9999);
+            // Set default username with timestamp
+            document.getElementById('usernameInput').value = 'User' + Date.now().toString().slice(-4);
         };
         
         // Cleanup on page unload
