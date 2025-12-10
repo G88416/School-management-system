@@ -1,0 +1,81 @@
+================================================================================
+                    WHERE IS COMMHUB PRO LOCATED?
+================================================================================
+
+QUICK ANSWER:
+-------------
+CommHub Pro is located in the "Media Center" section, in the "CommHub Pro" 
+tab (positioned after Video Creator tab).
+
+
+NAVIGATION PATH:
+----------------
+1. Open the application (index.html)
+2. Click "Media" in the left sidebar
+3. Click "CommHub Pro" tab
+4. You will see CommHub Pro interface with permanent server!
+
+
+FILE LOCATION:
+--------------
+File: index.html
+HTML Section: Lines ~5893-6000
+JavaScript Functions: Lines ~30195-30660
+
+
+KEY IDENTIFIERS:
+----------------
+- Tab ID: "group-video-chat"
+- Container ID: "commhub-container"
+- Sidebar ID: "commhub-sidebar"
+- Video Grid ID: "commhubVideoGrid"
+- Participants: "commhubParticipants"
+- Chat Messages: "commhubChatMessages"
+
+
+WHAT IS COMMHUB PRO?
+--------------------
+CommHub Pro is a professional group video conferencing system with:
+- Group video calls (WebRTC)
+- Real-time text chat
+- Screen sharing
+- Raise hand feature
+- Emoji reactions
+- Participant management
+
+
+HOW TO USE:
+-----------
+1. Navigate to the location (see Navigation Path above)
+2. Enter a room name
+3. Click "Join Room"
+4. Allow camera/microphone permissions
+5. Start video conferencing!
+
+
+TECHNICAL DETAILS:
+------------------
+- Technology: WebRTC + Socket.IO
+- Signaling Server: wss://your-group-server.up.railway.app
+- ICE Servers: Google STUN servers
+- Deployment: Railway (free tier available)
+
+
+FOR MORE DETAILS:
+-----------------
+See COMMHUB_PRO_LOCATION.md for comprehensive documentation
+
+
+IMPORTANT NOTES:
+----------------
+✓ CommHub Pro is clearly labeled in Media module
+✓ Icon added to tab: "CommHub Pro" with video conference icon
+✓ Permanent server - no deployment needed!
+✓ Accessible to all users (except students)
+✓ Located conveniently in Media Center next to Video Creator
+
+
+================================================================================
+Last Updated: December 2024
+For questions, refer to COMMHUB_PRO_LOCATION.md
+================================================================================
