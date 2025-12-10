@@ -4077,6 +4077,11 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="teacher-chat">
+                        <!-- ============================================
+                             TEACHER CHAT & COMMUNICATION SECTION
+                             Contains: Message Students, Admin Messages, Chat History, and CommHub Pro
+                             CommHub Pro Location: This section > "Group Video" tab
+                             ============================================ -->
                         <h4>Teacher Chat</h4>
                         <p class="text-muted">Send messages to students and reply to admin communications.</p>
                         
@@ -4091,7 +4096,10 @@
                                 <a class="nav-link" data-bs-toggle="pill" href="#chat-history">Chat History</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="pill" href="#group-video-chat">Group Video</a>
+                                <!-- CommHub Pro is located in this "Group Video" tab -->
+                                <a class="nav-link" data-bs-toggle="pill" href="#group-video-chat">
+                                    <i class="fas fa-users-video me-2"></i>Group Video (CommHub Pro)
+                                </a>
                             </li>
                         </ul>
                         
@@ -4242,6 +4250,18 @@
                                 </div>
                             </div>
                             
+                            <!-- ============================================
+                                 COMMHUB PRO LOCATION
+                                 ============================================
+                                 CommHub Pro is located here in the Teacher Chat section
+                                 
+                                 Navigation Path:
+                                 1. Teachers Module (sidebar) 
+                                 2. Teacher Chat tab
+                                 3. Group Video tab (this section)
+                                 
+                                 Line Location: ~4245-4330 in index.html
+                                 ============================================ -->
                             <!-- CommHub Pro - Group Video + Chat -->
                             <div class="tab-pane fade" id="group-video-chat">
                                 <div class="alert alert-info">
@@ -30180,6 +30200,10 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         // ========================================
         // COMMHUB PRO - GROUP VIDEO + CHAT
         // WebRTC-based group video conferencing
+        // 
+        // LOCATION: Teachers > Teacher Chat > Group Video tab
+        // HTML Section: Line ~4245-4330 (id="group-video-chat")
+        // JavaScript: Line ~30180-30646
         // ========================================
         
         // CommHub Pro state
