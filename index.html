@@ -30435,6 +30435,9 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubRecordedChunks = [];
         let commhubIsRecording = false;
         let commhubIncomingCallData = null;
+        let commhubConnectionAttempts = 0;
+        let commhubMaxRetries = 3;
+        let commhubRetryTimeout = null;
         
         // Shared ICE server configuration
         const COMMHUB_ICE_CONFIG = {
@@ -30447,16 +30450,67 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
             
             try {
-                commhubSocket = io(SIGNALING_SERVER);
+                // Configure Socket.IO with timeout and retry settings
+                commhubSocket = io(SIGNALING_SERVER, {
+                    transports: ['websocket', 'polling'],
+                    timeout: 10000,
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    reconnectionAttempts: commhubMaxRetries
+                });
                 
                 commhubSocket.on('connect', () => {
                     console.log('✅ CommHub Pro connected to signaling server');
+                    commhubConnectionAttempts = 0; // Reset on successful connection
                     addNotification('Connected to CommHub Pro server', 'success');
                 });
                 
                 commhubSocket.on('connect_error', (error) => {
-                    console.error('CommHub Pro connection error:', error);
-                    addNotification('Unable to connect to video server. Check your internet connection.', 'danger');
+                    commhubConnectionAttempts++;
+                    console.error('CommHub Pro connection error (attempt ' + commhubConnectionAttempts + '):', error);
+                    
+                    let errorMessage = 'Unable to connect to video server. ';
+                    
+                    // Provide more specific error details
+                    if (error.message) {
+                        if (error.message.includes('timeout')) {
+                            errorMessage += 'Connection timed out. ';
+                        } else if (error.message.includes('xhr poll error')) {
+                            errorMessage += 'Network error occurred. ';
+                        } else {
+                            errorMessage += 'Error: ' + error.message + '. ';
+                        }
+                    }
+                    
+                    // Add helpful suggestions
+                    if (commhubConnectionAttempts >= commhubMaxRetries) {
+                        errorMessage += 'Please check: 1) Your internet connection, 2) Firewall settings, 3) Try refreshing the page.';
+                        addNotification(errorMessage, 'danger');
+                    } else {
+                        errorMessage += 'Retrying connection (attempt ' + commhubConnectionAttempts + ' of ' + commhubMaxRetries + ')...';
+                        addNotification(errorMessage, 'warning');
+                    }
+                });
+                
+                commhubSocket.on('disconnect', (reason) => {
+                    console.log('CommHub Pro disconnected:', reason);
+                    if (reason === 'io server disconnect') {
+                        // Server initiated disconnect, try to reconnect
+                        addNotification('Disconnected from video server. Reconnecting...', 'warning');
+                    } else if (reason === 'transport close' || reason === 'transport error') {
+                        addNotification('Connection lost. Please check your internet connection.', 'warning');
+                    }
+                });
+                
+                commhubSocket.on('reconnect', (attemptNumber) => {
+                    console.log('CommHub Pro reconnected after ' + attemptNumber + ' attempts');
+                    addNotification('Reconnected to CommHub Pro server', 'success');
+                });
+                
+                commhubSocket.on('reconnect_failed', () => {
+                    console.error('CommHub Pro reconnection failed');
+                    addNotification('Failed to reconnect to video server. Please refresh the page and try again.', 'danger');
                 });
                 
                 commhubSocket.on('user-connected', (userId, userName) => {
@@ -30505,7 +30559,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 
             } catch (error) {
                 console.error('Failed to initialize CommHub Pro:', error);
-                addNotification('CommHub Pro initialization failed. Check console for details.', 'danger');
+                addNotification('CommHub Pro initialization failed: ' + error.message + '. Please check console for details.', 'danger');
             }
         }
         
@@ -30585,19 +30639,50 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 
                 // Initialize socket if not connected
                 if (!commhubSocket || !commhubSocket.connected) {
+                    addNotification('Connecting to video server...', 'info');
                     initCommHubSocket();
                     
-                    // Wait for socket connection with event listener
-                    const connectHandler = () => {
+                    // Wait for socket connection with timeout
+                    const connectionTimeout = 15000; // 15 seconds timeout
+                    const connectionPromise = new Promise((resolve, reject) => {
+                        const timeoutId = setTimeout(() => {
+                            reject(new Error('Connection timeout. The server might be unavailable or your internet connection is too slow.'));
+                        }, connectionTimeout);
+                        
+                        const connectHandler = () => {
+                            clearTimeout(timeoutId);
+                            commhubSocket.off('connect', connectHandler);
+                            commhubSocket.off('connect_error', errorHandler);
+                            resolve();
+                        };
+                        
+                        const errorHandler = (error) => {
+                            clearTimeout(timeoutId);
+                            commhubSocket.off('connect', connectHandler);
+                            commhubSocket.off('connect_error', errorHandler);
+                            reject(error);
+                        };
+                        
+                        commhubSocket.on('connect', connectHandler);
+                        commhubSocket.on('connect_error', errorHandler);
+                    });
+                    
+                    try {
+                        await connectionPromise;
                         joinCommHubRoomAfterConnection();
-                        commhubSocket.off('connect', connectHandler);
-                    };
-                    commhubSocket.on('connect', connectHandler);
+                    } catch (error) {
+                        throw new Error('Failed to connect to video server: ' + (error.message || 'Unknown error'));
+                    }
                 } else {
                     joinCommHubRoomAfterConnection();
                 }
                 
                 function joinCommHubRoomAfterConnection() {
+                    if (!commhubSocket || !commhubSocket.connected) {
+                        addNotification('Connection lost. Please try again.', 'danger');
+                        return;
+                    }
+                    
                     commhubSocket.emit('join-room', commhubRoom, commhubUsername);
                     
                     // Add local video
@@ -30615,7 +30700,30 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 
             } catch (error) {
                 console.error('Error joining CommHub room:', error);
-                addNotification('Cannot access camera/microphone: ' + error.message, 'danger');
+                
+                // Stop any media streams if they were started
+                if (commhubMyStream) {
+                    commhubMyStream.getTracks().forEach(track => track.stop());
+                    commhubMyStream = null;
+                }
+                
+                // Provide specific error messages
+                let errorMsg = 'Failed to join room: ';
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMsg += 'Camera/microphone permission denied. Please allow access and try again.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMsg += 'No camera or microphone found. Please connect a device and try again.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMsg += 'Camera/microphone is already in use by another application.';
+                } else if (error.message && error.message.includes('timeout')) {
+                    errorMsg += 'Connection timeout. Please check your internet connection and try again.';
+                } else if (error.message && error.message.includes('connect')) {
+                    errorMsg += 'Cannot connect to video server. Please check your internet connection and firewall settings.';
+                } else {
+                    errorMsg += error.message || 'Unknown error occurred.';
+                }
+                
+                addNotification(errorMsg, 'danger');
             }
         }
         
