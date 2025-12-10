@@ -252,7 +252,7 @@ server.listen(PORT, () => {
     console.log(`📡 WebSocket endpoint: ws://localhost:${PORT}`);
     console.log(`🌐 HTTP endpoint: http://localhost:${PORT}`);
     console.log('');
-    console.log('Health check: http://localhost:${PORT}/health');
+    console.log(`Health check: http://localhost:${PORT}/health`);
     console.log('');
     console.log('Ready to accept connections...');
     console.log('');
