@@ -6103,6 +6103,20 @@
                             <br><small class="text-muted">Powered by WebRTC with permanent server deployment.</small>
                         </div>
                         
+                        <!-- Connection Troubleshooting Notice -->
+                        <div class="alert alert-warning" id="commhubConnectionHelp" style="display:none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Connection Issues?</strong><br>
+                            If you're experiencing connection problems:
+                            <ul class="mb-0 mt-2" style="font-size: 0.9em;">
+                                <li>Check that your internet connection is stable</li>
+                                <li>Ensure WebSocket connections are not blocked by your firewall</li>
+                                <li>Try disabling any VPN or proxy services</li>
+                                <li>Allow camera and microphone permissions when prompted</li>
+                                <li>If issues persist, the server may be temporarily unavailable - please try again later</li>
+                            </ul>
+                        </div>
+                        
                         <div style="background: #000; border-radius: 16px; overflow: hidden;">
                             <!-- CommHub Pro Container -->
                             <div id="commhub-container" style="display:flex; height: 80vh; max-height: 800px;">
@@ -30438,11 +30452,57 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubConnectionAttempts = 0;
         let commhubMaxRetries = 3;
         let commhubRetryTimeout = null;
+        let commhubServerAvailable = false;
+        let commhubLastConnectionTest = 0;
+        
+        // Connection timeout constants
+        const CONNECTIVITY_TEST_CACHE_DURATION = 60000; // 60 seconds
+        const CONNECTION_TIMEOUT = 30000; // 30 seconds
+        const CONNECTIVITY_TEST_TIMEOUT = 5000; // 5 seconds
         
         // Shared ICE server configuration
         const COMMHUB_ICE_CONFIG = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
+        
+        // Test server connectivity before attempting full connection
+        async function testServerConnectivity(serverUrl) {
+            return new Promise((resolve) => {
+                try {
+                    // Test WebSocket connection directly with a short timeout
+                    const testSocket = io(serverUrl, {
+                        transports: ['websocket', 'polling'],
+                        timeout: CONNECTIVITY_TEST_TIMEOUT,
+                        reconnection: false, // Don't retry for connectivity test
+                        autoConnect: true
+                    });
+                    
+                    const timeoutId = setTimeout(() => {
+                        testSocket.close();
+                        console.log('Server connectivity test timed out');
+                        resolve(false);
+                    }, CONNECTIVITY_TEST_TIMEOUT);
+                    
+                    testSocket.on('connect', () => {
+                        clearTimeout(timeoutId);
+                        testSocket.close();
+                        console.log('Server connectivity test passed');
+                        resolve(true);
+                    });
+                    
+                    testSocket.on('connect_error', (error) => {
+                        clearTimeout(timeoutId);
+                        testSocket.close();
+                        console.error('Server connectivity test failed:', error);
+                        resolve(false);
+                    });
+                    
+                } catch (error) {
+                    console.error('Server connectivity test exception:', error);
+                    resolve(false);
+                }
+            });
+        }
         
         // Initialize CommHub Pro (connects to signaling server)
         function initCommHubSocket() {
@@ -30450,20 +30510,37 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
             
             try {
-                // Configure Socket.IO with timeout and retry settings
+                // Configure Socket.IO with enhanced timeout and retry settings
                 commhubSocket = io(SIGNALING_SERVER, {
-                    transports: ['websocket', 'polling'],
-                    timeout: 10000,
+                    transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+                    timeout: 20000, // Increased timeout to 20 seconds
                     reconnection: true,
-                    reconnectionDelay: 1000,
-                    reconnectionDelayMax: 5000,
-                    reconnectionAttempts: commhubMaxRetries
+                    reconnectionDelay: 2000, // Start with 2 second delay
+                    reconnectionDelayMax: 10000, // Max 10 seconds between retries
+                    reconnectionAttempts: commhubMaxRetries,
+                    upgrade: true, // Allow transport upgrade
+                    rememberUpgrade: true, // Remember successful transport
+                    forceNew: false, // Reuse connection if available
+                    autoConnect: true,
+                    // Add extra socket options for better error handling
+                    path: '/socket.io/',
+                    withCredentials: false,
+                    extraHeaders: {
+                        'Accept': 'application/json'
+                    }
                 });
                 
                 commhubSocket.on('connect', () => {
                     console.log('✅ CommHub Pro connected to signaling server');
                     commhubConnectionAttempts = 0; // Reset on successful connection
+                    commhubServerAvailable = true; // Mark server as available
                     addNotification('Connected to CommHub Pro server', 'success');
+                    
+                    // Hide troubleshooting help on successful connection
+                    const helpAlert = document.getElementById('commhubConnectionHelp');
+                    if (helpAlert) {
+                        helpAlert.style.display = 'none';
+                    }
                 });
                 
                 commhubSocket.on('connect_error', (error) => {
@@ -30472,21 +30549,44 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     
                     let errorMessage = 'Unable to connect to video server. ';
                     
-                    // Provide more specific error details
+                    // Detect specific error types and provide appropriate messages
                     if (error.message) {
-                        if (error.message.includes('timeout')) {
+                        const msg = error.message.toLowerCase();
+                        if (msg.includes('websocket') || msg.includes('ws')) {
+                            errorMessage += 'Error: websocket error. ';
+                        } else if (msg.includes('timeout')) {
                             errorMessage += 'Connection timed out. ';
-                        } else if (error.message.includes('xhr poll error')) {
+                        } else if (msg.includes('xhr poll error') || msg.includes('xhr')) {
                             errorMessage += 'Network error occurred. ';
+                        } else if (msg.includes('econnrefused') || msg.includes('refused')) {
+                            errorMessage += 'Server connection refused. ';
                         } else {
                             errorMessage += 'Error: ' + error.message + '. ';
                         }
+                    } else {
+                        // Generic error without message - likely websocket issue
+                        errorMessage += 'Error: websocket error. ';
                     }
                     
-                    // Add helpful suggestions
+                    // Add helpful suggestions based on attempt
                     if (commhubConnectionAttempts >= commhubMaxRetries) {
-                        errorMessage += 'Please check: 1) Your internet connection, 2) Firewall settings, 3) Try refreshing the page.';
+                        errorMessage += 'Failed to join room: Cannot connect to video server. Please check your internet connection and firewall settings.';
                         addNotification(errorMessage, 'danger');
+                        
+                        // Show troubleshooting help
+                        const helpAlert = document.getElementById('commhubConnectionHelp');
+                        if (helpAlert) {
+                            helpAlert.style.display = 'block';
+                        }
+                        
+                        // Stop media stream if connection completely failed
+                        if (commhubMyStream) {
+                            commhubMyStream.getTracks().forEach(track => track.stop());
+                            commhubMyStream = null;
+                        }
+                        
+                        // Reset connection state
+                        commhubSocket = null;
                     } else {
                         errorMessage += 'Retrying connection (attempt ' + commhubConnectionAttempts + ' of ' + commhubMaxRetries + ')...';
                         addNotification(errorMessage, 'warning');
@@ -30495,11 +30595,19 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 
                 commhubSocket.on('disconnect', (reason) => {
                     console.log('CommHub Pro disconnected:', reason);
+                    
+                    // Handle different disconnect reasons
                     if (reason === 'io server disconnect') {
                         // Server initiated disconnect, try to reconnect
                         addNotification('Disconnected from video server. Reconnecting...', 'warning');
-                    } else if (reason === 'transport close' || reason === 'transport error') {
-                        addNotification('Connection lost. Please check your internet connection.', 'warning');
+                    } else if (reason === 'transport close') {
+                        addNotification('Connection lost due to transport closure. Please check your internet connection.', 'warning');
+                    } else if (reason === 'transport error') {
+                        addNotification('Connection lost due to transport error. Please check your internet connection and firewall settings.', 'warning');
+                    } else if (reason === 'ping timeout') {
+                        addNotification('Connection timed out. Please check your internet connection.', 'warning');
+                    } else {
+                        addNotification('Disconnected from video server: ' + reason, 'warning');
                     }
                 });
                 
@@ -30631,6 +30739,19 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             commhubUsername = currentUser ? currentUser.name : 'User' + Math.floor(Math.random() * 9999);
             
             try {
+                // Test server connectivity first (cache result)
+                const now = Date.now();
+                if (now - commhubLastConnectionTest > CONNECTIVITY_TEST_CACHE_DURATION || !commhubServerAvailable) {
+                    addNotification('Testing connection to video server...', 'info');
+                    const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
+                    commhubServerAvailable = await testServerConnectivity(SIGNALING_SERVER);
+                    commhubLastConnectionTest = now;
+                    
+                    if (!commhubServerAvailable) {
+                        throw new Error('Video server is currently unavailable. Please check your internet connection or try again later. The server may be temporarily down for maintenance.');
+                    }
+                }
+                
                 // Get local media stream
                 commhubMyStream = await navigator.mediaDevices.getUserMedia({ 
                     video: true, 
@@ -30640,38 +30761,73 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 // Initialize socket if not connected
                 if (!commhubSocket || !commhubSocket.connected) {
                     addNotification('Connecting to video server...', 'info');
+                    
+                    // Reset connection attempts counter when starting fresh
+                    commhubConnectionAttempts = 0;
+                    
                     initCommHubSocket();
                     
                     // Wait for socket connection with timeout
-                    const connectionTimeout = 15000; // 15 seconds timeout
                     const connectionPromise = new Promise((resolve, reject) => {
+                        let retryAttempt = 0;
+                        const maxRetries = 3;
+                        
+                        // Helper to cleanup event listeners
+                        const cleanupListeners = () => {
+                            if (commhubSocket) {
+                                commhubSocket.off('connect', connectHandler);
+                                commhubSocket.off('connect_error', errorHandler);
+                            }
+                        };
+                        
                         const timeoutId = setTimeout(() => {
+                            cleanupListeners();
                             reject(new Error('Connection timeout. The server might be unavailable or your internet connection is too slow.'));
-                        }, connectionTimeout);
+                        }, CONNECTION_TIMEOUT);
                         
                         const connectHandler = () => {
                             clearTimeout(timeoutId);
-                            commhubSocket.off('connect', connectHandler);
-                            commhubSocket.off('connect_error', errorHandler);
+                            cleanupListeners();
                             resolve();
                         };
                         
                         const errorHandler = (error) => {
-                            clearTimeout(timeoutId);
-                            commhubSocket.off('connect', connectHandler);
-                            commhubSocket.off('connect_error', errorHandler);
-                            reject(error);
+                            retryAttempt++;
+                            console.error('Connection attempt ' + retryAttempt + ' failed:', error);
+                            
+                            // Extract error message
+                            let errorMsg = 'websocket error';
+                            if (error && error.message) {
+                                errorMsg = error.message;
+                            } else if (error && error.type) {
+                                errorMsg = error.type;
+                            }
+                            
+                            // If we've exhausted retries, reject
+                            if (retryAttempt >= maxRetries) {
+                                clearTimeout(timeoutId);
+                                cleanupListeners();
+                                reject(new Error('Connection failed after ' + maxRetries + ' attempts. Last error: ' + errorMsg));
+                            }
+                            // Otherwise, the Socket.IO library will retry automatically
                         };
                         
-                        commhubSocket.on('connect', connectHandler);
-                        commhubSocket.on('connect_error', errorHandler);
+                        if (commhubSocket) {
+                            commhubSocket.on('connect', connectHandler);
+                            commhubSocket.on('connect_error', errorHandler);
+                        } else {
+                            clearTimeout(timeoutId);
+                            reject(new Error('Failed to initialize socket connection'));
+                        }
                     });
                     
                     try {
                         await connectionPromise;
                         joinCommHubRoomAfterConnection();
                     } catch (error) {
-                        throw new Error('Failed to connect to video server: ' + (error.message || 'Unknown error'));
+                        const errorMsg = error.message || 'Unknown error';
+                        // Show user-friendly error message that matches the format user reported
+                        throw new Error('Failed to join room: Cannot connect to video server. Please check your internet connection and firewall settings.');
                     }
                 } else {
                     joinCommHubRoomAfterConnection();
