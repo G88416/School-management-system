@@ -268,6 +268,18 @@
         </div>
     </div>
     
+    <!-- Setup Notice -->
+    <div style="max-width: 1200px; margin: 0 auto 20px; padding: 15px 20px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 12px; border-left: 4px solid #ef4444;">
+        <h3 style="margin: 0 0 10px 0; color: #fbbf24;">⚠️ Server Setup Required</h3>
+        <p style="margin: 0 0 10px 0; line-height: 1.6;">
+            <strong>If you see connection errors</strong>, the signaling server needs to be deployed. This takes only 5 minutes!
+        </p>
+        <p style="margin: 0; line-height: 1.6;">
+            📖 <strong>Quick Fix:</strong> See <code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">WEBSOCKET_QUICK_FIX.md</code> for immediate solution<br>
+            📚 <strong>Full Guide:</strong> See <code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">WEBSOCKET_SERVER_DEPLOYMENT.md</code> for deployment instructions
+        </p>
+    </div>
+    
     <div class="container">
         <div class="join-section">
             <input type="text" id="usernameInput" placeholder="Your Name" value="">
@@ -319,9 +331,26 @@
         let isAudioMuted = false;
         let isVideoOff = false;
         
+        // ⚠️ IMPORTANT: Update this URL with your deployed server
+        // 
+        // OPTION 1: Deploy your own server (recommended)
+        // Follow instructions in WEBSOCKET_SERVER_DEPLOYMENT.md
+        // Then update this to your Railway/Heroku URL:
+        // const SIGNALING_SERVER = "wss://your-app.up.railway.app";
+        //
+        // OPTION 2: Local testing
+        // Run: npm install && npm start
+        // Then use: const SIGNALING_SERVER = "ws://localhost:3000";
+        //
+        // OPTION 3: Temporary test server (may not work reliably)
+        // Use Socket.IO's demo server for quick testing only
         const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
+        
         const ICE_CONFIG = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
         };
         
         // Initialize socket connection
