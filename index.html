@@ -2036,6 +2036,194 @@
             }
         }
         
+        /* ============================================
+           COMMHUB PRO MOBILE RESPONSIVE STYLES
+           Enhanced for mobile devices
+           ============================================ */
+        
+        /* Mobile optimizations for CommHub Pro (up to 767px) */
+        @media (max-width: 767px) {
+            /* Stack layout vertically on mobile */
+            #commhub-container {
+                flex-direction: column !important;
+                height: auto !important;
+                max-height: none !important;
+            }
+            
+            /* Sidebar becomes top bar on mobile */
+            #commhub-sidebar {
+                width: 100% !important;
+                border-right: none !important;
+                border-bottom: 1px solid #333;
+                max-height: 200px;
+            }
+            
+            /* Adjust sidebar padding for mobile */
+            #commhub-sidebar > div:first-child {
+                padding: 15px !important;
+                font-size: 18px !important;
+            }
+            
+            /* Room input section */
+            #commhub-sidebar > div:nth-child(2) {
+                padding: 10px !important;
+            }
+            
+            #commhubRoomInput {
+                padding: 10px !important;
+                font-size: 14px !important;
+            }
+            
+            #commhubJoinBtn {
+                padding: 10px !important;
+                font-size: 14px !important;
+            }
+            
+            /* Participants list - compact on mobile */
+            #commhubParticipants {
+                max-height: 100px;
+                overflow-y: auto;
+            }
+            
+            #commhubParticipants > div {
+                padding: 8px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Video grid - full width on mobile */
+            #commhub-container > div:nth-child(2) {
+                flex: 1 !important;
+                min-height: 300px !important;
+            }
+            
+            #commhubVideoGrid {
+                grid-template-columns: 1fr !important;
+                padding: 10px !important;
+                gap: 8px !important;
+            }
+            
+            /* Video containers - optimized for mobile */
+            .commhub-video-container {
+                min-height: 200px !important;
+            }
+            
+            /* Control buttons - larger touch targets */
+            #commhubControls {
+                height: 70px !important;
+                gap: 8px !important;
+                flex-wrap: wrap;
+                padding: 8px !important;
+            }
+            
+            .commhub-ctrl-btn {
+                width: 50px !important;
+                height: 50px !important;
+                font-size: 20px !important;
+            }
+            
+            /* Chat panel - bottom drawer on mobile */
+            #commhub-container > div:nth-child(3) {
+                width: 100% !important;
+                border-left: none !important;
+                border-top: 1px solid #333;
+                max-height: 250px;
+            }
+            
+            #commhubChatMessages {
+                max-height: 150px !important;
+                padding: 10px !important;
+            }
+            
+            #commhubChatMessages > div {
+                font-size: 12px !important;
+                padding: 6px 10px !important;
+            }
+            
+            #commhubChatInput {
+                padding: 8px !important;
+                font-size: 13px !important;
+            }
+            
+            /* Server status indicator */
+            #commhub-sidebar > div:last-child {
+                padding: 8px !important;
+            }
+            
+            #commhub-sidebar > div:last-child small {
+                font-size: 11px !important;
+            }
+        }
+        
+        /* Tablet optimizations for CommHub Pro (768px - 991px) */
+        @media (min-width: 768px) and (max-width: 991px) {
+            #commhub-container {
+                height: 70vh !important;
+            }
+            
+            #commhub-sidebar {
+                width: 220px !important;
+            }
+            
+            #commhub-container > div:nth-child(3) {
+                width: 250px !important;
+            }
+            
+            #commhubVideoGrid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+            }
+        }
+        
+        /* Small mobile devices (up to 576px) */
+        @media (max-width: 576px) {
+            #commhub-sidebar {
+                max-height: 180px;
+            }
+            
+            #commhub-sidebar > div:first-child {
+                font-size: 16px !important;
+                padding: 12px !important;
+            }
+            
+            .commhub-video-container {
+                min-height: 180px !important;
+            }
+            
+            .commhub-ctrl-btn {
+                width: 45px !important;
+                height: 45px !important;
+                font-size: 18px !important;
+            }
+            
+            #commhubChatMessages {
+                max-height: 120px !important;
+            }
+        }
+        
+        /* Landscape mode optimizations for CommHub Pro */
+        @media (max-width: 767px) and (orientation: landscape) {
+            #commhub-container {
+                flex-direction: row !important;
+            }
+            
+            #commhub-sidebar {
+                width: 200px !important;
+                max-height: none !important;
+                border-right: 1px solid #333;
+                border-bottom: none;
+            }
+            
+            #commhub-container > div:nth-child(3) {
+                width: 200px !important;
+                border-left: 1px solid #333;
+                border-top: none;
+                max-height: none;
+            }
+            
+            #commhubVideoGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+        
         /* PWA Install Prompt Styles */
         #installPrompt {
             position: fixed;
