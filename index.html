@@ -30530,22 +30530,17 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     console.error('CommHub Pro connection error (attempt ' + commhubConnectionAttempts + '):', error);
                     
                     let errorMessage = 'Unable to connect to video server. ';
-                    let errorType = 'websocket error';
                     
-                    // Detect specific error types
+                    // Detect specific error types and provide appropriate messages
                     if (error.message) {
                         const msg = error.message.toLowerCase();
                         if (msg.includes('websocket') || msg.includes('ws')) {
-                            errorType = 'websocket error';
                             errorMessage += 'Error: websocket error. ';
                         } else if (msg.includes('timeout')) {
-                            errorType = 'timeout';
                             errorMessage += 'Connection timed out. ';
                         } else if (msg.includes('xhr poll error') || msg.includes('xhr')) {
-                            errorType = 'network error';
                             errorMessage += 'Network error occurred. ';
                         } else if (msg.includes('econnrefused') || msg.includes('refused')) {
-                            errorType = 'connection refused';
                             errorMessage += 'Server connection refused. ';
                         } else {
                             errorMessage += 'Error: ' + error.message + '. ';
