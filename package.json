@@ -1,0 +1,32 @@
+{
+  "name": "commhub-signaling-server",
+  "version": "1.0.0",
+  "description": "WebSocket signaling server for CommHub Pro video conferencing",
+  "main": "signaling-server.js",
+  "scripts": {
+    "start": "node signaling-server.js",
+    "dev": "nodemon signaling-server.js",
+    "test": "node test-websocket.js",
+    "test:server": "node test-websocket.js wss://commhub-signaling-production.up.railway.app",
+    "test:local": "node test-websocket.js ws://localhost:3000"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "websocket",
+    "video-conferencing"
+  ],
+  "author": "School Management System",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
