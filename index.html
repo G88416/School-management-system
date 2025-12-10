@@ -3212,6 +3212,10 @@
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </button>
             </form>
+            <div class="alert alert-info mt-3" style="font-size: 0.85rem; padding: 10px;">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Cross-Device Login:</strong> Users created by admin can login from any device with internet access. Changes sync automatically.
+            </div>
             <hr class="my-3">
             <div class="text-center">
                 <small class="text-muted">System Provider?</small>
@@ -6133,6 +6137,7 @@
                                         <div style="text-align:center; padding:40px; color:#666; grid-column: 1/-1;">
                                             <i class="fas fa-video-slash fa-3x mb-3"></i>
                                             <p>Join a room to start video conferencing</p>
+                                            <p style="font-size:12px; color:#888; margin-top:10px;">Enter a room name and click "Join Room" to begin</p>
                                         </div>
                                     </div>
                                     <div style="height:80px; background:#1e1e1e; display:flex; align-items:center; justify-content:center; gap:20px;" id="commhubControls">
@@ -6150,6 +6155,9 @@
                                         </button>
                                         <button class="commhub-ctrl-btn" id="commhubReactBtn" onclick="sendCommHubReaction()" title="Send Reaction" disabled style="width:60px; height:60px; border-radius:50%; background:#333; border:none; color:white; font-size:24px; cursor:pointer; transition:0.2s;">
                                             <i class="fas fa-smile"></i>
+                                        </button>
+                                        <button class="commhub-ctrl-btn" id="commhubRecordBtn" onclick="toggleCommHubRecording()" title="Start/Stop Recording" disabled style="width:60px; height:60px; border-radius:50%; background:#333; border:none; color:white; font-size:24px; cursor:pointer; transition:0.2s;">
+                                            <i class="fas fa-circle"></i>
                                         </button>
                                         <button class="commhub-ctrl-btn" id="commhubLeaveBtn" onclick="leaveCommHubRoom()" title="Leave Room" disabled style="width:60px; height:60px; border-radius:50%; background:#dc3545; border:none; color:white; font-size:24px; cursor:pointer; transition:0.2s;">
                                             <i class="fas fa-phone-slash"></i>
@@ -6180,6 +6188,32 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- Incoming Call Modal -->
+            <div id="incomingCallModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:linear-gradient(135deg, #1a1a2e, #16213e); border-radius:20px; padding:40px; text-align:center; max-width:400px; box-shadow:0 25px 80px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
+                    <div style="width:80px; height:80px; margin:0 auto 20px; background:linear-gradient(135deg, #10b981, #34d399); border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite;">
+                        <i class="fas fa-video fa-2x" style="color:white;"></i>
+                    </div>
+                    <h3 style="color:white; margin-bottom:10px;">Incoming Video Call</h3>
+                    <p id="incomingCallerName" style="color:rgba(255,255,255,0.7); font-size:1.2rem; margin-bottom:30px;">Unknown Caller</p>
+                    <div style="display:flex; gap:15px; justify-content:center;">
+                        <button onclick="acceptIncomingCall()" style="background:linear-gradient(135deg, #10b981, #34d399); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
+                            <i class="fas fa-phone me-2"></i>Accept
+                        </button>
+                        <button onclick="declineIncomingCall()" style="background:linear-gradient(135deg, #ef4444, #f87171); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
+                            <i class="fas fa-phone-slash me-2"></i>Decline
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recording Indicator -->
+            <div id="recordingIndicator" style="display:none; position:fixed; top:80px; right:20px; background:rgba(239,68,68,0.95); padding:10px 20px; border-radius:20px; box-shadow:0 4px 15px rgba(239,68,68,0.4); z-index:9998; animation:pulse 1.5s infinite;">
+                <i class="fas fa-circle me-2" style="color:white; font-size:10px; animation:blink 1s infinite;"></i>
+                <span style="color:white; font-weight:600;">Recording in Progress</span>
+            </div>
+            
             <!-- Events Management -->
             <section id="eventsManagement" class="section d-none admin-only">
                 <h2>Events Management</h2>
@@ -30397,6 +30431,10 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubPeers = {};
         let commhubUsername = '';
         let commhubRoom = '';
+        let commhubMediaRecorder = null;
+        let commhubRecordedChunks = [];
+        let commhubIsRecording = false;
+        let commhubIncomingCallData = null;
         
         // Shared ICE server configuration
         const COMMHUB_ICE_CONFIG = {
@@ -30460,10 +30498,63 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     }
                 });
                 
+                // Handle incoming call requests
+                commhubSocket.on('incoming-call', (callData) => {
+                    showIncomingCallNotification(callData);
+                });
+                
             } catch (error) {
                 console.error('Failed to initialize CommHub Pro:', error);
                 addNotification('CommHub Pro initialization failed. Check console for details.', 'danger');
             }
+        }
+        
+        // Show incoming call notification
+        function showIncomingCallNotification(callData) {
+            commhubIncomingCallData = callData;
+            const modal = document.getElementById('incomingCallModal');
+            const callerName = document.getElementById('incomingCallerName');
+            callerName.textContent = callData.callerName + ' is calling...';
+            modal.style.display = 'flex';
+            
+            // Play notification sound (if available)
+            try {
+                const audio = new Audio('data:audio/wav;base64,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');
+                audio.play().catch(() => {}); // Ignore if autoplay is blocked
+            } catch (e) {}
+        }
+        
+        // Accept incoming call
+        async function acceptIncomingCall() {
+            const modal = document.getElementById('incomingCallModal');
+            modal.style.display = 'none';
+            
+            if (!commhubIncomingCallData) return;
+            
+            try {
+                // Auto-join the room
+                document.getElementById('commhubRoomInput').value = commhubIncomingCallData.roomName;
+                await joinCommHubRoom();
+                addNotification('Call accepted', 'success');
+            } catch (error) {
+                console.error('Error accepting call:', error);
+                addNotification('Failed to accept call: ' + error.message, 'danger');
+            }
+            
+            commhubIncomingCallData = null;
+        }
+        
+        // Decline incoming call
+        function declineIncomingCall() {
+            const modal = document.getElementById('incomingCallModal');
+            modal.style.display = 'none';
+            
+            if (commhubSocket && commhubIncomingCallData) {
+                commhubSocket.emit('call-declined', commhubIncomingCallData.callerId);
+            }
+            
+            addNotification('Call declined', 'info');
+            commhubIncomingCallData = null;
         }
         
         // Join CommHub room
@@ -30794,6 +30885,116 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             }
         }
         
+        // Toggle recording
+        async function toggleCommHubRecording() {
+            if (commhubIsRecording) {
+                stopCommHubRecording();
+            } else {
+                await startCommHubRecording();
+            }
+        }
+        
+        // Start recording conference
+        async function startCommHubRecording() {
+            if (!commhubMyStream) {
+                addNotification('Join a room first to start recording', 'warning');
+                return;
+            }
+            
+            try {
+                // Get the video grid container to capture both local and remote streams
+                const videoGrid = document.getElementById('commhubVideoGrid');
+                
+                // Try to capture the video grid (requires screen capture or canvas)
+                // Alternative: record only local stream
+                const stream = commhubMyStream;
+                
+                // Check if MediaRecorder is supported
+                if (!MediaRecorder.isTypeSupported('video/webm')) {
+                    addNotification('Recording not supported in this browser', 'danger');
+                    return;
+                }
+                
+                commhubRecordedChunks = [];
+                commhubMediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp8,opus'
+                });
+                
+                commhubMediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        commhubRecordedChunks.push(event.data);
+                    }
+                };
+                
+                commhubMediaRecorder.onstop = () => {
+                    const blob = new Blob(commhubRecordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create download link
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `conference-recording-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.webm`;
+                    a.click();
+                    
+                    URL.revokeObjectURL(url);
+                    addNotification('Recording saved successfully!', 'success');
+                    
+                    // Hide recording indicator
+                    document.getElementById('recordingIndicator').style.display = 'none';
+                };
+                
+                commhubMediaRecorder.start(1000); // Collect data every second
+                commhubIsRecording = true;
+                
+                // Update UI
+                const btn = document.getElementById('commhubRecordBtn');
+                btn.style.background = '#ef4444';
+                btn.innerHTML = '<i class="fas fa-stop"></i>';
+                
+                // Show recording indicator
+                document.getElementById('recordingIndicator').style.display = 'block';
+                
+                addNotification('Recording started', 'success');
+                addCommHubChatMessage('Recording started', 'system');
+                
+                // Notify other users
+                if (commhubSocket) {
+                    commhubSocket.emit('chat', '🔴 Recording started');
+                }
+                
+            } catch (error) {
+                console.error('Recording error:', error);
+                addNotification('Failed to start recording: ' + error.message, 'danger');
+            }
+        }
+        
+        // Stop recording conference
+        function stopCommHubRecording() {
+            if (!commhubMediaRecorder || !commhubIsRecording) return;
+            
+            try {
+                commhubMediaRecorder.stop();
+                commhubIsRecording = false;
+                
+                // Update UI
+                const btn = document.getElementById('commhubRecordBtn');
+                btn.style.background = '#333';
+                btn.innerHTML = '<i class="fas fa-circle"></i>';
+                
+                addNotification('Recording stopped', 'info');
+                addCommHubChatMessage('Recording stopped', 'system');
+                
+                // Notify other users
+                if (commhubSocket) {
+                    commhubSocket.emit('chat', '⏹️ Recording stopped');
+                }
+                
+            } catch (error) {
+                console.error('Stop recording error:', error);
+                addNotification('Failed to stop recording: ' + error.message, 'danger');
+            }
+        }
+        
         // Show reaction animation
         function showCommHubReaction(emoji) {
             const container = document.getElementById('commhubVideoGrid');
@@ -30820,6 +31021,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             document.getElementById('commhubScreenBtn').disabled = false;
             document.getElementById('commhubHandBtn').disabled = false;
             document.getElementById('commhubReactBtn').disabled = false;
+            document.getElementById('commhubRecordBtn').disabled = false;
             document.getElementById('commhubLeaveBtn').disabled = false;
         }
         
@@ -30830,7 +31032,13 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             document.getElementById('commhubScreenBtn').disabled = true;
             document.getElementById('commhubHandBtn').disabled = true;
             document.getElementById('commhubReactBtn').disabled = true;
+            document.getElementById('commhubRecordBtn').disabled = true;
             document.getElementById('commhubLeaveBtn').disabled = true;
+            
+            // Stop recording if active
+            if (commhubIsRecording) {
+                stopCommHubRecording();
+            }
         }
         
         // Add CSS animation for reactions
