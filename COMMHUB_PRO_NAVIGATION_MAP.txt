@@ -1,0 +1,166 @@
+================================================================================
+                    COMMHUB PRO - NAVIGATION MAP
+================================================================================
+
+                        VISUAL NAVIGATION GUIDE
+                        
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      School Management System                             │
+│                          (index.html)                                     │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌───────────────────────────────────────────────────────────┐
+    │                    SIDEBAR NAVIGATION                       │
+    │  ┌─────────────────────────────────────────────────────┐  │
+    │  │ 📊 Dashboard                                         │  │
+    │  │ 👨‍🎓 Students                                          │  │
+    │  │ 📝 Attendance                                        │  │
+    │  │ 💰 Fees                                              │  │
+    │  │ 👨‍🏫 Teachers  ◄── CLICK HERE FIRST                   │  │
+    │  │ 📚 Academics                                         │  │
+    │  │ 📋 Admissions                                        │  │
+    │  │ 📊 Reports                                           │  │
+    │  │ ⚙️ Settings                                          │  │
+    │  └─────────────────────────────────────────────────────┘  │
+    └───────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌───────────────────────────────────────────────────────────┐
+    │                     TEACHERS MODULE                         │
+    │  ┌─────────────────────────────────────────────────────┐  │
+    │  │ Teacher Directory    │   Lesson Plans   │ ···       │  │
+    │  ├─────────────────────────────────────────────────────┤  │
+    │  │ Teacher Chat  ◄── CLICK HERE SECOND                 │  │
+    │  ├─────────────────────────────────────────────────────┤  │
+    │  │ Performance   │   Timetable   │   Wellness          │  │
+    │  └─────────────────────────────────────────────────────┘  │
+    └───────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌───────────────────────────────────────────────────────────┐
+    │                   TEACHER CHAT SECTION                      │
+    │  ┌─────────────────────────────────────────────────────┐  │
+    │  │ Message Students  │  Admin Messages  │  History     │  │
+    │  ├─────────────────────────────────────────────────────┤  │
+    │  │ 🎥 Group Video (CommHub Pro)  ◄── CLICK HERE THIRD  │  │
+    │  └─────────────────────────────────────────────────────┘  │
+    └───────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌───────────────────────────────────────────────────────────┐
+    │                    ✅ COMMHUB PRO                          │
+    │  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓  │
+    │  ┃                                                     ┃  │
+    │  ┃  ┌────────────┐  ┌──────────────┐  ┌───────────┐ ┃  │
+    │  ┃  │  Sidebar   │  │ Video Grid   │  │   Chat    │ ┃  │
+    │  ┃  │            │  │              │  │  Panel    │ ┃  │
+    │  ┃  │ Room Join  │  │  📹 📹 📹   │  │           │ ┃  │
+    │  ┃  │            │  │              │  │ Messages  │ ┃  │
+    │  ┃  │Participants│  │  📹 📹 📹   │  │           │ ┃  │
+    │  ┃  │            │  │              │  │  [Send]   │ ┃  │
+    │  ┃  └────────────┘  └──────────────┘  └───────────┘ ┃  │
+    │  ┃                                                     ┃  │
+    │  ┃  Controls: 🎤 Mute | 📹 Video | 🖥️ Screen           ┃  │
+    │  ┃           ✋ Hand | 😊 React | 📞 Leave            ┃  │
+    │  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛  │
+    └───────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        CODE LOCATION REFERENCE
+================================================================================
+
+📂 File Structure:
+   index.html
+   ├─ Lines 4253-4353    → CommHub Pro HTML/UI
+   └─ Lines 30180-30646  → CommHub Pro JavaScript
+
+🔍 Quick Find:
+   Search for: "COMMHUB PRO LOCATION"
+   Tab ID: "group-video-chat"
+   Container: "commhub-container"
+
+📱 Access Roles:
+   ✅ Teachers
+   ✅ Admin
+   ✅ HOD (Head of Department)
+
+
+================================================================================
+                        STEP-BY-STEP INSTRUCTIONS
+================================================================================
+
+Step 1: Open Application
+   └─ Open index.html in your browser
+
+Step 2: Navigate to Teachers
+   └─ Click "Teachers" (👨‍🏫) in the left sidebar
+
+Step 3: Go to Teacher Chat
+   └─ Click "Teacher Chat" tab at the top
+
+Step 4: Access CommHub Pro
+   └─ Click "Group Video (CommHub Pro)" (🎥) tab
+   
+Step 5: Join a Room
+   └─ Enter room name and click "Join Room"
+   
+Step 6: Allow Permissions
+   └─ Grant camera and microphone access
+   
+Step 7: Start Conferencing! 🎉
+   └─ You're now in CommHub Pro video call
+
+
+================================================================================
+                             FEATURES
+================================================================================
+
+🎥 Video Features:
+   • Multi-participant video calls
+   • Camera on/off toggle
+   • HD video quality
+   
+🎤 Audio Features:
+   • Microphone mute/unmute
+   • High-quality audio
+   
+💬 Chat Features:
+   • Real-time text messaging
+   • Message history
+   
+🖥️ Sharing Features:
+   • Screen sharing
+   • Presentation mode
+   
+👥 Interaction Features:
+   • Raise hand
+   • Emoji reactions
+   • Participant list
+
+
+================================================================================
+                        TROUBLESHOOTING
+================================================================================
+
+Can't find CommHub Pro?
+   → Check you're logged in as Teacher/Admin/HOD
+   → Follow navigation path above exactly
+   
+Can't join room?
+   → Check camera/microphone permissions
+   → Verify signaling server is deployed
+   
+No video/audio?
+   → Allow browser permissions
+   → Check hardware connections
+   
+Need more help?
+   → See COMMHUB_PRO_LOCATION.md for detailed docs
+
+
+================================================================================
+Last Updated: December 2024
+Version: 1.0
+================================================================================
