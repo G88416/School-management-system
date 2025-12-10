@@ -30455,6 +30455,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubServerAvailable = false;
         let commhubLastConnectionTest = 0;
         
+        // Connection timeout constants
+        const CONNECTIVITY_TEST_CACHE_DURATION = 60000; // 60 seconds
+        const CONNECTION_TIMEOUT = 30000; // 30 seconds
+        const CONNECTIVITY_TEST_TIMEOUT = 5000; // 5 seconds
+        
         // Shared ICE server configuration
         const COMMHUB_ICE_CONFIG = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -30462,28 +30467,41 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         
         // Test server connectivity before attempting full connection
         async function testServerConnectivity(serverUrl) {
-            try {
-                // Try to reach the server with a simple HTTP request first
-                const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                
-                const response = await fetch(httpUrl, {
-                    method: 'HEAD',
-                    signal: controller.signal,
-                    mode: 'no-cors' // Allow cross-origin
-                });
-                
-                clearTimeout(timeoutId);
-                return true;
-            } catch (error) {
-                console.error('Server connectivity test failed:', error);
-                if (error.name === 'AbortError') {
-                    return false; // Timeout
+            return new Promise((resolve) => {
+                try {
+                    // Test WebSocket connection directly with a short timeout
+                    const testSocket = io(serverUrl, {
+                        transports: ['websocket', 'polling'],
+                        timeout: CONNECTIVITY_TEST_TIMEOUT,
+                        reconnection: false, // Don't retry for connectivity test
+                        autoConnect: true
+                    });
+                    
+                    const timeoutId = setTimeout(() => {
+                        testSocket.close();
+                        console.log('Server connectivity test timed out');
+                        resolve(false);
+                    }, CONNECTIVITY_TEST_TIMEOUT);
+                    
+                    testSocket.on('connect', () => {
+                        clearTimeout(timeoutId);
+                        testSocket.close();
+                        console.log('Server connectivity test passed');
+                        resolve(true);
+                    });
+                    
+                    testSocket.on('connect_error', (error) => {
+                        clearTimeout(timeoutId);
+                        testSocket.close();
+                        console.error('Server connectivity test failed:', error);
+                        resolve(false);
+                    });
+                    
+                } catch (error) {
+                    console.error('Server connectivity test exception:', error);
+                    resolve(false);
                 }
-                // Even if we get a CORS error, it means the server responded
-                return true;
-            }
+            });
         }
         
         // Initialize CommHub Pro (connects to signaling server)
@@ -30721,9 +30739,9 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             commhubUsername = currentUser ? currentUser.name : 'User' + Math.floor(Math.random() * 9999);
             
             try {
-                // Test server connectivity first (cache result for 1 minute)
+                // Test server connectivity first (cache result)
                 const now = Date.now();
-                if (now - commhubLastConnectionTest > 60000 || !commhubServerAvailable) {
+                if (now - commhubLastConnectionTest > CONNECTIVITY_TEST_CACHE_DURATION || !commhubServerAvailable) {
                     addNotification('Testing connection to video server...', 'info');
                     const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
                     commhubServerAvailable = await testServerConnectivity(SIGNALING_SERVER);
@@ -30749,26 +30767,27 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     
                     initCommHubSocket();
                     
-                    // Wait for socket connection with extended timeout
-                    const connectionTimeout = 30000; // 30 seconds timeout (increased for slower connections)
+                    // Wait for socket connection with timeout
                     const connectionPromise = new Promise((resolve, reject) => {
                         let retryAttempt = 0;
                         const maxRetries = 3;
                         
-                        const timeoutId = setTimeout(() => {
+                        // Helper to cleanup event listeners
+                        const cleanupListeners = () => {
                             if (commhubSocket) {
                                 commhubSocket.off('connect', connectHandler);
                                 commhubSocket.off('connect_error', errorHandler);
                             }
+                        };
+                        
+                        const timeoutId = setTimeout(() => {
+                            cleanupListeners();
                             reject(new Error('Connection timeout. The server might be unavailable or your internet connection is too slow.'));
-                        }, connectionTimeout);
+                        }, CONNECTION_TIMEOUT);
                         
                         const connectHandler = () => {
                             clearTimeout(timeoutId);
-                            if (commhubSocket) {
-                                commhubSocket.off('connect', connectHandler);
-                                commhubSocket.off('connect_error', errorHandler);
-                            }
+                            cleanupListeners();
                             resolve();
                         };
                         
@@ -30787,11 +30806,8 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                             // If we've exhausted retries, reject
                             if (retryAttempt >= maxRetries) {
                                 clearTimeout(timeoutId);
-                                if (commhubSocket) {
-                                    commhubSocket.off('connect', connectHandler);
-                                    commhubSocket.off('connect_error', errorHandler);
-                                }
-                                reject(new Error('Unable to connect to video server. Error: ' + errorMsg + '. Retrying connection (attempt ' + retryAttempt + ' of ' + maxRetries + ')...'));
+                                cleanupListeners();
+                                reject(new Error('Connection failed after ' + maxRetries + ' attempts. Last error: ' + errorMsg));
                             }
                             // Otherwise, the Socket.IO library will retry automatically
                         };
