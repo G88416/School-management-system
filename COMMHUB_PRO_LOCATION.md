@@ -20,13 +20,13 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 
 ### HTML Section:
 - **File**: `index.html`
-- **Line Range**: Approximately lines **4253-4353**
+- **Line Range**: Lines **4253-4353**
 - **Element ID**: `group-video-chat` (tab pane)
 - **Container ID**: `commhub-container`
 
 ### JavaScript Functions:
 - **File**: `index.html` (embedded JavaScript)
-- **Line Range**: Approximately lines **30180-30646**
+- **Line Range**: Lines **30180-30646**
 - **Functions Include**:
   - `initCommHubSocket()` - Initialize connection
   - `joinCommHubRoom()` - Join a video room
@@ -86,7 +86,7 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 - **ICE Servers**: Google STUN servers
 
 ### Signaling Server:
-- Default: `wss://your-group-server.up.railway.app`
+- Default: `wss://your-signaling-server.railway.app`
 - Note: You need to deploy your own signaling server on Railway
 
 ### Configuration:
@@ -147,14 +147,14 @@ CommHub Pro is accessible to:
 ```
 index.html
 │
-├── HTML Structure (Lines ~4253-4353)
+├── HTML Structure (Lines 4253-4353)
 │   ├── Tab Navigation
 │   ├── CommHub Container
 │   ├── Sidebar (Room Join, Participants)
 │   ├── Video Grid
 │   └── Control Buttons
 │
-└── JavaScript (Lines ~30180-30646)
+└── JavaScript (Lines 30180-30646)
     ├── Socket Connection
     ├── Room Management
     ├── WebRTC Peer Connections

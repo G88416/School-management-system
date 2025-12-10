@@ -20,8 +20,8 @@ NAVIGATION PATH:
 FILE LOCATION:
 --------------
 File: index.html
-HTML Section: Lines ~4253-4353
-JavaScript Functions: Lines ~30180-30646
+HTML Section: Lines 4253-4353
+JavaScript Functions: Lines 30180-30646
 
 
 KEY IDENTIFIERS:
