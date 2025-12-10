@@ -17,33 +17,22 @@
     │  │ 👨‍🎓 Students                                          │  │
     │  │ 📝 Attendance                                        │  │
     │  │ 💰 Fees                                              │  │
-    │  │ 👨‍🏫 Teachers  ◄── CLICK HERE FIRST                   │  │
+    │  │ 👨‍🏫 Teachers                                         │  │
     │  │ 📚 Academics                                         │  │
     │  │ 📋 Admissions                                        │  │
     │  │ 📊 Reports                                           │  │
+    │  │ 📷 Media  ◄── CLICK HERE FIRST                      │  │
     │  │ ⚙️ Settings                                          │  │
     │  └─────────────────────────────────────────────────────┘  │
     └───────────────────────────────────────────────────────────┘
                                     │
                                     ▼
     ┌───────────────────────────────────────────────────────────┐
-    │                     TEACHERS MODULE                         │
+    │                      MEDIA CENTER                           │
     │  ┌─────────────────────────────────────────────────────┐  │
-    │  │ Teacher Directory    │   Lesson Plans   │ ···       │  │
+    │  │ Communication  │  Poster Creator  │  Video Creator  │  │
     │  ├─────────────────────────────────────────────────────┤  │
-    │  │ Teacher Chat  ◄── CLICK HERE SECOND                 │  │
-    │  ├─────────────────────────────────────────────────────┤  │
-    │  │ Performance   │   Timetable   │   Wellness          │  │
-    │  └─────────────────────────────────────────────────────┘  │
-    └───────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-    ┌───────────────────────────────────────────────────────────┐
-    │                   TEACHER CHAT SECTION                      │
-    │  ┌─────────────────────────────────────────────────────┐  │
-    │  │ Message Students  │  Admin Messages  │  History     │  │
-    │  ├─────────────────────────────────────────────────────┤  │
-    │  │ 🎥 Group Video (CommHub Pro)  ◄── CLICK HERE THIRD  │  │
+    │  │ 🎥 CommHub Pro  ◄── CLICK HERE SECOND              │  │
     │  └─────────────────────────────────────────────────────┘  │
     └───────────────────────────────────────────────────────────┘
                                     │
@@ -73,18 +62,17 @@
 
 📂 File Structure:
    index.html
-   ├─ Lines 4253-4353    → CommHub Pro HTML/UI
-   └─ Lines 30180-30646  → CommHub Pro JavaScript
+   ├─ Lines ~5893-6000   → CommHub Pro HTML/UI
+   └─ Lines ~30195-30660 → CommHub Pro JavaScript
 
 🔍 Quick Find:
    Search for: "COMMHUB PRO LOCATION"
-   Tab ID: "group-video-chat"
+   Tab ID: "media-commhub-pro"
    Container: "commhub-container"
 
 📱 Access Roles:
-   ✅ Teachers
-   ✅ Admin
-   ✅ HOD (Head of Department)
+   ✅ All users (except students)
+   ✅ Teachers, Admin, HOD, Parents
 
 
 ================================================================================
@@ -94,14 +82,11 @@
 Step 1: Open Application
    └─ Open index.html in your browser
 
-Step 2: Navigate to Teachers
-   └─ Click "Teachers" (👨‍🏫) in the left sidebar
+Step 2: Navigate to Media
+   └─ Click "Media" (📷) in the left sidebar
 
-Step 3: Go to Teacher Chat
-   └─ Click "Teacher Chat" tab at the top
-
-Step 4: Access CommHub Pro
-   └─ Click "Group Video (CommHub Pro)" (🎥) tab
+Step 3: Access CommHub Pro
+   └─ Click "CommHub Pro" (🎥) tab
    
 Step 5: Join a Room
    └─ Enter room name and click "Join Room"
@@ -145,12 +130,13 @@ Step 7: Start Conferencing! 🎉
 ================================================================================
 
 Can't find CommHub Pro?
-   → Check you're logged in as Teacher/Admin/HOD
+   → Check you're logged in (any role except students)
+   → Look in Media Center, not Teachers module
    → Follow navigation path above exactly
    
 Can't join room?
    → Check camera/microphone permissions
-   → Verify signaling server is deployed
+   → Check internet connection (server is permanent)
    
 No video/audio?
    → Allow browser permissions

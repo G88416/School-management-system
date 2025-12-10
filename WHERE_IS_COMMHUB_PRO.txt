@@ -4,24 +4,23 @@
 
 QUICK ANSWER:
 -------------
-CommHub Pro is located in the "Teachers" section, under the "Teacher Chat" 
-tab, in the "Group Video (CommHub Pro)" sub-tab.
+CommHub Pro is located in the "Media Center" section, in the "CommHub Pro" 
+tab (positioned after Video Creator tab).
 
 
 NAVIGATION PATH:
 ----------------
 1. Open the application (index.html)
-2. Click "Teachers" in the left sidebar
-3. Click "Teacher Chat" tab at the top
-4. Click "Group Video (CommHub Pro)" tab
-5. You will see CommHub Pro interface!
+2. Click "Media" in the left sidebar
+3. Click "CommHub Pro" tab
+4. You will see CommHub Pro interface with permanent server!
 
 
 FILE LOCATION:
 --------------
 File: index.html
-HTML Section: Lines 4253-4353
-JavaScript Functions: Lines 30180-30646
+HTML Section: Lines ~5893-6000
+JavaScript Functions: Lines ~30195-30660
 
 
 KEY IDENTIFIERS:
@@ -69,10 +68,11 @@ See COMMHUB_PRO_LOCATION.md for comprehensive documentation
 
 IMPORTANT NOTES:
 ----------------
-✓ CommHub Pro is clearly labeled in the UI
-✓ Icon added to tab: "Group Video (CommHub Pro)"
-✓ Comments added throughout code for easy navigation
-✓ Accessible to Teachers, Admin, and HOD roles
+✓ CommHub Pro is clearly labeled in Media module
+✓ Icon added to tab: "CommHub Pro" with video conference icon
+✓ Permanent server - no deployment needed!
+✓ Accessible to all users (except students)
+✓ Located conveniently in Media Center next to Video Creator
 
 
 ================================================================================

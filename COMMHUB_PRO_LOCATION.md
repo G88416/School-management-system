@@ -5,13 +5,12 @@
 ### In the Application UI:
 CommHub Pro can be accessed through the following navigation path:
 
-1. **Sidebar Navigation** → Click on "Teachers" module
-2. **Teacher Tabs** → Click on "Teacher Chat" tab  
-3. **Communication Tabs** → Click on "Group Video (CommHub Pro)" tab
+1. **Sidebar Navigation** → Click on "Media" module
+2. **Media Tabs** → Click on "CommHub Pro" tab (after Video Creator)
 
 ### Visual Path:
 ```
-Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pro
+Main App → Media Center → CommHub Pro Tab
 ```
 
 ---
@@ -20,13 +19,13 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 
 ### HTML Section:
 - **File**: `index.html`
-- **Line Range**: Lines **4253-4353**
-- **Element ID**: `group-video-chat` (tab pane)
+- **Line Range**: Lines **~5893-6000**
+- **Element ID**: `media-commhub-pro` (tab pane)
 - **Container ID**: `commhub-container`
 
 ### JavaScript Functions:
 - **File**: `index.html` (embedded JavaScript)
-- **Line Range**: Lines **30180-30646**
+- **Line Range**: Lines **~30195-30660**
 - **Functions Include**:
   - `initCommHubSocket()` - Initialize connection
   - `joinCommHubRoom()` - Join a video room
@@ -86,12 +85,13 @@ Main App → Teachers Module → Teacher Chat → Group Video Tab → CommHub Pr
 - **ICE Servers**: Google STUN servers
 
 ### Signaling Server:
-- Default: `wss://your-signaling-server.railway.app`
-- Note: You need to deploy your own signaling server on Railway
+- **Permanent Server**: `wss://commhub-signaling-production.up.railway.app`
+- **Status**: Deployed and active
+- **Note**: Server is permanently deployed - no setup required!
 
 ### Configuration:
 ```javascript
-const SIGNALING_SERVER = "wss://your-signaling-server.railway.app";
+const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
 const COMMHUB_ICE_CONFIG = {
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 };
@@ -101,7 +101,7 @@ const COMMHUB_ICE_CONFIG = {
 
 ## 📝 How to Use:
 
-1. Navigate to: **Teachers → Teacher Chat → Group Video**
+1. Navigate to: **Media → CommHub Pro**
 2. Enter a room name in the input field
 3. Click "Join Room" button
 4. Allow camera and microphone permissions
@@ -111,10 +111,10 @@ const COMMHUB_ICE_CONFIG = {
 
 ## 🛠️ Setup Requirements:
 
-1. **Deploy Signaling Server**: 
-   - Visit [Railway](https://railway.com?referralCode=Y-GB9M)
-   - Deploy the Socket.IO signaling server
-   - Update the `SIGNALING_SERVER` URL in the code
+1. **Signaling Server**: 
+   - ✅ **Already deployed and active!**
+   - No setup required - server is permanently hosted on Railway
+   - Automatic connection when you use CommHub Pro
 
 2. **Browser Requirements**:
    - Modern browser with WebRTC support
@@ -136,9 +136,11 @@ To quickly find CommHub Pro in the code:
 ## 📞 Access Roles:
 
 CommHub Pro is accessible to:
+- ✅ All users (through Media module)
 - ✅ Teachers
-- ✅ Admin (through Teachers module)
-- ✅ HOD (through Teachers module)
+- ✅ Admin
+- ✅ HOD
+- ✅ Parents (non-student role)
 
 ---
 
@@ -147,14 +149,14 @@ CommHub Pro is accessible to:
 ```
 index.html
 │
-├── HTML Structure (Lines 4253-4353)
-│   ├── Tab Navigation
+├── HTML Structure (Lines ~5893-6000)
+│   ├── Tab Navigation (Media Module)
 │   ├── CommHub Container
 │   ├── Sidebar (Room Join, Participants)
 │   ├── Video Grid
 │   └── Control Buttons
 │
-└── JavaScript (Lines 30180-30646)
+└── JavaScript (Lines ~30195-30660)
     ├── Socket Connection
     ├── Room Management
     ├── WebRTC Peer Connections
@@ -167,10 +169,10 @@ index.html
 ## 💡 Need Help?
 
 If you can't find CommHub Pro:
-1. Make sure you're logged in as a Teacher or Admin
-2. Navigate to the Teachers section in the sidebar
-3. Look for the "Teacher Chat" tab
-4. Click on "Group Video (CommHub Pro)" tab
+1. Make sure you're logged in (any role except students)
+2. Navigate to the Media section in the sidebar
+3. Look for the "CommHub Pro" tab (after Video Creator)
+4. Click to start video conferencing!
 
 ---
 
