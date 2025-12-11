@@ -3212,6 +3212,36 @@
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </button>
             </form>
+            <!-- Backend/Cloud Connectivity Status -->
+            <div id="connectivityStatus" class="mt-3" style="font-size: 0.85rem;">
+                <div class="alert alert-secondary" style="padding: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong><i class="fas fa-server me-2"></i>System Status</strong>
+                        <button class="btn btn-sm btn-outline-light" onclick="checkAllConnections()" style="padding: 2px 8px;">
+                            <i class="fas fa-sync-alt"></i> Check
+                        </button>
+                    </div>
+                    <hr style="margin: 10px 0; opacity: 0.3;">
+                    <div id="connectionStatusList" style="font-size: 0.8rem;">
+                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-database me-2"></i>Local Storage:</span>
+                            <span id="localStorageStatus" class="badge bg-secondary">Checking...</span>
+                        </div>
+                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-cloud me-2"></i>Firebase:</span>
+                            <span id="firebaseConnStatus" class="badge bg-secondary">Checking...</span>
+                        </div>
+                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-video me-2"></i>Video Server:</span>
+                            <span id="videoServerStatus" class="badge bg-secondary">Checking...</span>
+                        </div>
+                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fas fa-wifi me-2"></i>Internet:</span>
+                            <span id="internetStatus" class="badge bg-secondary">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="alert alert-info mt-3" style="font-size: 0.85rem; padding: 10px;">
                 <i class="fas fa-info-circle me-2"></i>
                 <strong>Cross-Device Login:</strong> Users created by admin can login from any device with internet access. Changes sync automatically.
@@ -9785,6 +9815,221 @@
             
             return true;
         }
+        
+        // ========================================
+        // BACKEND/CLOUD CONNECTIVITY CHECKER
+        // ========================================
+        
+        // Configuration constants
+        const CONNECTION_CHECK_TIMEOUT = 5000; // 5 seconds timeout for async checks
+        
+        // Check all backend/cloud connections
+        async function checkAllConnections() {
+            console.log('🔍 Checking all backend/cloud connections...');
+            
+            // Check Local Storage
+            checkLocalStorage();
+            
+            // Check Internet
+            checkInternetConnection();
+            
+            // Check Firebase
+            await checkFirebaseConnection();
+            
+            // Check Video Server
+            await checkVideoServerConnection();
+        }
+        
+        // Check Local Storage availability
+        function checkLocalStorage() {
+            const statusEl = document.getElementById('localStorageStatus');
+            if (!statusEl) return;
+            
+            try {
+                const testKey = '_test_storage_';
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                
+                statusEl.className = 'badge bg-success';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Available';
+                console.log('✅ Local Storage: Available');
+            } catch (e) {
+                statusEl.className = 'badge bg-danger';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Unavailable';
+                console.error('❌ Local Storage: Unavailable', e);
+            }
+        }
+        
+        // Check Internet connectivity
+        function checkInternetConnection() {
+            const statusEl = document.getElementById('internetStatus');
+            if (!statusEl) return;
+            
+            if (navigator.onLine) {
+                statusEl.className = 'badge bg-success';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                console.log('✅ Internet: Connected');
+            } else {
+                statusEl.className = 'badge bg-danger';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Offline';
+                console.log('❌ Internet: Offline');
+            }
+        }
+        
+        // Check Firebase connection
+        async function checkFirebaseConnection() {
+            const statusEl = document.getElementById('firebaseConnStatus');
+            if (!statusEl) return;
+            
+            try {
+                // Check if Firebase SDK is loaded
+                if (typeof firebase === 'undefined') {
+                    statusEl.className = 'badge bg-secondary';
+                    statusEl.innerHTML = '<i class="fas fa-question-circle"></i> SDK Not Loaded';
+                    console.log('ℹ️ Firebase: SDK not loaded');
+                    return;
+                }
+                
+                // Check if Firebase is initialized
+                const firebaseConfig = localStorage.getItem('firebaseConfig');
+                if (!firebaseConfig) {
+                    statusEl.className = 'badge bg-warning';
+                    statusEl.innerHTML = '<i class="fas fa-cog"></i> Not Configured';
+                    console.log('⚠️ Firebase: Not configured');
+                    return;
+                }
+                
+                // Try to initialize Firebase and test connection
+                try {
+                    const config = JSON.parse(firebaseConfig);
+                    
+                    // Check if already initialized
+                    if (!firebase.apps || firebase.apps.length === 0) {
+                        firebase.initializeApp(config);
+                    }
+                    
+                    // Test database connection with timeout
+                    const db = firebase.database();
+                    const testRef = db.ref('.info/connected');
+                    
+                    // Set a timeout for the connection test
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_CHECK_TIMEOUT)
+                    );
+                    
+                    const connectionPromise = new Promise((resolve, reject) => {
+                        testRef.once('value', 
+                            (snapshot) => {
+                                if (snapshot.val() === true) {
+                                    resolve(true);
+                                } else {
+                                    reject(new Error('Not connected'));
+                                }
+                            },
+                            (error) => reject(error)
+                        );
+                    });
+                    
+                    await Promise.race([connectionPromise, timeoutPromise]);
+                    
+                    statusEl.className = 'badge bg-success';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                    console.log('✅ Firebase: Connected');
+                } catch (error) {
+                    statusEl.className = 'badge bg-danger';
+                    statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Connection Failed';
+                    console.error('❌ Firebase: Connection failed', error);
+                }
+            } catch (e) {
+                statusEl.className = 'badge bg-secondary';
+                statusEl.innerHTML = '<i class="fas fa-question-circle"></i> SDK Not Loaded';
+                console.log('ℹ️ Firebase: SDK not loaded');
+            }
+        }
+        
+        // Check Video Server (WebSocket signaling server) connection
+        async function checkVideoServerConnection() {
+            const statusEl = document.getElementById('videoServerStatus');
+            if (!statusEl) return;
+            
+            try {
+                const SIGNALING_SERVER = "wss://commhub-signaling-production.up.railway.app";
+                
+                // Check if Socket.IO is loaded
+                if (typeof io === 'undefined') {
+                    statusEl.className = 'badge bg-warning';
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> SDK Not Loaded';
+                    console.log('⚠️ Video Server: Socket.IO not loaded');
+                    return;
+                }
+                
+                // Create a test socket connection with timeout
+                const testSocket = io(SIGNALING_SERVER, {
+                    transports: ['websocket', 'polling'],
+                    timeout: CONNECTION_CHECK_TIMEOUT,
+                    reconnection: false,
+                    autoConnect: true
+                });
+                
+                // Set timeout
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => {
+                        testSocket.close();
+                        reject(new Error('Connection timeout'));
+                    }, CONNECTION_CHECK_TIMEOUT)
+                );
+                
+                // Connection promise
+                const connectionPromise = new Promise((resolve, reject) => {
+                    testSocket.on('connect', () => {
+                        testSocket.close();
+                        resolve(true);
+                    });
+                    
+                    testSocket.on('connect_error', (error) => {
+                        testSocket.close();
+                        reject(error);
+                    });
+                });
+                
+                await Promise.race([connectionPromise, timeoutPromise]);
+                
+                statusEl.className = 'badge bg-success';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                console.log('✅ Video Server: Connected');
+            } catch (error) {
+                statusEl.className = 'badge bg-danger';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Unavailable';
+                console.error('❌ Video Server: Connection failed', error);
+            }
+        }
+        
+        // Update online/offline indicator
+        window.addEventListener('online', () => {
+            const statusEl = document.getElementById('statusIndicator');
+            if (statusEl) {
+                statusEl.className = 'badge bg-success shadow';
+                statusEl.innerHTML = '<i class="fas fa-wifi me-1"></i>Online';
+            }
+            checkInternetConnection();
+        });
+        
+        window.addEventListener('offline', () => {
+            const statusEl = document.getElementById('statusIndicator');
+            if (statusEl) {
+                statusEl.className = 'badge bg-danger shadow';
+                statusEl.innerHTML = '<i class="fas fa-wifi-slash me-1"></i>Offline';
+            }
+            checkInternetConnection();
+        });
+        
+        // Run connectivity check on page load
+        window.addEventListener('load', () => {
+            // Delay check to allow page to fully render
+            setTimeout(() => {
+                checkAllConnections();
+            }, 1000);
+        });
         
         // Global variables
         var currentUser = null;
