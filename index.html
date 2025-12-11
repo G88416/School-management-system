@@ -9820,6 +9820,9 @@
         // BACKEND/CLOUD CONNECTIVITY CHECKER
         // ========================================
         
+        // Configuration constants
+        const CONNECTION_CHECK_TIMEOUT = 5000; // 5 seconds timeout for async checks
+        
         // Check all backend/cloud connections
         async function checkAllConnections() {
             console.log('🔍 Checking all backend/cloud connections...');
@@ -9881,9 +9884,9 @@
             try {
                 // Check if Firebase SDK is loaded
                 if (typeof firebase === 'undefined') {
-                    statusEl.className = 'badge bg-warning';
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> SDK Loaded';
-                    console.log('⚠️ Firebase: SDK loaded but not configured');
+                    statusEl.className = 'badge bg-secondary';
+                    statusEl.innerHTML = '<i class="fas fa-question-circle"></i> SDK Not Loaded';
+                    console.log('ℹ️ Firebase: SDK not loaded');
                     return;
                 }
                 
@@ -9911,7 +9914,7 @@
                     
                     // Set a timeout for the connection test
                     const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Connection timeout')), 5000)
+                        setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_CHECK_TIMEOUT)
                     );
                     
                     const connectionPromise = new Promise((resolve, reject) => {
@@ -9963,7 +9966,7 @@
                 // Create a test socket connection with timeout
                 const testSocket = io(SIGNALING_SERVER, {
                     transports: ['websocket', 'polling'],
-                    timeout: 5000,
+                    timeout: CONNECTION_CHECK_TIMEOUT,
                     reconnection: false,
                     autoConnect: true
                 });
@@ -9973,7 +9976,7 @@
                     setTimeout(() => {
                         testSocket.close();
                         reject(new Error('Connection timeout'));
-                    }, 5000)
+                    }, CONNECTION_CHECK_TIMEOUT)
                 );
                 
                 // Connection promise
