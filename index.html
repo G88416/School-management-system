@@ -9963,6 +9963,14 @@
                     return;
                 }
                 
+                // Check if CommHub socket is already connected
+                if (commhubSocket && commhubSocket.connected) {
+                    statusEl.className = 'badge bg-success';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected (Active)';
+                    console.log('✅ Video Server: Already connected');
+                    return;
+                }
+                
                 // Create a test socket connection with timeout
                 const testSocket = io(SIGNALING_SERVER, {
                     transports: ['websocket', 'polling'],
@@ -30822,6 +30830,13 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     commhubConnectionAttempts = 0; // Reset on successful connection
                     commhubServerAvailable = true; // Mark server as available
                     
+                    // Update visual status indicator
+                    const statusEl = document.getElementById('videoServerStatus');
+                    if (statusEl) {
+                        statusEl.className = 'badge bg-success';
+                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                    }
+                    
                     // Only show notification if not auto-initializing
                     if (currentUser && typeof addNotification === 'function') {
                         addNotification('Video server connected', 'success');
@@ -30902,6 +30917,13 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 commhubSocket.on('disconnect', (reason) => {
                     console.log('CommHub Pro disconnected:', reason);
                     
+                    // Update visual status indicator
+                    const statusEl = document.getElementById('videoServerStatus');
+                    if (statusEl) {
+                        statusEl.className = 'badge bg-warning';
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reconnecting...';
+                    }
+                    
                     // Only show notifications if user was actively using video features
                     if (!commhubMyStream && !commhubRoom) {
                         // Silent disconnect during idle - socket.io will auto-reconnect
@@ -30928,6 +30950,14 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 
                 commhubSocket.on('reconnect', (attemptNumber) => {
                     console.log('CommHub Pro reconnected after ' + attemptNumber + ' attempts');
+                    
+                    // Update visual status indicator
+                    const statusEl = document.getElementById('videoServerStatus');
+                    if (statusEl) {
+                        statusEl.className = 'badge bg-success';
+                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                    }
+                    
                     // Only notify if user was actively using video features
                     if (commhubMyStream || commhubRoom) {
                         if (typeof addNotification === 'function') {
