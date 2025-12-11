@@ -10,10 +10,12 @@ The School Management System now automatically initializes Firebase (for cross-d
 
 The video server is **automatically configured and connected** when you open the application.
 
-- **Server URL**: `wss://commhub-signaling-production.up.railway.app`
+- **Server URL**: Pre-configured in application (WSS endpoint)
 - **Auto-connects**: Yes, on page load
 - **Auto-reconnects**: Yes, with exponential backoff
 - **Status**: Check the login page status indicator
+
+> **Note for Developers**: The server endpoint is configured in the application code. For production deployments, use environment variables or configuration files to manage server URLs securely.
 
 ### Features
 - 📹 Group video conferencing
@@ -85,15 +87,17 @@ In Firebase Console, enable:
 3. Click on **Real-Time Sync** tab
 4. Enter your Firebase credentials:
    ```
-   API Key:           AIzaSy...
+   API Key:           your-api-key-here
    Project ID:        your-project-id
-   Database URL:      https://your-project.firebaseio.com
+   Database URL:      https://your-project-default-rtdb.firebaseio.com
+                      OR https://your-project.asia-southeast1.firebasedatabase.app
    Auth Domain:       your-project.firebaseapp.com
    Storage Bucket:    your-project.appspot.com
-   Messaging Sender:  123456789
-   App ID:            1:123456789:web:abcdef
+   Messaging Sender:  your-sender-id
+   App ID:            1:your-sender-id:web:your-app-id
    School ID:         [optional - defaults to "default-school"]
    ```
+   > **Important**: Keep your API key secure. Never share it publicly or commit it to version control.
 5. Click **"Save & Connect"**
 6. Wait for success message: "Connected to Firebase!"
 
@@ -157,7 +161,7 @@ If Firebase is not configured:
 1. **Incorrect credentials** - Double-check all values
 2. **No internet** - Check connection
 3. **Firebase services not enabled** - Enable Realtime Database, Storage, Messaging in Firebase Console
-4. **Invalid database URL** - Must start with `https://`
+4. **Invalid database URL** - Must end with `.firebaseio.com` or `.firebasedatabase.app` (for newer regions)
 5. **Firewall blocking** - Ensure Firebase domains are accessible
 
 **Steps to fix**:
@@ -234,10 +238,12 @@ System Connectivity Status
 ### Video Server Architecture
 - **Technology**: Socket.IO over WebSocket/Polling
 - **Protocol**: WSS (WebSocket Secure)
-- **Port**: 443 (HTTPS)
+- **Port**: 443 (WSS - WebSocket Secure, not HTTP/HTTPS)
 - **Reconnection**: Automatic with exponential backoff (2s to 10s)
 - **Timeout**: 20 seconds initial, 60 seconds ping timeout
 - **Transports**: WebSocket preferred, falls back to long-polling
+
+> **Note**: WSS (WebSocket Secure) uses port 443 like HTTPS but is a different protocol designed for bidirectional, real-time communication.
 
 ### Firebase Architecture
 - **Database**: Realtime Database (NoSQL)
