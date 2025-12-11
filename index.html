@@ -10028,8 +10028,50 @@
             // Delay check to allow page to fully render
             setTimeout(() => {
                 checkAllConnections();
+                // Auto-initialize CommHub Pro video server connection
+                autoInitializeCommHub();
+                // Auto-initialize Firebase if configured
+                autoInitializeFirebase();
             }, 1000);
         });
+        
+        // Auto-initialize CommHub Pro video server on page load
+        function autoInitializeCommHub() {
+            if (typeof io !== 'undefined' && typeof initCommHubSocket === 'function') {
+                try {
+                    console.log('🎥 Auto-initializing CommHub Pro video server...');
+                    initCommHubSocket();
+                } catch (error) {
+                    console.log('CommHub Pro auto-init skipped:', error.message);
+                }
+            }
+        }
+        
+        // Auto-initialize Firebase on page load if credentials exist
+        function autoInitializeFirebase() {
+            if (typeof firebase !== 'undefined' && typeof buildFirebaseConfig === 'function') {
+                try {
+                    const config = buildFirebaseConfig();
+                    // Check if valid configuration exists
+                    if (config && config.apiKey && config.apiKey !== "YOUR_API_KEY") {
+                        console.log('🔥 Auto-initializing Firebase...');
+                        if (typeof attemptFirebaseInit === 'function') {
+                            attemptFirebaseInit();
+                        } else if (typeof initializeFirebase === 'function') {
+                            const success = initializeFirebase();
+                            if (typeof updateFirebaseStatus === 'function') {
+                                updateFirebaseStatus(success);
+                            }
+                        }
+                    } else {
+                        console.log('ℹ️ Firebase not configured - using local storage only');
+                        console.log('💡 To enable cross-device sync, configure Firebase in Settings > Real-Time Sync');
+                    }
+                } catch (error) {
+                    console.log('Firebase auto-init skipped:', error.message);
+                }
+            }
+        }
         
         // Global variables
         var currentUser = null;
@@ -30779,7 +30821,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     console.log('✅ CommHub Pro connected to signaling server');
                     commhubConnectionAttempts = 0; // Reset on successful connection
                     commhubServerAvailable = true; // Mark server as available
-                    addNotification('Connected to CommHub Pro server', 'success');
+                    
+                    // Only show notification if not auto-initializing
+                    if (currentUser && typeof addNotification === 'function') {
+                        addNotification('Video server connected', 'success');
+                    }
                     
                     // Hide troubleshooting help on successful connection
                     const helpAlert = document.getElementById('commhubConnectionHelp');
@@ -30791,6 +30837,17 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 commhubSocket.on('connect_error', (error) => {
                     commhubConnectionAttempts++;
                     console.error('CommHub Pro connection error (attempt ' + commhubConnectionAttempts + '):', error);
+                    
+                    // Only show notifications if user is actively trying to use video features
+                    // (not during auto-initialization)
+                    if (!commhubMyStream) {
+                        // Silent failure during auto-init - just log
+                        if (commhubConnectionAttempts >= commhubMaxRetries) {
+                            console.log('ℹ️ Video server not available - will retry when needed');
+                            commhubSocket = null;
+                        }
+                        return;
+                    }
                     
                     let errorMessage = 'Unable to connect to video server. ';
                     
@@ -30816,7 +30873,9 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                     // Add helpful suggestions based on attempt
                     if (commhubConnectionAttempts >= commhubMaxRetries) {
                         errorMessage += 'Failed to join room: Cannot connect to video server. Please check your internet connection and firewall settings.';
-                        addNotification(errorMessage, 'danger');
+                        if (typeof addNotification === 'function') {
+                            addNotification(errorMessage, 'danger');
+                        }
                         
                         // Show troubleshooting help
                         const helpAlert = document.getElementById('commhubConnectionHelp');
@@ -30834,36 +30893,57 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                         commhubSocket = null;
                     } else {
                         errorMessage += 'Retrying connection (attempt ' + commhubConnectionAttempts + ' of ' + commhubMaxRetries + ')...';
-                        addNotification(errorMessage, 'warning');
+                        if (typeof addNotification === 'function') {
+                            addNotification(errorMessage, 'warning');
+                        }
                     }
                 });
                 
                 commhubSocket.on('disconnect', (reason) => {
                     console.log('CommHub Pro disconnected:', reason);
                     
+                    // Only show notifications if user was actively using video features
+                    if (!commhubMyStream && !commhubRoom) {
+                        // Silent disconnect during idle - socket.io will auto-reconnect
+                        console.log('ℹ️ Video server disconnected (idle) - will reconnect automatically');
+                        return;
+                    }
+                    
                     // Handle different disconnect reasons
-                    if (reason === 'io server disconnect') {
-                        // Server initiated disconnect, try to reconnect
-                        addNotification('Disconnected from video server. Reconnecting...', 'warning');
-                    } else if (reason === 'transport close') {
-                        addNotification('Connection lost due to transport closure. Please check your internet connection.', 'warning');
-                    } else if (reason === 'transport error') {
-                        addNotification('Connection lost due to transport error. Please check your internet connection and firewall settings.', 'warning');
-                    } else if (reason === 'ping timeout') {
-                        addNotification('Connection timed out. Please check your internet connection.', 'warning');
-                    } else {
-                        addNotification('Disconnected from video server: ' + reason, 'warning');
+                    if (typeof addNotification === 'function') {
+                        if (reason === 'io server disconnect') {
+                            // Server initiated disconnect, try to reconnect
+                            addNotification('Disconnected from video server. Reconnecting...', 'warning');
+                        } else if (reason === 'transport close') {
+                            addNotification('Connection lost due to transport closure. Please check your internet connection.', 'warning');
+                        } else if (reason === 'transport error') {
+                            addNotification('Connection lost due to transport error. Please check your internet connection and firewall settings.', 'warning');
+                        } else if (reason === 'ping timeout') {
+                            addNotification('Connection timed out. Please check your internet connection.', 'warning');
+                        } else {
+                            addNotification('Disconnected from video server: ' + reason, 'warning');
+                        }
                     }
                 });
                 
                 commhubSocket.on('reconnect', (attemptNumber) => {
                     console.log('CommHub Pro reconnected after ' + attemptNumber + ' attempts');
-                    addNotification('Reconnected to CommHub Pro server', 'success');
+                    // Only notify if user was actively using video features
+                    if (commhubMyStream || commhubRoom) {
+                        if (typeof addNotification === 'function') {
+                            addNotification('Reconnected to video server', 'success');
+                        }
+                    }
                 });
                 
                 commhubSocket.on('reconnect_failed', () => {
                     console.error('CommHub Pro reconnection failed');
-                    addNotification('Failed to reconnect to video server. Please refresh the page and try again.', 'danger');
+                    // Only notify if user was actively using video features
+                    if (commhubMyStream || commhubRoom) {
+                        if (typeof addNotification === 'function') {
+                            addNotification('Failed to reconnect to video server. Please refresh the page and try again.', 'danger');
+                        }
+                    }
                 });
                 
                 commhubSocket.on('user-connected', (userId, userName) => {
