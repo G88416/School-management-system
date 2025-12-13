@@ -31703,6 +31703,10 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
+      
+      // Make instances available globally for use in other scripts
+      window.firebaseAppV12 = app;
+      window.firebaseAnalytics = analytics;
     </script>
 </body>
 </html>
