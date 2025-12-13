@@ -31679,5 +31679,34 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         console.log('✅ CommHub Pro - Group Video + Chat loaded!');
         console.log('🚀 Deploy your signaling server on Railway: https://railway.com?referralCode=Y-GB9M');
     </script>
+    
+    <!-- Firebase SDK Initialization -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyD9YxZP4ErbIoYcvJWn3OwtsjNvMBKq1-s",
+        authDomain: "g-19systems.firebaseapp.com",
+        projectId: "g-19systems",
+        storageBucket: "g-19systems.firebasestorage.app",
+        messagingSenderId: "561001502208",
+        appId: "1:561001502208:web:4954f39536d428db762ae5",
+        measurementId: "G-2GBP0QMP2N"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      
+      // Make instances available globally for use in other scripts
+      window.firebaseAppV12 = app;
+      window.firebaseAnalytics = analytics;
+    </script>
 </body>
 </html>
