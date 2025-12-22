@@ -27756,6 +27756,12 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         let firebaseStorage = null;
         let firebaseInitialized = false;
         
+        // Firebase keep-alive variables
+        let firebaseHeartbeatInterval = null;
+        let firebaseKeepAliveInterval = null;
+        const FIREBASE_HEARTBEAT_INTERVAL = 45000; // Send heartbeat every 45 seconds
+        const FIREBASE_KEEP_ALIVE_INTERVAL = 90000; // Check connection every 90 seconds
+        
         // Build Firebase configuration from localStorage
         function buildFirebaseConfig() {
             // Check if this is g19systems admin and use cloud config
@@ -27896,6 +27902,9 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                     // Send Firebase config to service worker
                     sendConfigToServiceWorker(currentConfig);
                     
+                    // Start keep-alive mechanism
+                    startFirebaseKeepAlive();
+                    
                     return true;
                 } else {
                     // Firebase already initialized
@@ -27925,6 +27934,94 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
                 });
                 console.log('✅ Firebase config sent to service worker');
             }
+        }
+        
+        // Keep Firebase connection alive with periodic heartbeats
+        function startFirebaseKeepAlive() {
+            // Clear any existing intervals
+            if (firebaseHeartbeatInterval) clearInterval(firebaseHeartbeatInterval);
+            if (firebaseKeepAliveInterval) clearInterval(firebaseKeepAliveInterval);
+            
+            // Send periodic heartbeat to keep Firebase connection alive
+            firebaseHeartbeatInterval = setInterval(() => {
+                if (firebaseInitialized && firebaseDb) {
+                    try {
+                        const schoolId = localStorage.getItem('schoolId') || 'default-school';
+                        const userId = currentUser ? currentUser.name : 'anonymous';
+                        const sessionId = window.sessionSyncId || 'unknown';
+                        
+                        // Update heartbeat timestamp in Firebase
+                        firebaseDb.ref(`schools/${schoolId}/heartbeat/${sessionId}`).set({
+                            user: userId,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP,
+                            status: 'online'
+                        }).then(() => {
+                            console.log('📡 Firebase heartbeat sent');
+                        }).catch((error) => {
+                            console.warn('Firebase heartbeat failed:', error.message);
+                        });
+                    } catch (error) {
+                        console.warn('Firebase heartbeat error:', error.message);
+                    }
+                }
+            }, FIREBASE_HEARTBEAT_INTERVAL);
+            
+            // Periodically check Firebase connection health
+            firebaseKeepAliveInterval = setInterval(() => {
+                if (firebaseInitialized && firebaseDb) {
+                    // Check connection status using .info/connected
+                    firebaseDb.ref('.info/connected').once('value', (snapshot) => {
+                        const connected = snapshot.val();
+                        if (connected) {
+                            console.log('✅ Firebase connection healthy');
+                            
+                            // Update status indicator if exists
+                            const statusEl = document.getElementById('firebaseStatus');
+                            if (statusEl) {
+                                statusEl.className = 'badge bg-success';
+                                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                            }
+                        } else {
+                            console.log('⚠️ Firebase connection lost, will auto-reconnect');
+                            
+                            // Update status indicator
+                            const statusEl = document.getElementById('firebaseStatus');
+                            if (statusEl) {
+                                statusEl.className = 'badge bg-warning';
+                                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reconnecting...';
+                            }
+                        }
+                    }).catch((error) => {
+                        console.warn('Firebase connection check failed:', error.message);
+                    });
+                } else if (!firebaseInitialized) {
+                    // Try to re-initialize if connection was lost
+                    console.log('🔄 Firebase not initialized, attempting to reconnect...');
+                    try {
+                        const config = buildFirebaseConfig();
+                        if (config && config.apiKey && config.apiKey !== "YOUR_API_KEY") {
+                            initializeFirebase();
+                        }
+                    } catch (error) {
+                        console.warn('Firebase reconnection attempt failed:', error.message);
+                    }
+                }
+            }, FIREBASE_KEEP_ALIVE_INTERVAL);
+            
+            console.log('✅ Firebase keep-alive mechanism started');
+        }
+        
+        // Stop Firebase keep-alive mechanism
+        function stopFirebaseKeepAlive() {
+            if (firebaseHeartbeatInterval) {
+                clearInterval(firebaseHeartbeatInterval);
+                firebaseHeartbeatInterval = null;
+            }
+            if (firebaseKeepAliveInterval) {
+                clearInterval(firebaseKeepAliveInterval);
+                firebaseKeepAliveInterval = null;
+            }
+            console.log('🛑 Firebase keep-alive mechanism stopped');
         }
         
         // ========================================
@@ -28076,6 +28173,35 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             if (!firebaseInitialized || !firebaseDb) return;
             
             const schoolId = localStorage.getItem('schoolId') || 'default-school';
+            
+            // Listen to Firebase connection status to maintain persistent connection
+            firebaseDb.ref('.info/connected').on('value', (snapshot) => {
+                const connected = snapshot.val();
+                if (connected) {
+                    console.log('✅ Firebase connected and active');
+                    
+                    // Update user's online presence
+                    const userId = currentUser ? currentUser.name : 'anonymous';
+                    const sessionId = window.sessionSyncId || 'unknown';
+                    
+                    // Set user as online
+                    const userStatusRef = firebaseDb.ref(`schools/${schoolId}/presence/${sessionId}`);
+                    userStatusRef.set({
+                        user: userId,
+                        status: 'online',
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    // When disconnected, set user as offline
+                    userStatusRef.onDisconnect().set({
+                        user: userId,
+                        status: 'offline',
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                } else {
+                    console.log('⚠️ Firebase disconnected - will auto-reconnect');
+                }
+            });
             
             // Listen for message updates
             firebaseDb.ref(`schools/${schoolId}/messages`).on('child_added', (snapshot) => {
@@ -30750,6 +30876,12 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         let commhubServerAvailable = false;
         let commhubLastConnectionTest = 0;
         
+        // Keep-alive and persistent connection variables
+        let commhubHeartbeatInterval = null;
+        let commhubKeepAliveInterval = null;
+        const COMMHUB_HEARTBEAT_INTERVAL = 30000; // Send heartbeat every 30 seconds
+        const COMMHUB_KEEP_ALIVE_INTERVAL = 60000; // Check connection every 60 seconds
+        
         // Connection timeout constants
         const CONNECTIVITY_TEST_CACHE_DURATION = 60000; // 60 seconds
         const CONNECTION_TIMEOUT = 30000; // 30 seconds
@@ -31024,6 +31156,70 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                 console.error('Failed to initialize CommHub Pro:', error);
                 addNotification('CommHub Pro initialization failed: ' + error.message + '. Please check console for details.', 'danger');
             }
+            
+            // Start keep-alive mechanism
+            startCommHubKeepAlive();
+        }
+        
+        // Keep CommHub Pro connection alive with periodic heartbeats
+        function startCommHubKeepAlive() {
+            // Clear any existing intervals
+            if (commhubHeartbeatInterval) clearInterval(commhubHeartbeatInterval);
+            if (commhubKeepAliveInterval) clearInterval(commhubKeepAliveInterval);
+            
+            // Send periodic heartbeat to keep connection alive
+            commhubHeartbeatInterval = setInterval(() => {
+                if (commhubSocket && commhubSocket.connected) {
+                    commhubSocket.emit('heartbeat', {
+                        timestamp: Date.now(),
+                        username: commhubUsername || 'anonymous'
+                    });
+                    console.log('📡 CommHub heartbeat sent');
+                }
+            }, COMMHUB_HEARTBEAT_INTERVAL);
+            
+            // Periodically check connection health and reconnect if needed
+            commhubKeepAliveInterval = setInterval(() => {
+                if (!commhubSocket || !commhubSocket.connected) {
+                    console.log('🔄 CommHub connection lost, attempting reconnection...');
+                    
+                    // Update status indicator
+                    const statusEl = document.getElementById('videoServerStatus');
+                    if (statusEl) {
+                        statusEl.className = 'badge bg-warning';
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Reconnecting...';
+                    }
+                    
+                    // Attempt to reconnect
+                    try {
+                        if (commhubSocket && typeof commhubSocket.connect === 'function') {
+                            commhubSocket.connect();
+                        } else {
+                            // Reinitialize socket if it's not properly initialized
+                            initCommHubSocket();
+                        }
+                    } catch (error) {
+                        console.error('CommHub reconnection failed:', error);
+                    }
+                } else {
+                    console.log('✅ CommHub connection healthy');
+                }
+            }, COMMHUB_KEEP_ALIVE_INTERVAL);
+            
+            console.log('✅ CommHub keep-alive mechanism started');
+        }
+        
+        // Stop keep-alive mechanism (useful when disconnecting intentionally)
+        function stopCommHubKeepAlive() {
+            if (commhubHeartbeatInterval) {
+                clearInterval(commhubHeartbeatInterval);
+                commhubHeartbeatInterval = null;
+            }
+            if (commhubKeepAliveInterval) {
+                clearInterval(commhubKeepAliveInterval);
+                commhubKeepAliveInterval = null;
+            }
+            console.log('🛑 CommHub keep-alive mechanism stopped');
         }
         
         // Show incoming call notification
