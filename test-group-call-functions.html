@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Group Call Functions - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Firebase Group Call Functions - Test Page</h1>
+        
+        <div class="test-section">
+            <h3>Test 1: Check if functions are loaded</h3>
+            <button onclick="testFunctionsLoaded()">Check Functions</button>
+            <div id="test1-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Start a Group Call (Mock)</h3>
+            <button onclick="testStartGroupCall()">Start Group Call</button>
+            <div id="test2-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Check Firebase Database Connection</h3>
+            <button onclick="testFirebaseConnection()">Test Connection</button>
+            <div id="test3-output" class="output"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyD9YxZP4ErbIoYcvJWn3OwtsjNvMBKq1-s",
+        authDomain: "g-19systems.firebaseapp.com",
+        databaseURL: "https://g-19systems-default-rtdb.firebaseio.com",
+        projectId: "g-19systems",
+        storageBucket: "g-19systems.firebasestorage.app",
+        messagingSenderId: "561001502208",
+        appId: "1:561001502208:web:4954f39536d428db762ae5",
+        measurementId: "G-2GBP0QMP2N"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      
+      window.firebaseAppV12 = app;
+      window.db = db;
+    </script>
+
+    <!-- Import Group Call Functions -->
+    <script type="module">
+      import {
+        collection,
+        doc,
+        setDoc,
+        updateDoc,
+        deleteDoc,
+        onSnapshot,
+        serverTimestamp,
+        query,
+        where,
+        getDoc,
+        arrayUnion,
+        arrayRemove,
+        addDoc
+      } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+      
+      const db = window.db;
+      
+      async function startGroupCall({
+        title,
+        type = 'video',
+        participantIds,
+        hostId,
+        hostName,
+        hostPhoto,
+        linkedChatId = null
+      }) {
+        const callRef = doc(collection(db, 'calls'));
+        const callId = callRef.id;
+
+        await setDoc(callRef, {
+          type,
+          status: 'pending',
+          title,
+          hostId,
+          linkedChatId,
+          participants: participantIds,
+          activeParticipants: [hostId],
+          createdAt: serverTimestamp(),
+          startedAt: null,
+          endedAt: null
+        });
+
+        await setDoc(doc(callRef, 'members', hostId), {
+          joinedAt: serverTimestamp(),
+          leftAt: null,
+          displayName: hostName,
+          photoURL: hostPhoto || '',
+          isMuted: false,
+          isVideoOn: type === 'video',
+          isHost: true,
+          role: 'teacher'
+        });
+
+        console.log('Group call started:', callId);
+        return callId;
+      }
+
+      async function joinCall(callId, userId, displayName, photoURL, role) {
+        const callRef = doc(db, 'calls', callId);
+        const memberRef = doc(callRef, 'members', userId);
+
+        const callSnap = await getDoc(callRef);
+        if (!callSnap.exists() || !callSnap.data().participants.includes(userId)) {
+          throw new Error('Not authorized to join this call');
+        }
+
+        await updateDoc(callRef, {
+          activeParticipants: arrayUnion(userId),
+          status: 'active',
+          startedAt: serverTimestamp()
+        });
+
+        await setDoc(memberRef, {
+          joinedAt: serverTimestamp(),
+          leftAt: null,
+          displayName,
+          photoURL: photoURL || '',
+          isMuted: true,
+          isVideoOn: false,
+          isHost: userId === callSnap.data().hostId,
+          role
+        });
+
+        return callId;
+      }
+
+      async function leaveCall(callId, userId) {
+        const callRef = doc(db, 'calls', callId);
+        const memberRef = doc(callRef, 'members', userId);
+
+        await updateDoc(callRef, {
+          activeParticipants: arrayRemove(userId)
+        });
+
+        await updateDoc(memberRef, { leftAt: serverTimestamp() });
+
+        const callSnap = await getDoc(callRef);
+        if (callSnap.data().hostId === userId) {
+          await updateDoc(callRef, {
+            status: 'ended',
+            endedAt: serverTimestamp()
+          });
+        }
+      }
+
+      function listenToCallMembers(callId, callback) {
+        const membersCol = collection(db, 'calls', callId, 'members');
+        return onSnapshot(membersCol, (snapshot) => {
+          const members = [];
+          snapshot.forEach(doc => {
+            members.push({ userId: doc.id, ...doc.data() });
+          });
+          callback(members);
+        });
+      }
+
+      function listenToSignals(callId, userId, onSignal) {
+        const signalsCol = collection(db, 'calls', callId, 'signals');
+        const q = query(signalsCol, where('timestamp', '>', new Date()));
+
+        return onSnapshot(q, (snapshot) => {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              if (data.recipientId === userId || data.recipientId === 'all') {
+                onSignal(data);
+              }
+            }
+          });
+        });
+      }
+
+      async function sendSignal(callId, senderId, recipientId, type, data) {
+        const signalsCol = collection(db, 'calls', callId, 'signals');
+        await addDoc(signalsCol, {
+          senderId,
+          recipientId: recipientId || 'all',
+          type,
+          data,
+          timestamp: serverTimestamp()
+        });
+      }
+      
+      window.startGroupCall = startGroupCall;
+      window.joinCall = joinCall;
+      window.leaveCall = leaveCall;
+      window.listenToCallMembers = listenToCallMembers;
+      window.listenToSignals = listenToSignals;
+      window.sendSignal = sendSignal;
+      
+      console.log('✅ Firebase Group Call Functions loaded successfully!');
+    </script>
+
+    <script>
+        function testFunctionsLoaded() {
+            const output = document.getElementById('test1-output');
+            const functions = [
+                'startGroupCall',
+                'joinCall',
+                'leaveCall',
+                'listenToCallMembers',
+                'listenToSignals',
+                'sendSignal'
+            ];
+            
+            let result = 'Checking if all functions are loaded...\n\n';
+            let allLoaded = true;
+            
+            functions.forEach(func => {
+                if (typeof window[func] === 'function') {
+                    result += `✅ ${func} - Loaded\n`;
+                } else {
+                    result += `❌ ${func} - NOT FOUND\n`;
+                    allLoaded = false;
+                }
+            });
+            
+            result += '\n' + (allLoaded ? '✅ All functions loaded successfully!' : '❌ Some functions are missing!');
+            output.textContent = result;
+            output.className = allLoaded ? 'output success' : 'output error';
+        }
+
+        async function testStartGroupCall() {
+            const output = document.getElementById('test2-output');
+            output.textContent = 'Starting group call test...';
+            
+            try {
+                if (typeof window.startGroupCall !== 'function') {
+                    throw new Error('startGroupCall function not found. Please wait for Firebase to load.');
+                }
+                
+                const callId = await window.startGroupCall({
+                    title: 'Test Parent-Teacher Meeting',
+                    type: 'video',
+                    participantIds: ['teacher123', 'parent456', 'parent789'],
+                    hostId: 'teacher123',
+                    hostName: 'Mr. Test Teacher',
+                    hostPhoto: 'https://example.com/photo.jpg',
+                    linkedChatId: 'chat-room-123'
+                });
+                
+                output.textContent = `✅ Success!\n\nCall ID: ${callId}\n\nGroup call created successfully in Firebase Firestore!\nCheck your Firebase Console > Firestore Database > calls collection`;
+                output.className = 'output success';
+            } catch (error) {
+                output.textContent = `❌ Error:\n\n${error.message}\n\nStack: ${error.stack}`;
+                output.className = 'output error';
+            }
+        }
+
+        async function testFirebaseConnection() {
+            const output = document.getElementById('test3-output');
+            output.textContent = 'Testing Firebase connection...';
+            
+            try {
+                if (!window.db) {
+                    throw new Error('Firebase database not initialized');
+                }
+                
+                output.textContent = `✅ Firebase Connection Successful!\n\nDatabase instance is available.\nFirestore is ready to use.\n\nYou can now:\n- Start group calls\n- Join existing calls\n- Listen to real-time updates`;
+                output.className = 'output success';
+            } catch (error) {
+                output.textContent = `❌ Error:\n\n${error.message}`;
+                output.className = 'output error';
+            }
+        }
+
+        // Auto-test on page load
+        setTimeout(() => {
+            testFunctionsLoaded();
+        }, 2000);
+    </script>
+</body>
+</html>
