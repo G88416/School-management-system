@@ -87,10 +87,12 @@
         getDocs,
         query,
         where,
-        serverTimestamp,
-        writeBatch
+        serverTimestamp
       } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+      // Note: Firebase API keys are designed to be public and safe to expose in client-side code.
+      // Security is enforced through Firestore Security Rules, not by hiding the API key.
+      // For production, ensure proper Firestore Security Rules are configured.
       const firebaseConfig = {
         apiKey: "AIzaSyD9YxZP4ErbIoYcvJWn3OwtsjNvMBKq1-s",
         authDomain: "g-19systems.firebaseapp.com",
