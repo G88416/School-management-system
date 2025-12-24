@@ -31881,6 +31881,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
       import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
       // TODO: Add SDKs for Firebase products that you want to use
       // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -31900,10 +31901,161 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
+      const db = getFirestore(app);
       
       // Make instances available globally for use in other scripts
       window.firebaseAppV12 = app;
       window.firebaseAnalytics = analytics;
+      window.db = db; // Export db for use in chat functions
+    </script>
+    
+    <!-- Firebase Chat Support Functions -->
+    <script type="module">
+      // Import Firebase Firestore functions
+      import {
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        getDocs,
+        query,
+        where,
+        serverTimestamp,
+        writeBatch // Available for future batch operations
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+      
+      // Get db instance from window
+      const db = window.db;
+      
+      /**
+       * Create or get existing chat between users (perfect for Teacher ↔ Parent or 1:1)
+       * For group chats (e.g., class), use createGroupChat() below
+       */
+      async function createOrGetPrivateChat(userId1, userId2, userData1 = {}, userData2 = {}) {
+        if (!userId1 || !userId2) throw new Error('Both user IDs are required');
+
+        // Always sort IDs to avoid duplicates (e.g., A-B and B-A become the same)
+        const sortedIds = [userId1, userId2].sort();
+        const chatId = `${sortedIds[0]}_${sortedIds[1]}`;
+
+        const chatRef = doc(db, 'chats', chatId);
+
+        try {
+          // Check if chat already exists
+          const chatSnap = await getDoc(chatRef);
+          if (chatSnap.exists()) {
+            return { chatId, alreadyExisted: true };
+          }
+
+          // Create new private chat
+          await setDoc(chatRef, {
+            type: 'private',
+            name: '', // empty for private chats
+            participants: sortedIds,
+            participantRoles: {
+              [userId1]: userData1.role || 'unknown',
+              [userId2]: userData2.role || 'unknown'
+            },
+            createdAt: serverTimestamp(),
+            createdBy: userId1, // current user who initiated
+            lastMessage: {
+              text: '',
+              senderId: '',
+              timestamp: null
+            },
+            unreadCounts: {
+              [userId1]: 0,
+              [userId2]: 0
+            }
+          });
+
+          console.log('Private chat created:', chatId);
+          return { chatId, alreadyExisted: false };
+        } catch (error) {
+          console.error('Error creating private chat:', error);
+          throw error;
+        }
+      }
+
+      /**
+       * Create a Group Chat (e.g., "Grade 10 Math - Parents Group")
+       * Use this for class groups, staff rooms, etc.
+       */
+      async function createGroupChat({ groupName, participantIds, creatorId, creatorRole, extraData = {} }) {
+        if (!groupName || participantIds.length < 2) {
+          throw new Error('Group name and at least 2 participants required');
+        }
+
+        const chatRef = doc(collection(db, 'chats')); // auto-generated ID
+        const chatId = chatRef.id;
+
+        // Build participantRoles map
+        const participantRoles = {};
+        participantIds.forEach(uid => {
+          // You can fetch real roles from users collection if needed
+          participantRoles[uid] = uid === creatorId ? creatorRole : 'member';
+        });
+
+        // Initialize unread counts
+        const unreadCounts = {};
+        participantIds.forEach(uid => {
+          unreadCounts[uid] = 0;
+        });
+
+        await setDoc(chatRef, {
+          type: 'group',
+          name: groupName,
+          participants: participantIds,
+          participantRoles,
+          createdAt: serverTimestamp(),
+          createdBy: creatorId,
+          lastMessage: {
+            text: 'Group created',
+            senderId: creatorId,
+            timestamp: serverTimestamp()
+          },
+          unreadCounts,
+          photoURL: extraData.photoURL || '', // optional group photo
+          isAnnouncement: extraData.isAnnouncement || false // for broadcast-style groups
+        });
+
+        console.log('Group chat created:', chatId);
+        return chatId;
+      }
+
+      /**
+       * BONUS: Get all chats for current user (used in chat list screen)
+       */
+      async function getUserChats(currentUserId) {
+        const chatsQuery = query(
+          collection(db, 'chats'),
+          where('participants', 'array-contains', currentUserId)
+        );
+
+        const snapshot = await getDocs(chatsQuery);
+        const chats = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          chats.push({
+            chatId: doc.id,
+            ...data,
+            lastMessageTime: data.lastMessage?.timestamp?.toDate() || data.createdAt?.toDate()
+          });
+        });
+
+        // Sort by latest message
+        chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+
+        return chats;
+      }
+      
+      // Export functions to window object for global access
+      window.createOrGetPrivateChat = createOrGetPrivateChat;
+      window.createGroupChat = createGroupChat;
+      window.getUserChats = getUserChats;
+      
+      console.log('✅ Firebase Chat Support Functions loaded successfully!');
     </script>
     
     <!-- Firebase Functions Configuration -->

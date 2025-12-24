@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Chat Functions Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .output {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Chat Functions Test</h1>
+    <p>This page tests the Firebase chat support functions added to index.html</p>
+    
+    <div class="test-section">
+        <h2>1. Test Private Chat Creation</h2>
+        <button onclick="testPrivateChat()">Create Private Chat</button>
+        <div id="privateChatOutput" class="output"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Group Chat Creation</h2>
+        <button onclick="testGroupChat()">Create Group Chat</button>
+        <div id="groupChatOutput" class="output"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Get User Chats</h2>
+        <button onclick="testGetUserChats()">Get User Chats</button>
+        <div id="userChatsOutput" class="output"></div>
+    </div>
+    
+    <!-- Firebase SDK Initialization -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+      import {
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        getDocs,
+        query,
+        where,
+        serverTimestamp
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+      // Note: Firebase API keys are designed to be public and safe to expose in client-side code.
+      // Security is enforced through Firestore Security Rules, not by hiding the API key.
+      // For production, ensure proper Firestore Security Rules are configured.
+      const firebaseConfig = {
+        apiKey: "AIzaSyD9YxZP4ErbIoYcvJWn3OwtsjNvMBKq1-s",
+        authDomain: "g-19systems.firebaseapp.com",
+        databaseURL: "https://g-19systems-default-rtdb.firebaseio.com",
+        projectId: "g-19systems",
+        storageBucket: "g-19systems.firebasestorage.app",
+        messagingSenderId: "561001502208",
+        appId: "1:561001502208:web:4954f39536d428db762ae5",
+        measurementId: "G-2GBP0QMP2N"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      
+      // Export db globally
+      window.db = db;
+      
+      /**
+       * Create or get existing chat between users (perfect for Teacher ↔ Parent or 1:1)
+       */
+      async function createOrGetPrivateChat(userId1, userId2, userData1 = {}, userData2 = {}) {
+        if (!userId1 || !userId2) throw new Error('Both user IDs are required');
+
+        const sortedIds = [userId1, userId2].sort();
+        const chatId = `${sortedIds[0]}_${sortedIds[1]}`;
+        const chatRef = doc(db, 'chats', chatId);
+
+        try {
+          const chatSnap = await getDoc(chatRef);
+          if (chatSnap.exists()) {
+            return { chatId, alreadyExisted: true };
+          }
+
+          await setDoc(chatRef, {
+            type: 'private',
+            name: '',
+            participants: sortedIds,
+            participantRoles: {
+              [userId1]: userData1.role || 'unknown',
+              [userId2]: userData2.role || 'unknown'
+            },
+            createdAt: serverTimestamp(),
+            createdBy: userId1,
+            lastMessage: {
+              text: '',
+              senderId: '',
+              timestamp: null
+            },
+            unreadCounts: {
+              [userId1]: 0,
+              [userId2]: 0
+            }
+          });
+
+          console.log('Private chat created:', chatId);
+          return { chatId, alreadyExisted: false };
+        } catch (error) {
+          console.error('Error creating private chat:', error);
+          throw error;
+        }
+      }
+
+      /**
+       * Create a Group Chat
+       */
+      async function createGroupChat({ groupName, participantIds, creatorId, creatorRole, extraData = {} }) {
+        if (!groupName || participantIds.length < 2) {
+          throw new Error('Group name and at least 2 participants required');
+        }
+
+        const chatRef = doc(collection(db, 'chats'));
+        const chatId = chatRef.id;
+
+        const participantRoles = {};
+        participantIds.forEach(uid => {
+          participantRoles[uid] = uid === creatorId ? creatorRole : 'member';
+        });
+
+        const unreadCounts = {};
+        participantIds.forEach(uid => {
+          unreadCounts[uid] = 0;
+        });
+
+        await setDoc(chatRef, {
+          type: 'group',
+          name: groupName,
+          participants: participantIds,
+          participantRoles,
+          createdAt: serverTimestamp(),
+          createdBy: creatorId,
+          lastMessage: {
+            text: 'Group created',
+            senderId: creatorId,
+            timestamp: serverTimestamp()
+          },
+          unreadCounts,
+          photoURL: extraData.photoURL || '',
+          isAnnouncement: extraData.isAnnouncement || false
+        });
+
+        console.log('Group chat created:', chatId);
+        return chatId;
+      }
+
+      /**
+       * Get all chats for current user
+       */
+      async function getUserChats(currentUserId) {
+        const chatsQuery = query(
+          collection(db, 'chats'),
+          where('participants', 'array-contains', currentUserId)
+        );
+
+        const snapshot = await getDocs(chatsQuery);
+        const chats = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          chats.push({
+            chatId: doc.id,
+            ...data,
+            lastMessageTime: data.lastMessage?.timestamp?.toDate() || data.createdAt?.toDate()
+          });
+        });
+
+        chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+        return chats;
+      }
+      
+      // Export functions globally
+      window.createOrGetPrivateChat = createOrGetPrivateChat;
+      window.createGroupChat = createGroupChat;
+      window.getUserChats = getUserChats;
+      
+      console.log('✅ Firebase Chat Functions loaded successfully!');
+    </script>
+    
+    <script>
+        // Test functions
+        async function testPrivateChat() {
+            const output = document.getElementById('privateChatOutput');
+            output.classList.remove('error');
+            output.textContent = 'Creating private chat...';
+            
+            try {
+                const result = await window.createOrGetPrivateChat(
+                    'teacher123',
+                    'parent456',
+                    { role: 'teacher' },
+                    { role: 'parent' }
+                );
+                output.textContent = 'SUCCESS!\n' + JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.classList.add('error');
+                output.textContent = 'ERROR:\n' + error.message;
+            }
+        }
+        
+        async function testGroupChat() {
+            const output = document.getElementById('groupChatOutput');
+            output.classList.remove('error');
+            output.textContent = 'Creating group chat...';
+            
+            try {
+                const chatId = await window.createGroupChat({
+                    groupName: 'Grade 10 Math - Parents Group',
+                    participantIds: ['teacher123', 'parent456', 'parent789'],
+                    creatorId: 'teacher123',
+                    creatorRole: 'teacher',
+                    extraData: {
+                        photoURL: '',
+                        isAnnouncement: false
+                    }
+                });
+                output.textContent = 'SUCCESS!\nGroup Chat ID: ' + chatId;
+            } catch (error) {
+                output.classList.add('error');
+                output.textContent = 'ERROR:\n' + error.message;
+            }
+        }
+        
+        async function testGetUserChats() {
+            const output = document.getElementById('userChatsOutput');
+            output.classList.remove('error');
+            output.textContent = 'Fetching user chats...';
+            
+            try {
+                const chats = await window.getUserChats('teacher123');
+                output.textContent = 'SUCCESS!\nFound ' + chats.length + ' chats:\n' + 
+                    JSON.stringify(chats, null, 2);
+            } catch (error) {
+                output.classList.add('error');
+                output.textContent = 'ERROR:\n' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
