@@ -30,6 +30,7 @@
     
     <!-- Firebase SDK for Real-Time Syncing -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
@@ -11373,7 +11374,7 @@
             }
         }
         // Login function - Make globally accessible
-        window.login = function() {
+        window.login = async function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
@@ -11404,6 +11405,63 @@
                 logUserActivity(username, user.role, 'Login', 'Successful login');
                 
                 currentUser = user;
+                
+                // ========================================
+                // FIREBASE AUTHENTICATION INTEGRATION
+                // Automatically sign in to Firebase when user logs in to the app
+                // ========================================
+                try {
+                    // Check if Firebase is available
+                    if (typeof firebase !== 'undefined' && firebase.auth) {
+                        // Create a unique email for this user based on username
+                        const firebaseEmail = `${username}@school.local`;
+                        
+                        console.log('🔥 Attempting Firebase authentication for:', username);
+                        
+                        try {
+                            // Try to sign in with existing Firebase account
+                            await firebase.auth().signInWithEmailAndPassword(firebaseEmail, password);
+                            console.log('✅ Firebase sign-in successful for existing user:', username);
+                            addNotification('Firebase authentication successful', 'success');
+                        } catch (signInError) {
+                            // If user doesn't exist in Firebase, create a new account
+                            // Handle multiple Firebase error codes for missing users
+                            const userNotFoundCodes = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-email'];
+                            const isUserNotFound = userNotFoundCodes.includes(signInError.code);
+                            
+                            if (isUserNotFound) {
+                                console.log('📝 Creating new Firebase user for:', username);
+                                try {
+                                    await firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password);
+                                    console.log('✅ Firebase account created and signed in:', username);
+                                    
+                                    // Update display name
+                                    const currentFirebaseUser = firebase.auth().currentUser;
+                                    if (currentFirebaseUser) {
+                                        await currentFirebaseUser.updateProfile({
+                                            displayName: user.name
+                                        });
+                                    }
+                                    
+                                    addNotification('Firebase account created successfully', 'success');
+                                } catch (createError) {
+                                    console.error('⚠️ Firebase account creation failed:', createError.message);
+                                    // Don't block login if Firebase fails, just notify
+                                    addNotification('Note: Firebase authentication unavailable', 'warning');
+                                }
+                            } else {
+                                console.error('⚠️ Firebase sign-in failed:', signInError.message);
+                                addNotification('Note: Firebase authentication unavailable', 'warning');
+                            }
+                        }
+                    } else {
+                        console.log('ℹ️ Firebase Auth not initialized yet, will initialize after app loads');
+                    }
+                } catch (error) {
+                    console.error('⚠️ Firebase authentication error:', error);
+                    // Don't block login if Firebase fails
+                }
+                
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 updateVisibility();
@@ -11584,6 +11642,22 @@
                 stopPeriodicSync();
             }
             
+            // ========================================
+            // FIREBASE SIGN-OUT INTEGRATION
+            // Automatically sign out from Firebase when user logs out
+            // ========================================
+            try {
+                if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+                    firebase.auth().signOut().then(() => {
+                        console.log('✅ Firebase sign-out successful');
+                    }).catch((error) => {
+                        console.error('⚠️ Firebase sign-out failed:', error);
+                    });
+                }
+            } catch (error) {
+                console.error('⚠️ Firebase sign-out error:', error);
+            }
+            
             currentUser = null;
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
@@ -11604,7 +11678,7 @@
             document.getElementById('loginPage').style.display = 'flex';
         }
         
-        window.g19Login = function() {
+        window.g19Login = async function() {
             const username = document.getElementById('g19Username').value;
             const password = document.getElementById('g19Password').value;
             
@@ -11612,6 +11686,48 @@
             if (username === 'g19systems' && password === 'systemsg19') {
                 isG19User = true;
                 currentUser = { name: 'G19 Systems Administrator', role: 'G19Admin', username: 'g19systems' };
+                
+                // ========================================
+                // FIREBASE AUTHENTICATION INTEGRATION FOR G19
+                // Automatically sign in to Firebase when G19 admin logs in
+                // ========================================
+                try {
+                    if (typeof firebase !== 'undefined' && firebase.auth) {
+                        const firebaseEmail = `${username}@g19systems.com`;
+                        
+                        console.log('🔥 Attempting Firebase authentication for G19 admin');
+                        
+                        try {
+                            await firebase.auth().signInWithEmailAndPassword(firebaseEmail, password);
+                            console.log('✅ Firebase sign-in successful for G19 admin');
+                        } catch (signInError) {
+                            // Handle multiple Firebase error codes for missing users
+                            const userNotFoundCodes = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-email'];
+                            const isUserNotFound = userNotFoundCodes.includes(signInError.code);
+                            
+                            if (isUserNotFound) {
+                                console.log('📝 Creating new Firebase user for G19 admin');
+                                try {
+                                    await firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password);
+                                    console.log('✅ Firebase account created for G19 admin');
+                                    
+                                    const currentFirebaseUser = firebase.auth().currentUser;
+                                    if (currentFirebaseUser) {
+                                        await currentFirebaseUser.updateProfile({
+                                            displayName: 'G19 Systems Administrator'
+                                        });
+                                    }
+                                } catch (createError) {
+                                    console.error('⚠️ Firebase account creation failed:', createError.message);
+                                }
+                            } else {
+                                console.error('⚠️ Firebase sign-in failed:', signInError.message);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('⚠️ Firebase authentication error:', error);
+                }
                 
                 document.getElementById('g19LoginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
@@ -11653,6 +11769,23 @@
         
         function g19Logout() {
             isG19User = false;
+            
+            // ========================================
+            // FIREBASE SIGN-OUT INTEGRATION
+            // Automatically sign out from Firebase when G19 user logs out
+            // ========================================
+            try {
+                if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+                    firebase.auth().signOut().then(() => {
+                        console.log('✅ Firebase sign-out successful (G19 logout)');
+                    }).catch((error) => {
+                        console.error('⚠️ Firebase sign-out failed:', error);
+                    });
+                }
+            } catch (error) {
+                console.error('⚠️ Firebase sign-out error:', error);
+            }
+            
             currentUser = null;
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
@@ -31887,6 +32020,10 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
 
       // Your web app's Firebase configuration
       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      // NOTE: These API keys are safe to expose in client-side code.
+      // Firebase API keys are not secret and are meant to be included in your web app's code.
+      // Security is controlled through Firebase Security Rules, not by hiding the API key.
+      // See: https://firebase.google.com/docs/projects/api-keys
       const firebaseConfig = {
         apiKey: "AIzaSyD9YxZP4ErbIoYcvJWn3OwtsjNvMBKq1-s",
         authDomain: "g-19systems.firebaseapp.com",
