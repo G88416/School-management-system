@@ -174,7 +174,11 @@
                 log(`Sign-in failed: ${signInError.code} - ${signInError.message}`, 'error');
 
                 // Try to create account
-                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+                // Handle multiple Firebase error codes for missing users
+                const userNotFoundCodes = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-email'];
+                const isUserNotFound = userNotFoundCodes.includes(signInError.code);
+                
+                if (isUserNotFound) {
                     log('User not found, attempting to create account...', 'info');
                     try {
                         const userCredential = await auth.createUserWithEmailAndPassword(firebaseEmail, password);

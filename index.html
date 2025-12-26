@@ -11425,7 +11425,11 @@
                             addNotification('Firebase authentication successful', 'success');
                         } catch (signInError) {
                             // If user doesn't exist in Firebase, create a new account
-                            if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+                            // Handle multiple Firebase error codes for missing users
+                            const userNotFoundCodes = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-email'];
+                            const isUserNotFound = userNotFoundCodes.includes(signInError.code);
+                            
+                            if (isUserNotFound) {
                                 console.log('📝 Creating new Firebase user for:', username);
                                 try {
                                     await firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password);
@@ -11697,7 +11701,11 @@
                             await firebase.auth().signInWithEmailAndPassword(firebaseEmail, password);
                             console.log('✅ Firebase sign-in successful for G19 admin');
                         } catch (signInError) {
-                            if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+                            // Handle multiple Firebase error codes for missing users
+                            const userNotFoundCodes = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password', 'auth/invalid-email'];
+                            const isUserNotFound = userNotFoundCodes.includes(signInError.code);
+                            
+                            if (isUserNotFound) {
                                 console.log('📝 Creating new Firebase user for G19 admin');
                                 try {
                                     await firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password);
