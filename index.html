@@ -4335,8 +4335,16 @@
                                     <div class="col-md-8">
                                         <div class="card" style="background: rgba(255, 255, 255, 0.1);">
                                             <div class="card-header">
-                                                <h6 id="chatStudentName">Select a student to start chatting <span class="realtime-indicator" title="Real-time sync enabled"></span></h6>
-                                                <small class="text-muted"><i class="fas fa-broadcast-tower me-1"></i>Messages broadcast instantly</small>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 id="chatStudentName">Select a student to start chatting <span class="realtime-indicator" title="Real-time sync enabled"></span></h6>
+                                                        <small class="text-muted"><i class="fas fa-broadcast-tower me-1"></i>Messages broadcast instantly</small>
+                                                    </div>
+                                                    <!-- Start Group Call Button - Visible to Teachers/Admins only -->
+                                                    <button class="btn btn-success" id="startGroupCallBtn" onclick="initiateGroupCall()" style="display: none;" title="Start a group video call with participants">
+                                                        <i class="fas fa-video me-1"></i>Start Group Call
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div class="card-body" style="height: 350px; overflow-y: auto;" id="chatMessagesContainer">
                                                 <p class="text-muted text-center">No messages yet. Select a student to begin.</p>
@@ -6235,18 +6243,22 @@
             </section>
             
             <!-- Incoming Call Modal -->
-            <div id="incomingCallModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+            <div id="incomingCallBackdrop" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9998; backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);"></div>
+            <div id="incomingCallModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999;">
                 <div style="background:linear-gradient(135deg, #1a1a2e, #16213e); border-radius:20px; padding:40px; text-align:center; max-width:400px; box-shadow:0 25px 80px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
-                    <div style="width:80px; height:80px; margin:0 auto 20px; background:linear-gradient(135deg, #10b981, #34d399); border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite;">
-                        <i class="fas fa-video fa-2x" style="color:white;"></i>
+                    <!-- Caller Photo -->
+                    <div style="width:80px; height:80px; margin:0 auto 20px; background:linear-gradient(135deg, #10b981, #34d399); border-radius:50%; display:flex; align-items:center; justify-content:center; animation:pulse 2s infinite; overflow:hidden;">
+                        <img id="incomingCallerPhoto" src="" alt="Caller" style="width:100%; height:100%; object-fit:cover; display:none;">
+                        <i id="incomingCallerIcon" class="fas fa-video fa-2x" style="color:white;"></i>
                     </div>
-                    <h3 style="color:white; margin-bottom:10px;">Incoming Video Call</h3>
-                    <p id="incomingCallerName" style="color:rgba(255,255,255,0.7); font-size:1.2rem; margin-bottom:30px;">Unknown Caller</p>
+                    <h3 style="color:white; margin-bottom:10px;">Incoming Group Call</h3>
+                    <p id="incomingCallerName" style="color:rgba(255,255,255,0.7); font-size:1.2rem; margin-bottom:10px;">Unknown Caller</p>
+                    <p id="incomingCallTitle" style="color:rgba(255,255,255,0.5); font-size:0.9rem; margin-bottom:30px;">Group Call</p>
                     <div style="display:flex; gap:15px; justify-content:center;">
-                        <button onclick="acceptIncomingCall()" style="background:linear-gradient(135deg, #10b981, #34d399); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
+                        <button onclick="acceptIncomingGroupCall()" style="background:linear-gradient(135deg, #10b981, #34d399); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
                             <i class="fas fa-phone me-2"></i>Accept
                         </button>
-                        <button onclick="declineIncomingCall()" style="background:linear-gradient(135deg, #ef4444, #f87171); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
+                        <button onclick="declineIncomingGroupCall()" style="background:linear-gradient(135deg, #ef4444, #f87171); border:none; color:white; padding:15px 30px; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem; transition:all 0.3s;">
                             <i class="fas fa-phone-slash me-2"></i>Decline
                         </button>
                     </div>
@@ -31359,9 +31371,14 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         function showIncomingCallNotification(callData) {
             commhubIncomingCallData = callData;
             const modal = document.getElementById('incomingCallModal');
+            const backdrop = document.getElementById('incomingCallBackdrop');
             const callerName = document.getElementById('incomingCallerName');
+            const callTitle = document.getElementById('incomingCallTitle');
+            
             callerName.textContent = callData.callerName + ' is calling...';
-            modal.style.display = 'flex';
+            callTitle.textContent = 'CommHub Pro Call';
+            backdrop.style.display = 'block';
+            modal.style.display = 'block';
             
             // Play notification sound (if available)
             try {
@@ -31370,9 +31387,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             } catch (e) {}
         }
         
-        // Accept incoming call
+        // Accept incoming call (CommHub Pro)
         async function acceptIncomingCall() {
             const modal = document.getElementById('incomingCallModal');
+            const backdrop = document.getElementById('incomingCallBackdrop');
+            backdrop.style.display = 'none';
             modal.style.display = 'none';
             
             if (!commhubIncomingCallData) return;
@@ -31390,9 +31409,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
             commhubIncomingCallData = null;
         }
         
-        // Decline incoming call
+        // Decline incoming call (CommHub Pro)
         function declineIncomingCall() {
             const modal = document.getElementById('incomingCallModal');
+            const backdrop = document.getElementById('incomingCallBackdrop');
+            backdrop.style.display = 'none';
             modal.style.display = 'none';
             
             if (commhubSocket && commhubIncomingCallData) {
@@ -32374,6 +32395,272 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
       window.sendSignal = sendSignal;
       
       console.log('✅ Firebase Group Call Functions loaded successfully!');
+    </script>
+    
+    <!-- Group Call UI Integration -->
+    <script type="module">
+      import {
+        collection,
+        query,
+        where,
+        onSnapshot,
+        getDoc,
+        doc
+      } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+      
+      const db = window.db;
+      let callListener = null;
+      let currentIncomingCall = null;
+      
+      // Show/hide Start Group Call button based on user role
+      function updateGroupCallButtonVisibility() {
+        const startGroupCallBtn = document.getElementById('startGroupCallBtn');
+        if (!startGroupCallBtn) return;
+        
+        if (currentUser && (currentUser.role === 'Teacher' || currentUser.role === 'Admin' || currentUser.role === 'HOD')) {
+          startGroupCallBtn.style.display = 'inline-block';
+        } else {
+          startGroupCallBtn.style.display = 'none';
+        }
+      }
+      
+      // Initialize call listener when user logs in
+      function initializeCallListener() {
+        if (!currentUser || !db) {
+          console.log('Cannot initialize call listener: user or db not available');
+          return;
+        }
+        
+        // Clean up existing listener
+        if (callListener) {
+          callListener();
+          callListener = null;
+        }
+        
+        try {
+          // Listen for calls where current user is in participants array
+          const callsQuery = query(
+            collection(db, 'calls'),
+            where('participants', 'array-contains', currentUser.username || currentUser.name),
+            where('status', '==', 'pending')
+          );
+          
+          callListener = onSnapshot(callsQuery, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === 'added') {
+                const callData = change.doc.data();
+                const callId = change.doc.id;
+                
+                // Don't show notification if current user is the host
+                if (callData.hostId === (currentUser.username || currentUser.name)) {
+                  return;
+                }
+                
+                // Show incoming call modal
+                showIncomingGroupCallModal({
+                  callId,
+                  ...callData
+                });
+              }
+            });
+          }, (error) => {
+            console.error('Error listening to calls:', error);
+          });
+          
+          console.log('✅ Call listener initialized for user:', currentUser.username || currentUser.name);
+        } catch (error) {
+          console.error('Error setting up call listener:', error);
+        }
+      }
+      
+      // Show incoming call modal
+      function showIncomingGroupCallModal(callData) {
+        currentIncomingCall = callData;
+        
+        const modal = document.getElementById('incomingCallModal');
+        const backdrop = document.getElementById('incomingCallBackdrop');
+        const callerName = document.getElementById('incomingCallerName');
+        const callTitle = document.getElementById('incomingCallTitle');
+        const callerPhoto = document.getElementById('incomingCallerPhoto');
+        const callerIcon = document.getElementById('incomingCallerIcon');
+        
+        // Set caller information
+        callerName.textContent = callData.hostId || 'Unknown';
+        callTitle.textContent = callData.title || 'Group Call';
+        
+        // Show photo if available (placeholder for now)
+        if (callerPhoto && callerIcon) {
+          callerPhoto.style.display = 'none';
+          callerIcon.style.display = 'block';
+        }
+        
+        // Show modal
+        backdrop.style.display = 'block';
+        modal.style.display = 'block';
+        
+        // Play notification sound
+        try {
+          const audio = new Audio('data:audio/wav;base64,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');
+          audio.play().catch(() => {}); // Ignore if autoplay is blocked
+        } catch (e) {
+          console.log('Could not play notification sound');
+        }
+        
+        // Show toast notification as well
+        if (typeof addNotification === 'function') {
+          addNotification(`Incoming call from ${callData.hostId}`, 'info');
+        }
+      }
+      
+      // Hide incoming call modal
+      function hideIncomingGroupCallModal() {
+        const modal = document.getElementById('incomingCallModal');
+        const backdrop = document.getElementById('incomingCallBackdrop');
+        
+        backdrop.style.display = 'none';
+        modal.style.display = 'none';
+        
+        currentIncomingCall = null;
+      }
+      
+      // Accept incoming group call
+      window.acceptIncomingGroupCall = async function() {
+        if (!currentIncomingCall || !currentUser) {
+          hideIncomingGroupCallModal();
+          return;
+        }
+        
+        try {
+          const callId = currentIncomingCall.callId;
+          const userId = currentUser.username || currentUser.name;
+          const displayName = currentUser.name;
+          const photoURL = currentUser.photoURL || '';
+          const role = currentUser.role || 'user';
+          
+          // Join the call using Firebase function
+          await window.joinCall(callId, userId, displayName, photoURL, role);
+          
+          // Navigate to CommHub Pro to show the video interface
+          // This would need to be integrated with your video call UI
+          showSection('media');
+          
+          if (typeof addNotification === 'function') {
+            addNotification('Joined group call successfully', 'success');
+          }
+          
+          hideIncomingGroupCallModal();
+        } catch (error) {
+          console.error('Error accepting call:', error);
+          if (typeof addNotification === 'function') {
+            addNotification('Failed to join call: ' + error.message, 'danger');
+          }
+          hideIncomingGroupCallModal();
+        }
+      };
+      
+      // Decline incoming group call
+      window.declineIncomingGroupCall = function() {
+        if (typeof addNotification === 'function') {
+          addNotification('Call declined', 'info');
+        }
+        hideIncomingGroupCallModal();
+      };
+      
+      // Initiate group call from chat
+      window.initiateGroupCall = async function() {
+        if (!currentUser) {
+          if (typeof addNotification === 'function') {
+            addNotification('Please log in to start a call', 'warning');
+          }
+          return;
+        }
+        
+        // Check if user is teacher or admin
+        const role = currentUser.role;
+        if (role !== 'Teacher' && role !== 'Admin' && role !== 'HOD') {
+          if (typeof addNotification === 'function') {
+            addNotification('Only teachers and admins can start group calls', 'warning');
+          }
+          return;
+        }
+        
+        try {
+          // Get participants - for now, use a simple approach
+          // In a real implementation, you'd get the actual chat participants
+          const participantIds = [currentUser.username || currentUser.name];
+          
+          // You could enhance this to get actual chat participants from the current chat
+          // For example, if you have a currentChatId, fetch its participants
+          
+          // Prompt for call title
+          const callTitle = prompt('Enter a title for the group call:', 'Group Meeting') || 'Group Meeting';
+          
+          // Start the call
+          const callId = await window.startGroupCall({
+            title: callTitle,
+            type: 'video',
+            participantIds: participantIds,
+            hostId: currentUser.username || currentUser.name,
+            hostName: currentUser.name,
+            hostPhoto: currentUser.photoURL || '',
+            linkedChatId: null // Could link to current chat if available
+          });
+          
+          if (typeof addNotification === 'function') {
+            addNotification('Group call started! Participants will be notified.', 'success');
+          }
+          
+          console.log('Group call created:', callId);
+          
+          // Optionally navigate to CommHub Pro
+          // showSection('media');
+          
+        } catch (error) {
+          console.error('Error starting group call:', error);
+          if (typeof addNotification === 'function') {
+            addNotification('Failed to start call: ' + error.message, 'danger');
+          }
+        }
+      };
+      
+      // Update button visibility when user changes
+      const originalShowSection = window.showSection;
+      window.showSection = function(...args) {
+        if (originalShowSection) {
+          originalShowSection.apply(this, args);
+        }
+        updateGroupCallButtonVisibility();
+      };
+      
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          updateGroupCallButtonVisibility();
+          initializeCallListener();
+        });
+      } else {
+        updateGroupCallButtonVisibility();
+        initializeCallListener();
+      }
+      
+      // Re-initialize when user logs in
+      const originalLogin = window.login;
+      window.login = async function(...args) {
+        if (originalLogin) {
+          const result = await originalLogin.apply(this, args);
+          setTimeout(() => {
+            updateGroupCallButtonVisibility();
+            initializeCallListener();
+          }, 1000);
+          return result;
+        }
+      };
+      
+      // Export functions
+      window.updateGroupCallButtonVisibility = updateGroupCallButtonVisibility;
+      window.initializeCallListener = initializeCallListener;
+      
+      console.log('✅ Group Call UI Integration loaded successfully!');
     </script>
     
     <!-- Firebase Functions Configuration -->
