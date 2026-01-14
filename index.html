@@ -35,7 +35,6 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root {
-            /* Default Theme (Purple Gradient) - Enhanced with G19-inspired colors */
             --primary-gradient-start: #1a1a2e;
             --primary-gradient-end: #16213e;
             --accent-primary: #e94560;
@@ -2445,34 +2444,12 @@
         
 
         /* ============================================
-           G19 SYSTEMS PORTAL - ENHANCED UI STYLES
-           Beautiful, Interactive & Responsive Design
-           ============================================ */
-        
-        /* G19 Portal Custom Theme Variables */
-        :root {
-            --g19-primary: #0f3460;
-            --g19-secondary: #16213e;
-            --g19-accent: #e94560;
-            --g19-accent-light: #ff6b6b;
-            --g19-gradient-start: #1a1a2e;
-            --g19-gradient-end: #16213e;
-            --g19-glass-bg: rgba(255, 255, 255, 0.08);
-            --g19-glass-border: rgba(255, 255, 255, 0.15);
-            --g19-text-primary: #ffffff;
-            --g19-text-secondary: rgba(255, 255, 255, 0.7);
-            --g19-shadow-color: rgba(233, 69, 96, 0.3);
-            --g19-filter-brightness: 1;
-            --g19-filter-contrast: 1;
-            --g19-filter-saturate: 1;
-        }
         
         /* Portal Background with Animated Gradient */
         
         
         
         
-        @keyframes g19-ambient {
             0% { opacity: 0.5; transform: scale(1); }
             100% { opacity: 1; transform: scale(1.1); }
         }
@@ -2482,7 +2459,6 @@
         /* Portal Header */
         
         
-        @keyframes g19-title-glow {
             0% { filter: drop-shadow(0 0 5px rgba(233, 69, 96, 0.3)); }
             100% { filter: drop-shadow(0 0 20px rgba(233, 69, 96, 0.6)); }
         }
@@ -2605,7 +2581,6 @@
         /* Badges */
         
         
-        /* Responsive Design for G19 Portal */
         @media (max-width: 991px) {
             
             
@@ -2639,7 +2614,6 @@
         
         
         
-        @keyframes g19-float {
             0%, 100% {
                 transform: translateY(0) translateX(0);
                 opacity: 0;
@@ -5816,29 +5790,18 @@
             }
         }
         
-        // Check Firebase connection
         
                 
-                // Check if Firebase is initialized
-                const firebaseConfig = localStorage.getItem('firebaseConfig');
-                if (!firebaseConfig) {
-                    statusEl.className = 'badge bg-warning';
-                    statusEl.innerHTML = '<i class="fas fa-cog"></i> Not Configured';
-                    console.log('⚠️ Firebase: Not configured');
-                    return;
-                }
                 
-                // Try to initialize Firebase and test connection
+                
+                
                 try {
-                    const config = JSON.parse(firebaseConfig);
+                    
                     
                     // Check if already initialized
-                    if (!firebase.apps || firebase.apps.length === 0) {
-                        firebase.initializeApp(config);
                     }
                     
                     // Test database connection with timeout
-                    const db = firebase.database();
                     const testRef = db.ref('.info/connected');
                     
                     // Set a timeout for the connection test
@@ -5863,16 +5826,13 @@
                     
                     statusEl.className = 'badge bg-success';
                     statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
-                    console.log('✅ Firebase: Connected');
                 } catch (error) {
                     statusEl.className = 'badge bg-danger';
                     statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Connection Failed';
-                    console.error('❌ Firebase: Connection failed', error);
                 }
             } catch (e) {
                 statusEl.className = 'badge bg-secondary';
                 statusEl.innerHTML = '<i class="fas fa-question-circle"></i> SDK Not Loaded';
-                console.log('ℹ️ Firebase: SDK not loaded');
             }
         }
         
@@ -5982,19 +5942,11 @@
             }
         }
         
-        // Auto-initialize Firebase on page load if credentials exist
-         else if (typeof initializeFirebase === 'function') {
-                            const success = initializeFirebase();
-                            if (typeof updateFirebaseStatus === 'function') {
-                                updateFirebaseStatus(success);
-                            }
+         else 
                         }
                     } else {
-                        console.log('ℹ️ Firebase not configured - using local storage only');
-                        console.log('💡 To enable cross-device sync, configure Firebase in Settings > Real-Time Sync');
                     }
                 } catch (error) {
-                    console.log('Firebase auto-init skipped:', error.message);
                 }
             }
         }
@@ -7267,7 +7219,6 @@
             localStorage.setItem('incidentReports', JSON.stringify(incidentReports));
             localStorage.setItem('wellnessPrograms', JSON.stringify(wellnessPrograms));
             
-            // ENHANCED: Sync all critical data types to Firebase for real-time updates
             if (typeof syncDataToAllDevices === 'function' && currentUser) {
                 // Sync critical data types that need real-time propagation
                 const criticalDataTypes = [
@@ -7327,23 +7278,14 @@
                 );
                                     }
                                     
-                                    addNotification('Firebase account created successfully', 'success');
                                 } catch (createError) {
-                                    console.error('⚠️ Firebase account creation failed:', createError.message);
-                                    // Don't block login if Firebase fails, just notify
-                                    addNotification('Note: Firebase authentication unavailable', 'warning');
                                 }
                             } else {
-                                console.error('⚠️ Firebase sign-in failed:', signInError.message);
-                                addNotification('Note: Firebase authentication unavailable', 'warning');
                             }
                         }
                     } else {
-                        console.log('ℹ️ Firebase Auth not initialized yet, will initialize after app loads');
                     }
                 } catch (error) {
-                    console.error('⚠️ Firebase authentication error:', error);
-                    // Don't block login if Firebase fails
                 }
                 
                 document.getElementById('loginPage').style.display = 'none';
@@ -7369,15 +7311,10 @@
                     setupPeriodicSync();
                 }
                 
-                // Check if g19 cloud is enabled and show appropriate message
-                const g19CloudEnabled = localStorage.getItem('g19CloudEnabled') === 'true';
-                const isG19Domain = window.location.hostname === 'g19systems.com' || 
-                                   window.location.hostname === 'www.g19systems.com' ||
-                                   window.location.hostname.includes('g19systems.com');
                 
-                if (g19CloudEnabled || isG19Domain) {
-                    addNotification('Welcome back, ' + user.name + '! Connected to G19 Systems Cloud - Real-time sync enabled.', 'success');
-                } else {
+                
+                
+                                } else {
                     addNotification('Welcome back, ' + user.name + '!', 'info');
                 }
             } else {
@@ -17117,7 +17054,6 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             // Force reload all data from localStorage immediately
             loadData();
             
-            // ENHANCED: Use new universal sync system for Firebase real-time updates
             if (typeof saveData === 'function') {
                 saveData(); // This will trigger syncDataToAllDevices for all data types
             }
@@ -17184,7 +17120,6 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     currentUser ? (currentUser.username || currentUser.name) : 'System',
                     currentUser ? currentUser.role : 'System',
                     'Real-time Sync',
-                    'Triggered immediate sync to all devices via Firebase and BroadcastChannel'
                 );
             }
         }
@@ -20581,7 +20516,6 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // ENHANCED SEND FUNCTIONS WITH BROADCASTING
         // ========================================
         
-        // Override sendLiveChatMessage to broadcast with Firebase sync
         const originalSendLiveChatMessage = typeof sendLiveChatMessage !== 'undefined' ? sendLiveChatMessage : null;
         sendLiveChatMessage = function() {
             const input = document.getElementById('liveChatInput');
@@ -20603,8 +20537,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             liveChatMessages.push(message);
             localStorage.setItem('liveChatMessages', JSON.stringify(liveChatMessages));
             
-            // Sync to Firebase for cross-device updates
-            syncToFirebase('message', message);
+            
             
             // Broadcast to all tabs/windows on this device
             broadcastMessage(BROADCAST_TYPES.LIVE_CHAT, {
@@ -20622,7 +20555,6 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             addNotification('Message sent to all users!', 'success');
         };
         
-        // Override createAnnouncement to broadcast with Firebase sync
         const originalCreateAnnouncement = typeof createAnnouncement !== 'undefined' ? createAnnouncement : null;
         createAnnouncement = function() {
             const title = document.getElementById('announcementTitle').value.trim();
@@ -20648,8 +20580,7 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
             announcements.push(announcement);
             localStorage.setItem('announcements', JSON.stringify(announcements));
             
-            // Sync to Firebase for cross-device updates
-            syncToFirebase('announcement', announcement);
+            
             
             // Broadcast announcement to all users immediately on this device
             broadcastMessage(BROADCAST_TYPES.ANNOUNCEMENT, {
@@ -20893,16 +20824,13 @@ ${application.status === 'rejected' ? '\nREJECTION REASON:\n' + (application.rej
         // Show FCM status
         function showFCMStatus() {
             const status = {
-                messaging: firebaseMessaging ? '✅ Enabled' : '❌ Not available',
+                
                 token: fcmToken ? '✅ Registered' : '❌ Not registered',
                 notifications: Notification.permission === 'granted' ? '✅ Allowed' : 
                               Notification.permission === 'denied' ? '❌ Blocked' : '⚠️ Not requested',
-                firebase: firebaseInitialized ? '✅ Connected' : '❌ Not connected'
             };
             
             const message = `
-<strong>Firebase Cloud Messaging Status:</strong><br>
-📡 Firebase: ${status.firebase}<br>
 📱 FCM Service: ${status.messaging}<br>
 🔑 FCM Token: ${status.token}<br>
 🔔 Browser Notifications: ${status.notifications}<br>
@@ -20926,7 +20854,7 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
                         </div>
                         <div class="modal-footer">
                             ${Notification.permission !== 'granted' ? 
-                                '<button class="btn btn-primary" onclick="testFirebaseCloudMessaging(); this.closest(\'.modal\').remove();">Request Permission</button>' : ''}
+                                '<button class="btn btn-primary" onclick="'.modal\').remove();">Request Permission</button>' : ''}
                             <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
                         </div>
                     </div>
@@ -20936,7 +20864,6 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         }
         
         console.log('✅ Enhanced real-time communication system loaded!');
-        console.log('📱 Features: Firebase sync, WebRTC calls, Voice notes, Call history');
         
         // ========================================
         // WEBRTC DIALER FUNCTIONS
@@ -21221,37 +21148,11 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         console.log('✅ WebRTC Dialer integrated into live chat system');
         
         // ========================================
-        // AUTO-DETECT G19SYSTEMS.COM DOMAIN
-        // Enable Firebase automatically for g19systems.com
         // ========================================
         (function() {
-            const isG19Domain = window.location.hostname === 'g19systems.com' || 
-                               window.location.hostname === 'www.g19systems.com' ||
-                               window.location.hostname.includes('g19systems.com');
             
-            if (isG19Domain) {
-                console.log('🌐 Detected g19systems.com domain - Firebase will auto-connect on login');
-                // Pre-configure for g19 cloud
-                const g19CloudConfig = {
-                    apiKey: "AIzaSyBG19SystemsCloudKey2024",
-                    authDomain: "g19systems-cloud.firebaseapp.com",
-                    databaseURL: "https://g19systems-cloud-default-rtdb.firebaseio.com",
-                    projectId: "g19systems-cloud",
-                    storageBucket: "g19systems-cloud.appspot.com",
-                    messagingSenderId: "123456789012",
-                    appId: "1:123456789012:web:g19systemscloud2024"
-                };
-                
-                // Store configuration for use after login
-                localStorage.setItem('firebaseApiKey', g19CloudConfig.apiKey);
-                localStorage.setItem('firebaseAuthDomain', g19CloudConfig.authDomain);
-                localStorage.setItem('firebaseDatabaseURL', g19CloudConfig.databaseURL);
-                localStorage.setItem('firebaseProjectId', g19CloudConfig.projectId);
-                localStorage.setItem('firebaseStorageBucket', g19CloudConfig.storageBucket);
-                localStorage.setItem('firebaseMessagingSenderId', g19CloudConfig.messagingSenderId);
-                localStorage.setItem('firebaseAppId', g19CloudConfig.appId);
-                localStorage.setItem('g19CloudEnabled', 'true');
-            }
+            
+            
         })();
         
         // ========================================
@@ -21673,13 +21574,10 @@ ${fcmToken ? '<small>Token: ' + fcmToken.substring(0, 30) + '...</small>' : ''}
         // SYSTEM MANAGEMENT PORTAL FUNCTIONS
         // ========================================
         
-        // Note: System Management is now handled through G19 Systems Portal
         // This function is deprecated and provides a notification to users
         function loadSystemManagement() {
-            // System Management is now exclusively in G19 Systems Portal
             // Show notification if user tries to access this functionality
             if (typeof addNotification === 'function') {
-                addNotification('System Management has been moved to the G19 Systems Portal. Please contact your system provider for access.', 'info');
             }
             // Redirect to dashboard
             showSection('dashboard');
