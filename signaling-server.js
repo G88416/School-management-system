@@ -20,6 +20,7 @@
 
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const socketIO = require('socket.io');
 const cors = require('cors');
 
@@ -39,6 +40,9 @@ app.use(cors({
     credentials: true
 }));
 
+// Serve static frontend files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Configure Socket.IO with CORS
 const io = socketIO(server, {
     cors: {
@@ -54,8 +58,10 @@ const io = socketIO(server, {
 const rooms = new Map(); // roomId -> Set of socket IDs
 const users = new Map(); // socket.id -> { roomId, username }
 
-// Health check endpoint
-app.get('/', (req, res) => {
+// Server status endpoint
+// Note: the root path '/' now serves the frontend (public/index.html).
+// Use /status for the JSON server status, or /health for a simple health check.
+app.get('/status', (req, res) => {
     res.json({
         status: 'ok',
         name: 'CommHub Pro Signaling Server',

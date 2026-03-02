@@ -248,9 +248,9 @@ sudo certbot --nginx -d your-domain.com
 
 ### 1. Check Server Health
 
-Visit your server URL in a browser:
+Visit your server status URL in a browser:
 ```
-https://your-server-url.com/
+https://your-server-url.com/status
 ```
 
 You should see:
@@ -359,7 +359,7 @@ If you see both videos, **everything is working!** ✅
 
 ### View Active Connections
 
-Visit: `https://your-server-url.com/`
+Visit: `https://your-server-url.com/status`
 
 Shows:
 - Number of active rooms
