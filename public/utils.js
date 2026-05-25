@@ -5,6 +5,50 @@
  * and validation used for bulk student/teacher uploads.
  */
 
+const inMemoryStorage = new Map();
+
+const safeStorage = {
+  getItem(key, defaultValue = null) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return defaultValue;
+      return JSON.parse(raw);
+    } catch (error) {
+      if (!inMemoryStorage.has(key)) return defaultValue;
+      return inMemoryStorage.get(key);
+    }
+  },
+
+  setItem(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      inMemoryStorage.set(key, value);
+    }
+  },
+
+  removeItem(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      // no-op
+    }
+    inMemoryStorage.delete(key);
+  }
+};
+
+window.safeStorage = safeStorage;
+
+function safeGetElement(id) {
+  const element = document.getElementById(id);
+  if (!element) {
+    console.warn(`Element with id "${id}" was not found.`);
+  }
+  return element;
+}
+
+window.safeGetElement = safeGetElement;
+
 /**
  * Parse a CSV string into an array of row objects.
  *
