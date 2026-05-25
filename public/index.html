@@ -5112,6 +5112,9 @@
       
       // Add teachers
       teachers.forEach(teacher => {
+        const teacherFirstName = teacher.firstname || (teacher.name ? teacher.name.split(' ')[0] : 'Teacher');
+        const teacherSurname = teacher.surname || (teacher.name ? teacher.name.split(' ').slice(1).join(' ') : '');
+        const teacherDisplayName = `${teacherFirstName} ${teacherSurname}`.trim();
         const contactItem = document.createElement('a');
         contactItem.href = '#';
         contactItem.className = 'list-group-item list-group-item-action';
@@ -5119,10 +5122,10 @@
         contactItem.innerHTML = `
           <div class="d-flex align-items-center">
             <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
-              ${teacher.firstname.charAt(0)}
+              ${teacherFirstName.charAt(0)}
             </div>
             <div class="ms-2">
-              <strong>${teacher.firstname} ${teacher.surname}</strong>
+              <strong>${teacherDisplayName}</strong>
               <br><small class="text-muted">Teacher</small>
             </div>
           </div>
@@ -5132,6 +5135,9 @@
       
       // Add students
       students.forEach(student => {
+        const studentFirstName = student.firstname || (student.name ? student.name.split(' ')[0] : 'Student');
+        const studentSurname = student.surname || (student.name ? student.name.split(' ').slice(1).join(' ') : '');
+        const studentDisplayName = `${studentFirstName} ${studentSurname}`.trim();
         const contactItem = document.createElement('a');
         contactItem.href = '#';
         contactItem.className = 'list-group-item list-group-item-action';
@@ -5139,10 +5145,10 @@
         contactItem.innerHTML = `
           <div class="d-flex align-items-center">
             <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
-              ${student.firstname.charAt(0)}
+              ${studentFirstName.charAt(0)}
             </div>
             <div class="ms-2">
-              <strong>${student.firstname} ${student.surname}</strong>
+              <strong>${studentDisplayName}</strong>
               <br><small class="text-muted">Student - Grade ${student.grade}</small>
             </div>
           </div>
@@ -5712,6 +5718,9 @@
         
         // Show success message
         alert('Student registered successfully!' + (profilePicUrl ? ' Profile picture uploaded.' : ''));
+      } else {
+        alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
+      }
       } catch (error) {
         console.error('Error adding student:', error);
         alert('An error occurred while adding the student. Please try again.');
@@ -5722,10 +5731,7 @@
           modal.hide();
         }
       }
-    } else {
-      alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
     }
-  }
 
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();
