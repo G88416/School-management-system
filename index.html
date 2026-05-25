@@ -1,0 +1,563 @@
+# Soccer Club Management System (HTML Version)
+
+Save this as `index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elite FC Management System</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: #07120d;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2cff7d;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: white;
+      margin-left: 25px;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      color: #2cff7d;
+    }
+
+    .hero {
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)),
+        url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1600&auto=format&fit=crop') center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 10%;
+    }
+
+    .hero-content h1 {
+      font-size: 70px;
+      margin-bottom: 20px;
+      line-height: 1.1;
+    }
+
+    .hero-content span {
+      color: #2cff7d;
+    }
+
+    .hero-content p {
+      font-size: 20px;
+      max-width: 800px;
+      margin: auto;
+      opacity: 0.9;
+      line-height: 1.8;
+    }
+
+    .hero-buttons {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 35px;
+      border-radius: 50px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: #2cff7d;
+      color: black;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(44,255,125,0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid #2cff7d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #2cff7d;
+      color: black;
+    }
+
+    section {
+      padding: 100px 8%;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+
+    .section-title h2 {
+      font-size: 50px;
+      margin-bottom: 15px;
+    }
+
+    .section-title p {
+      color: #bdbdbd;
+      max-width: 700px;
+      margin: auto;
+      line-height: 1.8;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+    }
+
+    .stat-card {
+      background: #0e1d15;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      transition: 0.3s;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      background: #11261c;
+    }
+
+    .stat-card h3 {
+      font-size: 50px;
+      color: #2cff7d;
+      margin-bottom: 10px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: #0e1d15;
+      border-radius: 20px;
+      overflow: hidden;
+      transition: 0.4s;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 30px;
+    }
+
+    .card-content h3 {
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .card-content p {
+      color: #cfcfcf;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .fixtures {
+      background: #0e1d15;
+      border-radius: 25px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th {
+      background: #2cff7d;
+      color: black;
+      padding: 20px;
+      text-align: left;
+    }
+
+    table td {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .dashboard-box {
+      background: #0e1d15;
+      padding: 35px;
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+
+    .dashboard-box:hover {
+      background: #12261d;
+    }
+
+    .dashboard-box h3 {
+      margin-bottom: 15px;
+      color: #2cff7d;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.03);
+    }
+
+    .contact {
+      background: #0e1d15;
+      border-radius: 30px;
+      padding: 60px;
+      text-align: center;
+    }
+
+    .contact h2 {
+      font-size: 45px;
+      margin-bottom: 20px;
+    }
+
+    .contact p {
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      background: black;
+      color: #aaa;
+    }
+
+    @media(max-width: 900px) {
+      .hero-content h1 {
+        font-size: 45px;
+      }
+
+      nav {
+        display: none;
+      }
+
+      section {
+        padding: 80px 5%;
+      }
+
+      .section-title h2 {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚽ Elite FC</div>
+
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#players">Players</a>
+    <a href="#fixtures">Fixtures</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <div class="hero-content">
+    <h1>Manage Your <span>Soccer Club</span> Like Champions</h1>
+
+    <p>
+      Powerful football club management system for players, coaches,
+      fans, fixtures, analytics, finances, and team performance.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#players" class="btn btn-primary">View Players</a>
+      <a href="#fixtures" class="btn btn-secondary">Upcoming Fixtures</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Club Statistics</h2>
+    <p>Track the progress and growth of your football club in real-time.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <h3>32</h3>
+      <p>Registered Players</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>18</h3>
+      <p>League Wins</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>12K</h3>
+      <p>Club Fans</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>8</h3>
+      <p>Professional Coaches</p>
+    </div>
+  </div>
+</section>
+
+<section id="players">
+  <div class="section-title">
+    <h2>Player Management</h2>
+    <p>Manage player profiles, positions, performance and contracts.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=1200&auto=format&fit=crop">
+
+      <div class="card-content">
+        <h3>Goalkeepers</h3>
+        <p>
+          Manage goalkeeper training, saves statistics, and match fitness.
+        </p>
+
+        <a href="#" class="btn btn-primary">Manage</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1543357480-c60d40007a3f?q=80&w=1200&auto=format&fit=crop">
+
+      <div class="card-content">
+        <h3>Midfielders</h3>
+        <p>
+          Track assists, passing accuracy, and player development.
+        </p>
+
+        <a href="#" class="btn btn-primary">Manage</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?q=80&w=1200&auto=format&fit=crop">
+
+      <div class="card-content">
+        <h3>Strikers</h3>
+        <p>
+          Analyze goal scoring, finishing rate and match contributions.
+        </p>
+
+        <a href="#" class="btn btn-primary">Manage</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fixtures">
+  <div class="section-title">
+    <h2>Upcoming Fixtures</h2>
+    <p>Monitor scheduled matches and club activities.</p>
+  </div>
+
+  <div class="fixtures">
+    <table>
+      <tr>
+        <th>Date</th>
+        <th>Match</th>
+        <th>Venue</th>
+        <th>Status</th>
+      </tr>
+
+      <tr>
+        <td>28 May 2026</td>
+        <td>Elite FC vs Galaxy FC</td>
+        <td>National Stadium</td>
+        <td>Upcoming</td>
+      </tr>
+
+      <tr>
+        <td>02 June 2026</td>
+        <td>Elite FC vs Lions United</td>
+        <td>Elite Arena</td>
+        <td>Upcoming</td>
+      </tr>
+
+      <tr>
+        <td>08 June 2026</td>
+        <td>Elite FC vs Thunder FC</td>
+        <td>City Sports Ground</td>
+        <td>Upcoming</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<section id="dashboard">
+  <div class="section-title">
+    <h2>Admin Dashboard</h2>
+    <p>Quick overview of club performance and operations.</p>
+  </div>
+
+  <div class="dashboard">
+    <div class="dashboard-box">
+      <h3>💰 Club Revenue</h3>
+      <p>R850,000 generated from sponsorships and ticket sales.</p>
+    </div>
+
+    <div class="dashboard-box">
+      <h3>🏆 Team Performance</h3>
+      <p>Current league position: 2nd place with 45 points.</p>
+    </div>
+
+    <div class="dashboard-box">
+      <h3>📈 Player Analytics</h3>
+      <p>Top scorer: James Mokoena with 18 goals.</p>
+    </div>
+
+    <div class="dashboard-box">
+      <h3>🎟️ Ticket Sales</h3>
+      <p>Over 6,000 tickets sold this month.</p>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="section-title">
+    <h2>Club Gallery</h2>
+    <p>Highlights from matches, training and club activities.</p>
+  </div>
+
+  <div class="gallery">
+    <img src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop">
+
+    <img src="https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=1200&auto=format&fit=crop">
+
+    <img src="https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?q=80&w=1200&auto=format&fit=crop">
+
+    <img src="https://images.unsplash.com/photo-1552667466-07770ae110d0?q=80&w=1200&auto=format&fit=crop">
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact">
+    <h2>Join Elite FC Today</h2>
+
+    <p>
+      Register players, manage teams and grow your football club using
+      this powerful management platform.
+    </p>
+
+    <a href="#" class="btn btn-primary">Register Club</a>
+  </div>
+</section>
+
+<footer>
+  © 2026 Elite FC Management System | Designed for Modern Football Clubs
+</footer>
+
+</body>
+</html>
+```
+
+## Deployment
+
+Upload the file to:
+
+* Firebase Hosting
+* Netlify
+* Vercel
+* GitHub Pages
+
+## Next Features You Can Add
+
+* Firebase Authentication
+* Admin Login
+* Player Database
+* Match Results System
+* League Table
+* Live Scores
+* AI Match Prediction
+* Training Scheduler
+* Payment System
+* Fan Membership Portal
